@@ -1,0 +1,47 @@
+package br.com.salgadosdalucia.api.model;
+
+import br.com.salgadosdalucia.api.enums.TipoPreco;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "itens_pedido")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class ItemPedido {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+    @ManyToOne
+    @JoinColumn(name = "pedido_id")
+    public Pedido pedido;
+    @ManyToOne
+    @JoinColumn(name = "salgado_id", nullable = false)
+    public Salgado salgado;
+    public Integer quantidade;
+    public TipoPreco tipoPreco;
+    @Enumerated(EnumType.STRING)
+    public Double precoUnitario;
+    public Double subTotal;
+
+    public void calcularPrecos() {
+        if (this.salgado != null && this.quantidade != null) {
+            double precoCento;
+
+            if (this.tipoPreco == TipoPreco.CONGELADO) {
+                precoCento = this.salgado.precoCentoCongelado;
+            } else{
+                precoCento = this.salgado.precoCentoProcessado;
+            }
+            this.precoUnitario = precoCento / 100.0;
+            this.subTotal = this.precoUnitario * this.quantidade;
+        }
+    }
+
+}
