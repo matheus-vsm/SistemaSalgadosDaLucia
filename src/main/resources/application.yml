@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: api_salgadosdalucia
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/${DB_NAME_SALGADOS_MYSQL}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USER_MYSQL}
+    password: ${DB_PASSWORD_MYSQL}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+#validate → o Hibernate verifica se as entidades batem com o banco, e lança erro se tiver divergência. Útil para pegar inconsistências entre o código e o banco.
+#none → o Hibernate não faz nada, nem valida. O Flyway cuida de tudo sozinho.
+#No mercado com Flyway o mais comum é validate em desenvolvimento e none em produção.
