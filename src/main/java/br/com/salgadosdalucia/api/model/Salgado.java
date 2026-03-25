@@ -3,10 +3,7 @@ package br.com.salgadosdalucia.api.model;
 import br.com.salgadosdalucia.api.enums.Categoria;
 import br.com.salgadosdalucia.api.enums.StatusSalgado;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "salgados")
@@ -14,6 +11,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Salgado {
 
     @Id
@@ -25,6 +23,7 @@ public class Salgado {
     public Categoria categoria;
     public Double precoCentoCongelado;
     public Double precoCentoProcessado;
+    @Enumerated(EnumType.STRING)
     public StatusSalgado status;
 
 }
