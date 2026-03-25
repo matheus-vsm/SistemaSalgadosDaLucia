@@ -42,7 +42,8 @@ public class Pedido {
     @JoinColumn(name = "usuario_id")
     public Usuario usuarioResponsavel;
 
-    @PrePersist // JPA lifecycle callback to set the order date before saving
+    @PrePersist // É chamado antes de salvar um objeto novo no banco
+    @PreUpdate // É chamado antes de atualizar um objeto que já existe
     public void gerarData() {
         this.dataPedido = (this.dataPedido == null) ? LocalDate.now() : this.dataPedido;
     }

@@ -2,10 +2,7 @@ package br.com.salgadosdalucia.api.model;
 
 import br.com.salgadosdalucia.api.model.enums.TipoPreco;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "itens_pedido")
@@ -13,6 +10,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ItemPedido {
 
     @Id
@@ -30,6 +28,8 @@ public class ItemPedido {
     public Double precoUnitario;
     public Double subTotal;
 
+    @PrePersist
+    @PreUpdate
     public void calcularPrecos() {
         if (this.salgado != null && this.quantidade != null) {
             double precoCento;
