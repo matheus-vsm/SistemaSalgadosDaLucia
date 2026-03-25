@@ -1,6 +1,6 @@
 package br.com.salgadosdalucia.api.model;
 
-import br.com.salgadosdalucia.api.enums.TipoPreco;
+import br.com.salgadosdalucia.api.model.enums.TipoPreco;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,8 +25,8 @@ public class ItemPedido {
     @JoinColumn(name = "salgado_id", nullable = false)
     public Salgado salgado;
     public Integer quantidade;
-    public TipoPreco tipoPreco;
     @Enumerated(EnumType.STRING)
+    public TipoPreco tipoPreco;
     public Double precoUnitario;
     public Double subTotal;
 

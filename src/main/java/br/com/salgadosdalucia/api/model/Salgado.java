@@ -1,7 +1,7 @@
 package br.com.salgadosdalucia.api.model;
 
-import br.com.salgadosdalucia.api.enums.Categoria;
-import br.com.salgadosdalucia.api.enums.StatusSalgado;
+import br.com.salgadosdalucia.api.model.enums.Categoria;
+import br.com.salgadosdalucia.api.model.enums.StatusSalgado;
 import jakarta.persistence.*;
 import lombok.*;
 
