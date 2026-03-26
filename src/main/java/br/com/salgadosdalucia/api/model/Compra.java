@@ -1,10 +1,7 @@
 package br.com.salgadosdalucia.api.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,14 +12,16 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Compra {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
-//    @OneToMany
-//    public List<ItemCompra> itens;
-    public Double valorTotal;
-    public LocalDate dataCompra;
+    private Long id;
+    @OneToMany(mappedBy = "compra")
+    private List<ItemCompra> itens;
+    private Double valorTotal;
+    private LocalDate dataCompra;
+    private String observacao;
 
 }

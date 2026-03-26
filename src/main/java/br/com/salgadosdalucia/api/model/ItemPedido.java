@@ -1,11 +1,8 @@
 package br.com.salgadosdalucia.api.model;
 
-import br.com.salgadosdalucia.api.enums.TipoPreco;
+import br.com.salgadosdalucia.api.model.enums.TipoPreco;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "itens_pedido")
@@ -13,35 +10,22 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ItemPedido {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    private Long id;
     @ManyToOne
     @JoinColumn(name = "pedido_id")
-    public Pedido pedido;
+    private Pedido pedido;
     @ManyToOne
     @JoinColumn(name = "salgado_id", nullable = false)
-    public Salgado salgado;
-    public Integer quantidade;
-    public TipoPreco tipoPreco;
+    private Salgado salgado;
+    private Integer quantidade;
     @Enumerated(EnumType.STRING)
-    public Double precoUnitario;
-    public Double subTotal;
-
-    public void calcularPrecos() {
-        if (this.salgado != null && this.quantidade != null) {
-            double precoCento;
-
-            if (this.tipoPreco == TipoPreco.CONGELADO) {
-                precoCento = this.salgado.precoCentoCongelado;
-            } else{
-                precoCento = this.salgado.precoCentoProcessado;
-            }
-            this.precoUnitario = precoCento / 100.0;
-            this.subTotal = this.precoUnitario * this.quantidade;
-        }
-    }
+    private TipoPreco tipoPreco;
+    private Double precoUnitario;
+    private Double subTotal;
 
 }

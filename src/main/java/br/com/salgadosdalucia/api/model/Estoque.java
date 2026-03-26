@@ -4,23 +4,20 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "itens_compra")
+@Table(name = "estoque")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ItemCompra {
+public class Estoque {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne
-    @JoinColumn(name = "compra_id")
-    private Compra compra;
-    private String nome;
+    @OneToOne
+    @JoinColumn(name = "salgado_id")
+    private Salgado salgado;
     private Integer quantidade;
-    private Double precoUnitario;
-    private Double subTotal;
 
 }

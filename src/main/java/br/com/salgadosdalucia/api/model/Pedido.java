@@ -1,11 +1,10 @@
 package br.com.salgadosdalucia.api.model;
 
-import br.com.salgadosdalucia.api.enums.StatusPedido;
+import br.com.salgadosdalucia.api.model.enums.FormaPagamento;
+import br.com.salgadosdalucia.api.model.enums.StatusPedido;
+import br.com.salgadosdalucia.api.model.enums.TipoEntrega;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,26 +16,35 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Pedido {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    private Long id;
     @ManyToOne
     @JoinColumn(name = "cliente_id")
-    public Cliente cliente;
-    @OneToMany
-    public List<ItemPedido> itens;
-    public Endereco enderecoEntrega;
-    public Double valorTotal;
-    public LocalDate dataPedido;
-    public LocalDateTime dataEntrega;
+    private Cliente cliente;
+    @OneToMany(mappedBy = "pedido")
+    private List<ItemPedido> itens;
+    @Embedded
+    private Endereco enderecoEntrega;
+    private Double valorTotal;
+    private LocalDate dataPedido;
+    private LocalDateTime dataEntrega;
     @Enumerated(EnumType.STRING)
-    public StatusPedido status;
+    private StatusPedido status;
+    @Enumerated(EnumType.STRING)
+    private TipoEntrega tipoEntrega;
+    @Enumerated(EnumType.STRING)
+    private FormaPagamento formaPagamento;
+    @ManyToOne
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuarioResponsavel;
 
-    @PrePersist // JPA lifecycle callback to set the order date before saving
+    @PrePersist // É chamado antes de salvar um objeto novo no banco
     public void gerarData() {
-        this.dataPedido = (this.dataPedido == null) ? LocalDate.now() : this.dataPedido;
+        this.dataPedido = LocalDate.now();
     }
 
 }
