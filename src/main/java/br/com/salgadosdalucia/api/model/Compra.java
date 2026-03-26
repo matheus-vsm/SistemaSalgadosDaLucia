@@ -17,25 +17,11 @@ public class Compra {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
-    @OneToMany
-    public List<ItemCompra> itens;
-    public Double valorTotal;
-    public LocalDate dataCompra;
-    public String observacao;
-
-    @PrePersist
-    @PreUpdate
-    public void calcularValorTotal() {
-        if (itens == null) {
-            this.valorTotal = 0.0;
-            return;
-        }
-
-        this.valorTotal = itens.stream()
-                .filter(item -> item.getSubTotal() != null)
-                .mapToDouble(ItemCompra::getSubTotal)
-                .sum();
-    }
+    private Long id;
+    @OneToMany(mappedBy = "compra")
+    private List<ItemCompra> itens;
+    private Double valorTotal;
+    private LocalDate dataCompra;
+    private String observacao;
 
 }

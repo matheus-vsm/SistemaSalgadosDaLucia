@@ -14,10 +14,10 @@ public class Cliente {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
-    public String nome;
-    public String telefone;
+    private Long id;
+    private String nome;
+    private String telefone;
     @Embedded
-    public Endereco endereco;
+    private Endereco endereco;
 
 }

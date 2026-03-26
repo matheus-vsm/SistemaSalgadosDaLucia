@@ -14,19 +14,13 @@ public class ItemCompra {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    private Long id;
     @ManyToOne
     @JoinColumn(name = "compra_id")
-    public Compra compra;
-    public String nome;
-    public Integer quantidade;
-    public Double precoUnitario;
-    public Double subTotal;
-
-    @PrePersist
-    @PreUpdate
-    public void calcularSubTotal() {
-        this.subTotal = this.precoUnitario * this.quantidade;
-    }
+    private Compra compra;
+    private String nome;
+    private Integer quantidade;
+    private Double precoUnitario;
+    private Double subTotal;
 
 }

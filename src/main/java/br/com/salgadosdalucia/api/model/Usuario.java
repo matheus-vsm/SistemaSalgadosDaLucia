@@ -15,11 +15,11 @@ public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
-    public String nome;
-    public String login;
-    public String senha;
+    private Long id;
+    private String nome;
+    private String login;
+    private String senha;
     @Enumerated(EnumType.STRING)
-    public PerfilUsuario perfilUsuario;
+    private PerfilUsuario perfilUsuario;
 
 }

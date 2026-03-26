@@ -21,52 +21,30 @@ public class Pedido {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    private Long id;
     @ManyToOne
     @JoinColumn(name = "cliente_id")
-    public Cliente cliente;
-    @OneToMany
-    public List<ItemPedido> itens;
+    private Cliente cliente;
+    @OneToMany(mappedBy = "pedido")
+    private List<ItemPedido> itens;
     @Embedded
-    public Endereco enderecoEntrega;
-    public Double valorTotal;
-    public LocalDate dataPedido;
-    public LocalDateTime dataEntrega;
+    private Endereco enderecoEntrega;
+    private Double valorTotal;
+    private LocalDate dataPedido;
+    private LocalDateTime dataEntrega;
     @Enumerated(EnumType.STRING)
-    public StatusPedido status;
+    private StatusPedido status;
     @Enumerated(EnumType.STRING)
-    public TipoEntrega tipoEntrega;
+    private TipoEntrega tipoEntrega;
     @Enumerated(EnumType.STRING)
-    public FormaPagamento formaPagamento;
+    private FormaPagamento formaPagamento;
     @ManyToOne
     @JoinColumn(name = "usuario_id")
-    public Usuario usuarioResponsavel;
+    private Usuario usuarioResponsavel;
 
     @PrePersist // É chamado antes de salvar um objeto novo no banco
-    @PreUpdate // É chamado antes de atualizar um objeto que já existe
     public void gerarData() {
-        this.dataPedido = (this.dataPedido == null) ? LocalDate.now() : this.dataPedido;
-    }
-
-    public void calcularValorTotal() {
-        if (itens == null) {
-            this.valorTotal = 0.0;
-            return;
-        }
-
-        this.valorTotal = itens.stream()
-                .filter(item -> item.getSubTotal() != null)
-                .mapToDouble(ItemPedido::getSubTotal)
-                .sum();
-    }
-
-    public void defineEnderecoEntrega() {
-        if (this.tipoEntrega == TipoEntrega.RETIRADA) {
-            this.enderecoEntrega = null; // Retirada não tem endereço de entrega
-        } else if (this.tipoEntrega == TipoEntrega.ENTREGA && this.enderecoEntrega == null) {
-            // Se for entrega e o endereço não foi definido, pode-se lançar uma exceção ou definir um endereço padrão
-            this.enderecoEntrega = cliente.getEndereco();
-        }
+        this.dataPedido = LocalDate.now();
     }
 
 }

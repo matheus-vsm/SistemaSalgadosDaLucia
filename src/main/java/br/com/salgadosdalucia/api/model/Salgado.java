@@ -1,7 +1,6 @@
 package br.com.salgadosdalucia.api.model;
 
 import br.com.salgadosdalucia.api.model.enums.Categoria;
-import br.com.salgadosdalucia.api.model.enums.StatusSalgado;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,14 +15,13 @@ public class Salgado {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
-    public String nome;
-    public String descricao;
+    private Long id;
+    private String nome;
+    private String descricao;
     @Enumerated(EnumType.STRING)
-    public Categoria categoria;
-    public Double precoCentoCongelado;
-    public Double precoCentoProcessado;
-    @Enumerated(EnumType.STRING)
-    public StatusSalgado status;
+    private Categoria categoria;
+    private Double precoCentoCongelado;
+    private Double precoCentoProcessado;
+    private boolean ativo;
 
 }

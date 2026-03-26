@@ -14,7 +14,10 @@ public class Estoque {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
-    public Integer quantidade;
+    private Long id;
+    @OneToOne
+    @JoinColumn(name = "salgado_id")
+    private Salgado salgado;
+    private Integer quantidade;
 
 }
