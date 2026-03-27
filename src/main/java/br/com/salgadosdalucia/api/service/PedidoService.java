@@ -6,6 +6,8 @@ import br.com.salgadosdalucia.api.model.enums.TipoEntrega;
 import br.com.salgadosdalucia.api.model.enums.TipoPreco;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 public class PedidoService {
 
@@ -13,14 +15,14 @@ public class PedidoService {
         if (pedido == null) return;
 
         if (pedido.getItens().isEmpty()) {
-            pedido.setValorTotal(0.0);
+            pedido.setValorTotal(BigDecimal.ZERO);
             return;
         }
 
         pedido.setValorTotal(pedido.getItens().stream()
                 .filter(item -> item.getSubTotal() != null)
-                .mapToDouble(ItemPedido::getSubTotal)
-                .sum());
+                .map(ItemPedido::getSubTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add));
     }
 
     private void defineEnderecoEntrega(Pedido pedido) {
@@ -33,7 +35,7 @@ public class PedidoService {
     }
 
     private void calcularPrecos(ItemPedido item) {
-        double precoCento;
+        BigDecimal precoCento;
 
         if (item.getTipoPreco() == TipoPreco.CONGELADO) {
             precoCento = item.getSalgado().getPrecoCentoCongelado();
@@ -41,8 +43,8 @@ public class PedidoService {
             precoCento = item.getSalgado().getPrecoCentoProcessado();
         }
 
-        item.setPrecoUnitario(precoCento / 100.0);
-        item.setSubTotal(item.getPrecoUnitario() * item.getQuantidade());
+        item.setPrecoUnitario(precoCento.divide(BigDecimal.valueOf(100))); // = precoCento / 100.0
+        item.setSubTotal(item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade()))); // = item.getPrecoUnitario() * item.getQuantidade()
     }
 
 }
