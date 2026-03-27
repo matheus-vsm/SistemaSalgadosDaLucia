@@ -5,5 +5,5 @@ CREATE TABLE itens_compra (
     quantidade      INT             NOT NULL,
     valor_unitario  DECIMAL(10,2)   NOT NULL,
     sub_total       DECIMAL(10,2)   NOT NULL,
-    CONSTRAINT fk_item_compra_compra FOREIGN KEY (compra_id) REFERENCES compra(id)
+    CONSTRAINT fk_item_compra_compra FOREIGN KEY (compra_id) REFERENCES compras(id)
 );

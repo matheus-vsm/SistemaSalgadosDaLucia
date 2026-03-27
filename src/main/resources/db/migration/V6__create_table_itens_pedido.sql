@@ -6,6 +6,6 @@ CREATE TABLE itens_pedido (
     preco_unitario  DECIMAL(10,2)   NOT NULL,
     sub_total       DECIMAL(10,2)   NOT NULL,
     tipo_preco      VARCHAR(20)     NOT NULL,
-    CONSTRAINT fk_item_pedido_pedido FOREIGN KEY (pedido_id) REFERENCES pedido(id),
-    CONSTRAINT fk_item_pedido_salgado FOREIGN KEY (salgado_id) REFERENCES salgado(id)
+    CONSTRAINT fk_item_pedido_pedido FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
+    CONSTRAINT fk_item_pedido_salgado FOREIGN KEY (salgado_id) REFERENCES salgados(id)
 );

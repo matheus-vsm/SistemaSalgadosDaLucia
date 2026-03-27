@@ -15,6 +15,6 @@ CREATE TABLE pedidos (
     tipo_entrega        VARCHAR(20)     NOT NULL,
     forma_pagamento     VARCHAR(20)     NOT NULL,
     valor_total         DECIMAL(10,2)   NOT NULL,
-    CONSTRAINT fk_pedido_cliente FOREIGN KEY (cliente_id) REFERENCES cliente(id),
-    CONSTRAINT fk_pedido_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+    CONSTRAINT fk_pedido_cliente FOREIGN KEY (cliente_id) REFERENCES clientes(id),
+    CONSTRAINT fk_pedido_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
