@@ -3,6 +3,8 @@ package br.com.salgadosdalucia.api.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "itens_compra")
 @Getter
@@ -20,7 +22,7 @@ public class ItemCompra {
     private Compra compra;
     private String nome;
     private Integer quantidade;
-    private Double precoUnitario;
-    private Double subTotal;
+    private BigDecimal precoUnitario;
+    private BigDecimal subTotal;
 
 }

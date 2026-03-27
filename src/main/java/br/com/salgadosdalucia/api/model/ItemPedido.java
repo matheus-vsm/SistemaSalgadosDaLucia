@@ -4,6 +4,8 @@ import br.com.salgadosdalucia.api.model.enums.TipoPreco;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "itens_pedido")
 @Getter
@@ -25,7 +27,7 @@ public class ItemPedido {
     private Integer quantidade;
     @Enumerated(EnumType.STRING)
     private TipoPreco tipoPreco;
-    private Double precoUnitario;
-    private Double subTotal;
+    private BigDecimal precoUnitario;
+    private BigDecimal subTotal;
 
 }

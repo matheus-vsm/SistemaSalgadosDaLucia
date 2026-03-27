@@ -6,6 +6,7 @@ import br.com.salgadosdalucia.api.model.enums.TipoEntrega;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,7 +30,7 @@ public class Pedido {
     private List<ItemPedido> itens;
     @Embedded
     private Endereco enderecoEntrega;
-    private Double valorTotal;
+    private BigDecimal valorTotal;
     private LocalDate dataPedido;
     private LocalDateTime dataEntrega;
     @Enumerated(EnumType.STRING)
