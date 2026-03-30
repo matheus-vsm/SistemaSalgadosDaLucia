@@ -9,7 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +25,7 @@ public class ClienteService {
 
     public Page<Cliente> listarTodos(Pageable paginacao) {
         return repository.findAllByAtivoTrue(paginacao);
-                // só se devolver dto .map(this::mapToDto); // equivalente a .map(cliente -> mapToDto(cliente))
+        // só se devolver dto .map(this::mapToDto); // equivalente a .map(cliente -> mapToDto(cliente))
         // map do page aplica FUNÇÃO de conversão
     }
 
