@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:salgados_lucia
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop #ele cria as tabelas na subida e derruba na descida.
+    database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  flyway:
+    enabled: false #O Flyway precisa ficar desabilitado porque os scripts dele são escritos pra sintaxe MySQL e vão quebrar no H2.
