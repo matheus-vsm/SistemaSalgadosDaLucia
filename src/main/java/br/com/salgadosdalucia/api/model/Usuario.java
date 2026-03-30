@@ -21,5 +21,6 @@ public class Usuario {
     private String senha;
     @Enumerated(EnumType.STRING)
     private PerfilUsuario perfilUsuario;
+    private boolean ativo;
 
 }
