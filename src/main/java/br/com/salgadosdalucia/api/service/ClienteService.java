@@ -1,11 +1,11 @@
 package br.com.salgadosdalucia.api.service;
 
 import br.com.salgadosdalucia.api.dto.ClienteDto;
-import br.com.salgadosdalucia.api.dto.EnderecoDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
+import br.com.salgadosdalucia.api.mapper.ClienteMapper;
+import br.com.salgadosdalucia.api.mapper.EnderecoMapper;
 import br.com.salgadosdalucia.api.model.Cliente;
-import br.com.salgadosdalucia.api.model.Endereco;
 import br.com.salgadosdalucia.api.repositoy.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,7 +23,7 @@ public class ClienteService {
 
     @Transactional(rollbackFor = Exception.class)
     public Cliente cadastrar(ClienteDto dto) {
-        Cliente cliente = mapToEntity(dto);
+        Cliente cliente = ClienteMapper.mapToEntity(dto);
         return clienteRepository.save(cliente);
     }
 
@@ -47,7 +47,7 @@ public class ClienteService {
                 .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
         cliente.setNome(dto.nome());
         cliente.setTelefone(dto.telefone());
-        cliente.setEndereco(mapToEndereco(dto.endereco()));
+        cliente.setEndereco(EnderecoMapper.mapToEndereco(dto.endereco()));
 
         return clienteRepository.save(cliente);
     }
@@ -61,24 +61,6 @@ public class ClienteService {
         }
         cliente.setAtivo(false);
         clienteRepository.save(cliente);
-    }
-
-    private ClienteDto mapToDto(Cliente cliente) {
-        return new ClienteDto(cliente.getNome(), cliente.getTelefone(), mapToEnderecoDto(cliente.getEndereco()));
-    }
-
-    private Cliente mapToEntity(ClienteDto dto) {
-        return new Cliente(null, dto.nome(), dto.telefone(), true, mapToEndereco(dto.endereco()));
-    }
-
-    private Endereco mapToEndereco(EnderecoDto dto) {
-        return new Endereco(dto.logradouro(), dto.numero(), dto.complemento(), dto.cep(),
-                dto.bairro(), dto.cidade(), dto.uf());
-    }
-
-    private EnderecoDto mapToEnderecoDto(Endereco endereo) {
-        return new EnderecoDto(endereo.getLogradouro(), endereo.getNumero(), endereo.getComplemento(),
-                endereo.getCep(), endereo.getBairro(), endereo.getCidade(), endereo.getUf());
     }
 
 }
