@@ -1,14 +1,16 @@
 package br.com.salgadosdalucia.api.dto;
 
-import br.com.salgadosdalucia.api.model.Endereco;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public record ClienteDto(
-        @NotBlank
+        @NotBlank(message = "Nome é obrigatório!")
         String nome,
-        @NotBlank
+        @NotBlank(message = "Telefone é obrigatório!")
         String telefone,
-        @NotBlank
-        Endereco endereco
+        @NotNull
+        @Valid
+        EnderecoDto endereco
 ) {
 }
