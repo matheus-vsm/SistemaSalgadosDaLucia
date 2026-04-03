@@ -13,7 +13,7 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
   h2:
     console:
-      enabled: true
+      enabled: true #para visualizar o console do H2
       path: /h2-console
   flyway:
     enabled: false #O Flyway precisa ficar desabilitado porque os scripts dele são escritos pra sintaxe MySQL e vão quebrar no H2.
