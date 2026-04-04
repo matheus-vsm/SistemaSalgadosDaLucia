@@ -8,9 +8,7 @@ spring:
     hibernate:
       ddl-auto: create-drop #ele cria as tabelas na subida e derruba na descida.
     database-platform: org.hibernate.dialect.H2Dialect
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+
   h2:
     console:
       enabled: true #para visualizar o console do H2

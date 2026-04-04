@@ -47,7 +47,7 @@ public class ClienteService {
                 .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
         cliente.setNome(dto.nome());
         cliente.setTelefone(dto.telefone());
-        cliente.setEndereco(EnderecoMapper.mapToEndereco(dto.endereco()));
+        cliente.setEndereco(EnderecoMapper.mapToEntity(dto.endereco()));
 
         return clienteRepository.save(cliente);
     }
