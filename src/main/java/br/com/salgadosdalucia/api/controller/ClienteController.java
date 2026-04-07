@@ -1,5 +1,6 @@
 package br.com.salgadosdalucia.api.controller;
 
+import br.com.salgadosdalucia.api.dto.AlterarStatusDto;
 import br.com.salgadosdalucia.api.dto.ClienteDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
@@ -58,9 +59,10 @@ public class ClienteController {
         return ResponseEntity.ok(cliente);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> desativarCliente(@PathVariable Long id) throws BadRequestException, NotFoundException {
-        service.desativar(id);
+    @PatchMapping("/atualizar-status/{id}")
+    public ResponseEntity<Void> alterarStatusCliente(@Valid @PathVariable Long id, @RequestBody AlterarStatusDto status)
+            throws BadRequestException, NotFoundException {
+        service.atualizarStatus(id, status);
         return ResponseEntity.noContent().build();
     }
 
