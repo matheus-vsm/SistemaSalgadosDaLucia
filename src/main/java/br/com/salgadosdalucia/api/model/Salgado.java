@@ -4,6 +4,8 @@ import br.com.salgadosdalucia.api.model.enums.Categoria;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "salgados")
 @Getter
@@ -20,8 +22,8 @@ public class Salgado {
     private String descricao;
     @Enumerated(EnumType.STRING)
     private Categoria categoria;
-    private Double precoCentoCongelado;
-    private Double precoCentoProcessado;
+    private BigDecimal precoCentoCongelado;
+    private BigDecimal precoCentoProcessado;
     private boolean ativo;
 
 }

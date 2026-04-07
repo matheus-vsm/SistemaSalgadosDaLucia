@@ -1,0 +1,20 @@
+CREATE TABLE pedidos (
+    id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
+    cliente_id          BIGINT          NOT NULL,
+    usuario_id          BIGINT          NOT NULL,
+    data_pedido         DATE            NOT NULL,
+    data_entrega        DATETIME        NOT NULL,
+    logradouro          VARCHAR(150),
+    numero              VARCHAR(10),
+    complemento         VARCHAR(100),
+    bairro              VARCHAR(100),
+    cep                 VARCHAR(10),
+    cidade              VARCHAR(100),
+    uf                  CHAR(2),
+    status              VARCHAR(20)     NOT NULL,
+    tipo_entrega        VARCHAR(20)     NOT NULL,
+    forma_pagamento     VARCHAR(20)     NOT NULL,
+    valor_total         DECIMAL(10,2)   NOT NULL,
+    CONSTRAINT fk_pedido_cliente FOREIGN KEY (cliente_id) REFERENCES clientes(id),
+    CONSTRAINT fk_pedido_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);

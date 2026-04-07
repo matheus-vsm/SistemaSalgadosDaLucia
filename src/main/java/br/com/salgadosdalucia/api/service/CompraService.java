@@ -4,6 +4,8 @@ import br.com.salgadosdalucia.api.model.Compra;
 import br.com.salgadosdalucia.api.model.ItemCompra;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 public class CompraService {
 
@@ -11,18 +13,18 @@ public class CompraService {
         if (compra == null) return;
 
         if (compra.getItens().isEmpty()) {
-            compra.setValorTotal(0.0);
+            compra.setValorTotal(BigDecimal.ZERO);
             return;
         }
 
         compra.setValorTotal(compra.getItens().stream()
                 .filter(item -> item.getSubTotal() != null)
-                .mapToDouble(ItemCompra::getSubTotal)
-                .sum());
+                .map(ItemCompra::getSubTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add));
     }
 
     private void calcularSubTotal(ItemCompra item) {
-        item.setSubTotal(item.getPrecoUnitario() * item.getQuantidade());
+        item.setSubTotal(item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade())));
     }
 
 }

@@ -9,6 +9,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(of = "id")
 @Builder
 public class Cliente {
 
@@ -17,6 +18,7 @@ public class Cliente {
     private Long id;
     private String nome;
     private String telefone;
+    private boolean ativo;
     @Embedded
     private Endereco endereco;
 

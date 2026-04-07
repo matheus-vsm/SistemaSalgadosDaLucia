@@ -3,6 +3,7 @@ package br.com.salgadosdalucia.api.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class Compra {
     private Long id;
     @OneToMany(mappedBy = "compra")
     private List<ItemCompra> itens;
-    private Double valorTotal;
+    private BigDecimal valorTotal;
     private LocalDate dataCompra;
     private String observacao;
 
