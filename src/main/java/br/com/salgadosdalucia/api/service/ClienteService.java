@@ -1,5 +1,6 @@
 package br.com.salgadosdalucia.api.service;
 
+import br.com.salgadosdalucia.api.dto.AlterarStatusDto;
 import br.com.salgadosdalucia.api.dto.ClienteDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
@@ -49,18 +50,23 @@ public class ClienteService {
         cliente.setTelefone(dto.telefone());
         cliente.setEndereco(EnderecoMapper.mapToEntity(dto.endereco()));
 
-        return clienteRepository.save(cliente);
+        return cliente; // @Transactional faz o save automaticamente no final da transação
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void desativar(Long id) throws BadRequestException, NotFoundException {
+    public void atualizarStatus(Long id, AlterarStatusDto status) throws BadRequestException, NotFoundException {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
-        if (!cliente.isAtivo()) {
-            throw new BadRequestException(String.format("Cliente %s já está desativado.", cliente.getNome()));
+
+        if (cliente.isAtivo() == status.status()) {
+            throw new BadRequestException(
+                    String.format("Cliente %s já está %s.",
+                            cliente.getNome(),
+                            status.status() ? "ativado" : "desativado")
+            );
         }
-        cliente.setAtivo(false);
-        clienteRepository.save(cliente);
+
+        cliente.setAtivo(status.status());
     }
 
 }
