@@ -50,7 +50,7 @@ public class ClienteService {
         cliente.setTelefone(dto.telefone());
         cliente.setEndereco(EnderecoMapper.mapToEntity(dto.endereco()));
 
-        return clienteRepository.save(cliente);
+        return cliente; // @Transactional faz o save automaticamente no final da transação
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -67,7 +67,6 @@ public class ClienteService {
         }
 
         cliente.setAtivo(status.status());
-        clienteRepository.save(cliente);
     }
 
 }
