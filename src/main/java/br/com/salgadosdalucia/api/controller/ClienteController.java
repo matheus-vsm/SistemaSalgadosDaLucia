@@ -29,7 +29,7 @@ public class ClienteController {
 
     @PostMapping
     public ResponseEntity<Cliente> cadastrarCliente(@Valid @RequestBody ClienteDto dto, UriComponentsBuilder uriBuilder) {
-        var cliente = service.cadastrar(dto);
+        Cliente cliente = service.cadastrar(dto);
         URI uri = uriBuilder.path("/clientes/{id}").buildAndExpand(cliente.getId()).toUri();
 
         return ResponseEntity.created(uri).body(cliente);
@@ -43,19 +43,19 @@ public class ClienteController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Cliente> buscarClientePorId(@PathVariable Long id) throws NotFoundException {
-        var cliente = service.buscarPorId(id);
+        Cliente cliente = service.buscarPorId(id);
         return ResponseEntity.ok(cliente);
     }
 
     @GetMapping("/nome/{nome}")
     public ResponseEntity<List<Cliente>> buscarClientePorNome(@PathVariable String nome) {
-        var cliente = service.buscarPorNome(nome);
+        List<Cliente> cliente = service.buscarPorNome(nome);
         return ResponseEntity.ok(cliente);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Cliente> atualizarCliente(@Valid @PathVariable Long id, @RequestBody ClienteDto dto) throws NotFoundException {
-        var cliente = service.atualizar(id, dto);
+        Cliente cliente = service.atualizar(id, dto);
         return ResponseEntity.ok(cliente);
     }
 
