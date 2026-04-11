@@ -2,7 +2,7 @@ package br.com.salgadosdalucia.api.pedido;
 
 import br.com.salgadosdalucia.api.cliente.Cliente;
 import br.com.salgadosdalucia.api.endereco.Endereco;
-import br.com.salgadosdalucia.api.model.Usuario;
+import br.com.salgadosdalucia.api.usuario.Usuario;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -1,6 +1,5 @@
-package br.com.salgadosdalucia.api.model;
+package br.com.salgadosdalucia.api.usuario;
 
-import br.com.salgadosdalucia.api.model.enums.PerfilUsuario;
 import jakarta.persistence.*;
 import lombok.*;
 
