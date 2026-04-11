@@ -1,7 +1,4 @@
-package br.com.salgadosdalucia.api.mapper;
-
-import br.com.salgadosdalucia.api.dto.EnderecoDto;
-import br.com.salgadosdalucia.api.model.Endereco;
+package br.com.salgadosdalucia.api.endereco;
 
 public class EnderecoMapper {
 

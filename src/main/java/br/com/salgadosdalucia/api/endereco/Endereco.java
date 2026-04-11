@@ -1,4 +1,4 @@
-package br.com.salgadosdalucia.api.model;
+package br.com.salgadosdalucia.api.endereco;
 
 import jakarta.persistence.Embeddable;
 import lombok.*;

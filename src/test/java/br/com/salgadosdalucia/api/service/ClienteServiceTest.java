@@ -2,8 +2,8 @@ package br.com.salgadosdalucia.api.service;
 
 import br.com.salgadosdalucia.api.cliente.ClienteDto;
 import br.com.salgadosdalucia.api.cliente.ClienteService;
-import br.com.salgadosdalucia.api.dto.EnderecoDto;
-import br.com.salgadosdalucia.api.mapper.EnderecoMapper;
+import br.com.salgadosdalucia.api.endereco.EnderecoDto;
+import br.com.salgadosdalucia.api.endereco.EnderecoMapper;
 import br.com.salgadosdalucia.api.cliente.Cliente;
 import br.com.salgadosdalucia.api.cliente.ClienteRepository;
 import org.junit.jupiter.api.DisplayName;

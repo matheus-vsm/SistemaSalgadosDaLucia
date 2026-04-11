@@ -3,7 +3,7 @@ package br.com.salgadosdalucia.api.cliente;
 import br.com.salgadosdalucia.api.dto.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
-import br.com.salgadosdalucia.api.mapper.EnderecoMapper;
+import br.com.salgadosdalucia.api.endereco.EnderecoMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
