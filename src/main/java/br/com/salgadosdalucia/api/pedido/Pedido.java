@@ -1,10 +1,8 @@
-package br.com.salgadosdalucia.api.model;
+package br.com.salgadosdalucia.api.pedido;
 
 import br.com.salgadosdalucia.api.cliente.Cliente;
 import br.com.salgadosdalucia.api.endereco.Endereco;
-import br.com.salgadosdalucia.api.model.enums.FormaPagamento;
-import br.com.salgadosdalucia.api.model.enums.StatusPedido;
-import br.com.salgadosdalucia.api.model.enums.TipoEntrega;
+import br.com.salgadosdalucia.api.model.Usuario;
 import jakarta.persistence.*;
 import lombok.*;
 

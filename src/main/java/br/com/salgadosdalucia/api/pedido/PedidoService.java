@@ -1,9 +1,5 @@
-package br.com.salgadosdalucia.api.service;
+package br.com.salgadosdalucia.api.pedido;
 
-import br.com.salgadosdalucia.api.model.ItemPedido;
-import br.com.salgadosdalucia.api.model.Pedido;
-import br.com.salgadosdalucia.api.model.enums.TipoEntrega;
-import br.com.salgadosdalucia.api.model.enums.TipoPreco;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

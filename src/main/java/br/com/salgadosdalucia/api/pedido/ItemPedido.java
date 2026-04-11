@@ -1,6 +1,5 @@
-package br.com.salgadosdalucia.api.model;
+package br.com.salgadosdalucia.api.pedido;
 
-import br.com.salgadosdalucia.api.model.enums.TipoPreco;
 import br.com.salgadosdalucia.api.salgado.Salgado;
 import jakarta.persistence.*;
 import lombok.*;
