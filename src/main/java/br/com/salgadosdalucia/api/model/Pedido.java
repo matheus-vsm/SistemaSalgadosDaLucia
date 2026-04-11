@@ -1,5 +1,6 @@
 package br.com.salgadosdalucia.api.model;
 
+import br.com.salgadosdalucia.api.cliente.Cliente;
 import br.com.salgadosdalucia.api.model.enums.FormaPagamento;
 import br.com.salgadosdalucia.api.model.enums.StatusPedido;
 import br.com.salgadosdalucia.api.model.enums.TipoEntrega;

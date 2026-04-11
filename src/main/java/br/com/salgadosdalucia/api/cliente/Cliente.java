@@ -1,5 +1,6 @@
-package br.com.salgadosdalucia.api.model;
+package br.com.salgadosdalucia.api.cliente;
 
+import br.com.salgadosdalucia.api.model.Endereco;
 import jakarta.persistence.*;
 import lombok.*;
 

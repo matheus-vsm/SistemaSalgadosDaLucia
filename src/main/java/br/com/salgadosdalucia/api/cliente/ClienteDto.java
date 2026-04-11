@@ -1,5 +1,6 @@
-package br.com.salgadosdalucia.api.dto;
+package br.com.salgadosdalucia.api.cliente;
 
+import br.com.salgadosdalucia.api.dto.EnderecoDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

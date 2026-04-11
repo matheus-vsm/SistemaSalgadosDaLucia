@@ -1,6 +1,5 @@
-package br.com.salgadosdalucia.api.repositoy;
+package br.com.salgadosdalucia.api.cliente;
 
-import br.com.salgadosdalucia.api.model.Cliente;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

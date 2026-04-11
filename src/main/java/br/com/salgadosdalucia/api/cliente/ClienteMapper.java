@@ -1,7 +1,6 @@
-package br.com.salgadosdalucia.api.mapper;
+package br.com.salgadosdalucia.api.cliente;
 
-import br.com.salgadosdalucia.api.dto.ClienteDto;
-import br.com.salgadosdalucia.api.model.Cliente;
+import br.com.salgadosdalucia.api.mapper.EnderecoMapper;
 
 public class ClienteMapper {
 
