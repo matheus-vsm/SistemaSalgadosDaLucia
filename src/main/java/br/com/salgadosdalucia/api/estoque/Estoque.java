@@ -1,4 +1,4 @@
-package br.com.salgadosdalucia.api.model;
+package br.com.salgadosdalucia.api.estoque;
 
 import br.com.salgadosdalucia.api.salgado.Salgado;
 import jakarta.persistence.*;
