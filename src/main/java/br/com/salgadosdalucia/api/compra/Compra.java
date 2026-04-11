@@ -1,4 +1,4 @@
-package br.com.salgadosdalucia.api.model;
+package br.com.salgadosdalucia.api.compra;
 
 import jakarta.persistence.*;
 import lombok.*;

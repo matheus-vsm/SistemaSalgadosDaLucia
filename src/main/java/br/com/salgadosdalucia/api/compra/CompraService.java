@@ -1,7 +1,5 @@
-package br.com.salgadosdalucia.api.service;
+package br.com.salgadosdalucia.api.compra;
 
-import br.com.salgadosdalucia.api.model.Compra;
-import br.com.salgadosdalucia.api.model.ItemCompra;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
