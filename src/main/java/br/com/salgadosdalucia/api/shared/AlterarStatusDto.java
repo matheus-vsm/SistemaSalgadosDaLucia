@@ -1,4 +1,4 @@
-package br.com.salgadosdalucia.api.dto;
+package br.com.salgadosdalucia.api.shared;
 
 import jakarta.validation.constraints.NotNull;
 

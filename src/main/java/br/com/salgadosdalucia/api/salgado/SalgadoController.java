@@ -1,6 +1,6 @@
 package br.com.salgadosdalucia.api.salgado;
 
-import br.com.salgadosdalucia.api.dto.AlterarStatusDto;
+import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
 import jakarta.validation.Valid;
