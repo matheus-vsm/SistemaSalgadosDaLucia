@@ -1,4 +1,4 @@
-package br.com.salgadosdalucia.api.model.enums;
+package br.com.salgadosdalucia.api.salgado;
 
 public enum Categoria {
     FRITO,

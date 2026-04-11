@@ -1,7 +1,4 @@
-package br.com.salgadosdalucia.api.mapper;
-
-import br.com.salgadosdalucia.api.dto.SalgadoDto;
-import br.com.salgadosdalucia.api.model.Salgado;
+package br.com.salgadosdalucia.api.salgado;
 
 public class SalgadoMapper {
 

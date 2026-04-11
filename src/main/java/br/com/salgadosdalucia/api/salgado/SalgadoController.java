@@ -1,11 +1,8 @@
-package br.com.salgadosdalucia.api.controller;
+package br.com.salgadosdalucia.api.salgado;
 
 import br.com.salgadosdalucia.api.dto.AlterarStatusDto;
-import br.com.salgadosdalucia.api.dto.SalgadoDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
-import br.com.salgadosdalucia.api.model.Salgado;
-import br.com.salgadosdalucia.api.service.SalgadoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

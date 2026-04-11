@@ -1,6 +1,5 @@
-package br.com.salgadosdalucia.api.dto;
+package br.com.salgadosdalucia.api.salgado;
 
-import br.com.salgadosdalucia.api.model.enums.Categoria;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
