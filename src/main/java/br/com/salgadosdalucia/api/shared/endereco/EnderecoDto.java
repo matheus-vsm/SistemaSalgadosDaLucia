@@ -1,4 +1,4 @@
-package br.com.salgadosdalucia.api.endereco;
+package br.com.salgadosdalucia.api.shared.endereco;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

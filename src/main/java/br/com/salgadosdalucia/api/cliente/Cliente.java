@@ -1,6 +1,6 @@
 package br.com.salgadosdalucia.api.cliente;
 
-import br.com.salgadosdalucia.api.endereco.Endereco;
+import br.com.salgadosdalucia.api.shared.endereco.Endereco;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -1,7 +1,7 @@
 package br.com.salgadosdalucia.api.controller;
 
 import br.com.salgadosdalucia.api.cliente.*;
-import br.com.salgadosdalucia.api.endereco.EnderecoDto;
+import br.com.salgadosdalucia.api.shared.endereco.EnderecoDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

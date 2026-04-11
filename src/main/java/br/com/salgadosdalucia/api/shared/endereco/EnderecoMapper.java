@@ -1,4 +1,4 @@
-package br.com.salgadosdalucia.api.endereco;
+package br.com.salgadosdalucia.api.shared.endereco;
 
 public class EnderecoMapper {
 
