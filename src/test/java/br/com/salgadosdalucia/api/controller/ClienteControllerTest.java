@@ -1,10 +1,7 @@
 package br.com.salgadosdalucia.api.controller;
 
-import br.com.salgadosdalucia.api.dto.ClienteDto;
-import br.com.salgadosdalucia.api.dto.EnderecoDto;
-import br.com.salgadosdalucia.api.mapper.ClienteMapper;
-import br.com.salgadosdalucia.api.model.Cliente;
-import br.com.salgadosdalucia.api.service.ClienteService;
+import br.com.salgadosdalucia.api.cliente.*;
+import br.com.salgadosdalucia.api.shared.endereco.EnderecoDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.context.annotation.Bean;
