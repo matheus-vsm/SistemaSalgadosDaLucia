@@ -30,7 +30,7 @@ public class Pedido {
 
     @OneToMany(mappedBy = "pedido",
             cascade = CascadeType.ALL, // propaga TODAS as operações (salvar, atualizar, deletar, etc.) do Pedido para ItemPedido automaticamente
-            orphanRemoval = true) // // remove do banco qualquer ItemPedido que for removido da lista "itens" do Pedido
+            orphanRemoval = true) // remove do banco qualquer ItemPedido que for removido da lista "itens" do Pedido
     private List<ItemPedido> itens;
 
     @Embedded
@@ -55,7 +55,7 @@ public class Pedido {
 
     @PrePersist // É chamado antes de salvar um objeto novo no banco
     public void gerarData() {
-        this.dataPedido = LocalDate.now();
+        if (this.dataPedido == null) this.dataPedido = LocalDate.now();
     }
 
 }
