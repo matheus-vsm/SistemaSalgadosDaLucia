@@ -14,11 +14,14 @@ import br.com.salgadosdalucia.api.usuario.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,9 +91,31 @@ public class PedidoService {
         return pedidoRepository.findAll(paginacao).map(PedidoMapper::mapToPedidoListagemDto);
     }
 
-    public Page<PedidoListagemDto> listarTodosFiltrado(StatusPedido statusPedido, Pageable paginacao) {
-        if (statusPedido == null) statusPedido = StatusPedido.EM_ANDAMENTO;
-        return pedidoRepository.findAllByStatus(statusPedido, paginacao).map(PedidoMapper::mapToPedidoListagemDto);
+    public Page<PedidoListagemDto> listarTodosFiltrado(StatusPedido statusPedido,
+                                                       Long clienteId,
+                                                       String nomeCliente,
+                                                       LocalDate dataPedido,
+                                                       LocalDateTime dataEntrega,
+                                                       TipoEntrega tipoEntrega,
+                                                       FormaPagamento formaPagamento,
+                                                       Long usuarioResponsavelId,
+                                                       String nomeUsuarioResponsavel,
+                                                       Pageable paginacao) {
+        LocalDateTime inicioEntrega = null;
+        LocalDateTime fimEntrega = null;
+
+        if (dataEntrega != null) {
+            inicioEntrega = dataEntrega.toLocalDate().atStartOfDay();
+            fimEntrega = dataEntrega.toLocalDate().atTime(23, 59, 59);
+        }
+
+        return pedidoRepository.findWithFiltros(statusPedido, clienteId, nomeCliente, dataPedido,
+                inicioEntrega, fimEntrega, tipoEntrega, formaPagamento, usuarioResponsavelId,
+                nomeUsuarioResponsavel, paginacao).map(PedidoMapper::mapToPedidoListagemDto);
+    }
+
+    public PedidoListagemDto buscarPorId(Long id) throws BadRequestException {
+        return PedidoMapper.mapToPedidoListagemDto(pedidoRepository.findById(id).orElseThrow(() -> new BadRequestException("Pedido não encontrado com ID: " + id)));
     }
 
     private void calcularValorTotal(Pedido pedido) {
