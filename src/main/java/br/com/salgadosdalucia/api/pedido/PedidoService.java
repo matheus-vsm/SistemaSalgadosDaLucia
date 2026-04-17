@@ -3,16 +3,19 @@ package br.com.salgadosdalucia.api.pedido;
 import br.com.salgadosdalucia.api.cliente.Cliente;
 import br.com.salgadosdalucia.api.cliente.ClienteRepository;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
+import br.com.salgadosdalucia.api.pedido.dto.ItemPedidoDto;
+import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoRequest;
+import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoResponse;
 import br.com.salgadosdalucia.api.salgado.Salgado;
 import br.com.salgadosdalucia.api.salgado.SalgadoRepository;
 import br.com.salgadosdalucia.api.usuario.Usuario;
 import br.com.salgadosdalucia.api.usuario.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.cache.spi.support.AbstractReadWriteAccess;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,11 +32,17 @@ public class PedidoService {
     private final UsuarioRepository usuarioRepository;
 
     @Transactional(rollbackFor = Exception.class)
-    public PedidoResponse cadastrar(PedidoRequest request) throws BadRequestException {
+    public CriacaoPedidoResponse cadastrar(CriacaoPedidoRequest request) throws BadRequestException {
         Cliente cliente = clienteRepository.findById(request.clienteId())
                 .orElseThrow(() -> new BadRequestException("Cliente não encontrado com ID: " + request.clienteId()));
         Usuario usuario = usuarioRepository.findById(request.usuarioResponsavelId())
                 .orElseThrow(() -> new BadRequestException("Usuário não encontrado com ID: " + request.usuarioResponsavelId()));
+        if (!cliente.isAtivo()) {
+            throw new BadRequestException("Cliente com ID " + request.clienteId() + " está inativo e não pode realizar pedidos.");
+        }
+        if (!usuario.isAtivo()) {
+            throw new BadRequestException("Usuário com ID " + request.usuarioResponsavelId() + " está inativo e não pode ser responsável por pedidos.");
+        }
 
         List<ItemPedido> itens = new ArrayList<>();
         Pedido pedido = Pedido.builder()
@@ -49,12 +58,17 @@ public class PedidoService {
         for (ItemPedidoDto item : request.itens()) {
             Salgado salgado = salgadoRepository.findById(item.salgadoId())
                     .orElseThrow(() -> new BadRequestException("Salgado não encontrado com ID: " + item.salgadoId()));
+            if (!salgado.isAtivo()) {
+                throw new BadRequestException("Salgado com ID " + item.salgadoId() + " está inativo e não pode ser adicionado ao pedido.");
+            }
+
             ItemPedido itemPedido = new ItemPedido();
             itemPedido.setSalgado(salgado);
             itemPedido.setQuantidade(item.quantidade());
             itemPedido.setTipoPreco(item.tipoPreco());
             itemPedido.setPedido(pedido); // Associa o ItemPedido ao Pedido
             calcularPrecos(itemPedido);
+
             itens.add(itemPedido);
         }
 
@@ -64,7 +78,7 @@ public class PedidoService {
 
         pedidoRepository.save(pedido);
 
-        return new PedidoResponse(pedido);
+        return PedidoMapper.mapToCriacaoPedidoResponse(pedido);
     }
 
     private void calcularValorTotal(Pedido pedido) {
@@ -78,7 +92,7 @@ public class PedidoService {
         pedido.setValorTotal(pedido.getItens().stream()
                 .filter(item -> item.getSubTotal() != null)
                 .map(ItemPedido::getSubTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add));
+                .reduce(BigDecimal.ZERO, BigDecimal::add)); // começa com 0 e vai somando todos os valores
     }
 
     private void defineEnderecoEntrega(Pedido pedido) {
@@ -99,7 +113,10 @@ public class PedidoService {
             precoCento = item.getSalgado().getPrecoCentoProcessado();
         }
 
-        item.setPrecoUnitario(precoCento.divide(BigDecimal.valueOf(100))); // = precoCento / 100.0
+        item.setPrecoUnitario(
+                precoCento.divide(BigDecimal.valueOf(100),
+                        2, // casas decimais
+                        RoundingMode.HALF_UP)); // divide por 100 e arredonda para normalmente (0.5 pra cima)
         item.setSubTotal(item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade()))); // = item.getPrecoUnitario() * item.getQuantidade()
     }
 

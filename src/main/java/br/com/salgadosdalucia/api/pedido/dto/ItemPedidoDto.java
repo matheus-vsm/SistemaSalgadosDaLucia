@@ -1,5 +1,6 @@
-package br.com.salgadosdalucia.api.pedido;
+package br.com.salgadosdalucia.api.pedido.dto;
 
+import br.com.salgadosdalucia.api.pedido.TipoPreco;
 import jakarta.validation.constraints.NotNull;
 
 public record ItemPedidoDto(

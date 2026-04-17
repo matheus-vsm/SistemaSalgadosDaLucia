@@ -1,5 +1,7 @@
-package br.com.salgadosdalucia.api.pedido;
+package br.com.salgadosdalucia.api.pedido.dto;
 
+import br.com.salgadosdalucia.api.pedido.FormaPagamento;
+import br.com.salgadosdalucia.api.pedido.TipoEntrega;
 import br.com.salgadosdalucia.api.shared.endereco.EnderecoDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Future;
@@ -10,7 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record PedidoRequest(
+public record CriacaoPedidoRequest(
         @NotNull(message = "ID no Cliente é obrigatório!")
         Long clienteId,
         @NotEmpty(message = "É necessário adicionar pelo menos um item ao pedido!")

@@ -1,4 +1,4 @@
-package br.com.salgadosdalucia.api.cliente;
+package br.com.salgadosdalucia.api.cliente.dto;
 
 import br.com.salgadosdalucia.api.shared.endereco.EnderecoDto;
 import jakarta.validation.Valid;
