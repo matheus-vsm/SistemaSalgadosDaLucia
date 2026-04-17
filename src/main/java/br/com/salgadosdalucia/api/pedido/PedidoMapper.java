@@ -2,6 +2,8 @@ package br.com.salgadosdalucia.api.pedido;
 
 import br.com.salgadosdalucia.api.cliente.ClienteMapper;
 import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoResponse;
+import br.com.salgadosdalucia.api.pedido.dto.PedidoListagemDto;
+import br.com.salgadosdalucia.api.shared.endereco.EnderecoMapper;
 import br.com.salgadosdalucia.api.usuario.dto.UsuarioMapper;
 
 public class PedidoMapper {
@@ -22,4 +24,19 @@ public class PedidoMapper {
         );
     }
 
+    public static PedidoListagemDto mapToPedidoListagemDto(Pedido pedido) {
+        return new PedidoListagemDto(
+                pedido.getId(),
+                ClienteMapper.mapToClientePedido(pedido.getCliente()),
+                pedido.getStatus(),
+                ItemPedidoMapper.mapToItemPedidoResponse(pedido.getItens()),
+                pedido.getValorTotal(),
+                pedido.getDataPedido(),
+                pedido.getDataEntrega(),
+                pedido.getTipoEntrega(),
+                EnderecoMapper.mapToDto(pedido.getEnderecoEntrega()),
+                pedido.getFormaPagamento(),
+                UsuarioMapper.mapToUsuarioPedidoDto(pedido.getUsuarioResponsavel())
+        );
+    }
 }

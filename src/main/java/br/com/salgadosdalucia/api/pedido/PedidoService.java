@@ -6,11 +6,14 @@ import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.pedido.dto.ItemPedidoDto;
 import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoRequest;
 import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoResponse;
+import br.com.salgadosdalucia.api.pedido.dto.PedidoListagemDto;
 import br.com.salgadosdalucia.api.salgado.Salgado;
 import br.com.salgadosdalucia.api.salgado.SalgadoRepository;
 import br.com.salgadosdalucia.api.usuario.Usuario;
 import br.com.salgadosdalucia.api.usuario.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,6 +82,10 @@ public class PedidoService {
         pedidoRepository.save(pedido);
 
         return PedidoMapper.mapToCriacaoPedidoResponse(pedido);
+    }
+
+    public Page<PedidoListagemDto> listarTodos(Pageable paginacao) {
+            return pedidoRepository.findAll(paginacao).map(PedidoMapper::mapToPedidoListagemDto);
     }
 
     private void calcularValorTotal(Pedido pedido) {
