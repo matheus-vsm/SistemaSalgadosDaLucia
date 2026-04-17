@@ -1,6 +1,7 @@
 package br.com.salgadosdalucia.api.pedido;
 
 import br.com.salgadosdalucia.api.exception.BadRequestException;
+import br.com.salgadosdalucia.api.pedido.dto.AlterarStatusPedidoDto;
 import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoRequest;
 import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoResponse;
 import br.com.salgadosdalucia.api.pedido.dto.PedidoListagemDto;
@@ -62,8 +63,20 @@ public class PedidoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PedidoListagemDto> buscarPorId(@PathVariable Long id) throws BadRequestException {
-        var pedido = service.buscarPorId(id);
+        PedidoListagemDto pedido = service.buscarPorId(id);
         return ResponseEntity.ok(pedido);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CriacaoPedidoResponse> atualizar(@PathVariable Long id, @RequestBody @Valid CriacaoPedidoRequest request) throws BadRequestException {
+        CriacaoPedidoResponse pedido = service.atualizar(id, request);
+        return ResponseEntity.ok(pedido);
+    }
+
+    @PatchMapping("{id}/status")
+    public ResponseEntity<Void> alterarStatus(@PathVariable Long id, @RequestBody @Valid AlterarStatusPedidoDto status) throws BadRequestException {
+        service.alterarStatus(id, status);
+        return ResponseEntity.noContent().build();
     }
 
 }

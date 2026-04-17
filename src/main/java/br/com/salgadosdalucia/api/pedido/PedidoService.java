@@ -3,18 +3,15 @@ package br.com.salgadosdalucia.api.pedido;
 import br.com.salgadosdalucia.api.cliente.Cliente;
 import br.com.salgadosdalucia.api.cliente.ClienteRepository;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
-import br.com.salgadosdalucia.api.pedido.dto.ItemPedidoDto;
-import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoRequest;
-import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoResponse;
-import br.com.salgadosdalucia.api.pedido.dto.PedidoListagemDto;
+import br.com.salgadosdalucia.api.pedido.dto.*;
 import br.com.salgadosdalucia.api.salgado.Salgado;
 import br.com.salgadosdalucia.api.salgado.SalgadoRepository;
+import br.com.salgadosdalucia.api.shared.endereco.EnderecoMapper;
 import br.com.salgadosdalucia.api.usuario.Usuario;
 import br.com.salgadosdalucia.api.usuario.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -115,7 +112,56 @@ public class PedidoService {
     }
 
     public PedidoListagemDto buscarPorId(Long id) throws BadRequestException {
-        return PedidoMapper.mapToPedidoListagemDto(pedidoRepository.findById(id).orElseThrow(() -> new BadRequestException("Pedido não encontrado com ID: " + id)));
+        return PedidoMapper.mapToPedidoListagemDto(pedidoRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Pedido não encontrado com ID: " + id)));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public CriacaoPedidoResponse atualizar(Long id, CriacaoPedidoRequest request) throws BadRequestException {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Pedido não encontrado com ID: " + id));
+
+        if (pedido.getStatus() != StatusPedido.EM_ANDAMENTO) {
+            throw new BadRequestException("Somente pedidos com status EM_ANDAMENTO podem ser atualizados. Pedido ID " + id + " tem status " + pedido.getStatus());
+        }
+
+        Cliente cliente = clienteRepository.findById(request.clienteId())
+                .orElseThrow(() -> new BadRequestException("Cliente não encontrado com ID: " + request.clienteId()));
+        Usuario usuario = usuarioRepository.findById(request.usuarioResponsavelId())
+                .orElseThrow(() -> new BadRequestException("Usuário não encontrado com ID: " + request.usuarioResponsavelId()));
+        if (!cliente.isAtivo()) {
+            throw new BadRequestException("Cliente com ID " + request.clienteId() + " está inativo e não pode realizar pedidos.");
+        }
+        if (!usuario.isAtivo()) {
+            throw new BadRequestException("Usuário com ID " + request.usuarioResponsavelId() + " está inativo e não pode ser responsável por pedidos.");
+        }
+
+        pedido.setCliente(cliente);
+        pedido.setDataEntrega(request.dataEntrega());
+        pedido.setDataPedido(request.dataPedido());
+        pedido.setTipoEntrega(request.tipoEntrega());
+        pedido.setEnderecoEntrega(EnderecoMapper.mapToEntity(request.enderecoEntrega()));
+        pedido.setFormaPagamento(request.formaPagamento());
+        pedido.setUsuarioResponsavel(usuario);
+        atualizarItensPedido(pedido, request.itens());
+
+        calcularValorTotal(pedido);
+        defineEnderecoEntrega(pedido);
+
+        pedidoRepository.save(pedido);
+
+        return PedidoMapper.mapToCriacaoPedidoResponse(pedido);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void alterarStatus(Long id, AlterarStatusPedidoDto status) throws BadRequestException {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Pedido não encontrado com ID: " + id));
+        if (pedido.getStatus() == status.status()) {
+            throw new BadRequestException("O pedido já está com o status " + status.status());
+        }
+
+        pedido.setStatus(status.status());
     }
 
     private void calcularValorTotal(Pedido pedido) {
@@ -155,6 +201,32 @@ public class PedidoService {
                         2, // casas decimais
                         RoundingMode.HALF_UP)); // divide por 100 e arredonda para normalmente (0.5 pra cima)
         item.setSubTotal(item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade()))); // = item.getPrecoUnitario() * item.getQuantidade()
+    }
+
+    private void atualizarItensPedido(Pedido pedido, List<ItemPedidoDto> itensDto) throws BadRequestException {
+        pedido.getItens().clear(); // remove antigos
+
+        List<ItemPedido> novosItens = new ArrayList<>();
+
+        for (ItemPedidoDto item : itensDto) {
+            Salgado salgado = salgadoRepository.findById(item.salgadoId())
+                    .orElseThrow(() -> new BadRequestException("Salgado não encontrado com ID: " + item.salgadoId()));
+            if (!salgado.isAtivo()) {
+                throw new BadRequestException("Salgado com ID " + item.salgadoId() + " está inativo e não pode ser adicionado ao pedido.");
+            }
+
+            ItemPedido itemPedido = new ItemPedido();
+            itemPedido.setPedido(pedido);
+            itemPedido.setSalgado(salgado);
+            itemPedido.setQuantidade(item.quantidade());
+            itemPedido.setTipoPreco(item.tipoPreco());
+
+            calcularPrecos(itemPedido);
+
+            novosItens.add(itemPedido);
+        }
+
+        pedido.getItens().addAll(novosItens);
     }
 
 }
