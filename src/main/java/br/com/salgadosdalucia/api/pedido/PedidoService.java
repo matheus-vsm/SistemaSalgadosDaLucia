@@ -3,6 +3,8 @@ package br.com.salgadosdalucia.api.pedido;
 import br.com.salgadosdalucia.api.cliente.Cliente;
 import br.com.salgadosdalucia.api.cliente.ClienteRepository;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
+import br.com.salgadosdalucia.api.exception.BusinessException;
+import br.com.salgadosdalucia.api.exception.NotFoundException;
 import br.com.salgadosdalucia.api.pedido.dto.*;
 import br.com.salgadosdalucia.api.salgado.Salgado;
 import br.com.salgadosdalucia.api.salgado.SalgadoRepository;
@@ -35,16 +37,16 @@ public class PedidoService {
     private final UsuarioRepository usuarioRepository;
 
     @Transactional(rollbackFor = Exception.class)
-    public CriacaoPedidoResponse cadastrar(CriacaoPedidoRequest request) throws BadRequestException {
+    public CriacaoPedidoResponse cadastrar(CriacaoPedidoRequest request) throws NotFoundException {
         Cliente cliente = clienteRepository.findById(request.clienteId())
-                .orElseThrow(() -> new BadRequestException("Cliente não encontrado com ID: " + request.clienteId()));
+                .orElseThrow(() -> new NotFoundException("Cliente não encontrado com ID: " + request.clienteId()));
         Usuario usuario = usuarioRepository.findById(request.usuarioResponsavelId())
-                .orElseThrow(() -> new BadRequestException("Usuário não encontrado com ID: " + request.usuarioResponsavelId()));
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado com ID: " + request.usuarioResponsavelId()));
         if (!cliente.isAtivo()) {
-            throw new BadRequestException("Cliente com ID " + request.clienteId() + " está inativo e não pode realizar pedidos.");
+            throw new BusinessException("Cliente com ID " + request.clienteId() + " está inativo e não pode realizar pedidos.");
         }
         if (!usuario.isAtivo()) {
-            throw new BadRequestException("Usuário com ID " + request.usuarioResponsavelId() + " está inativo e não pode ser responsável por pedidos.");
+            throw new BusinessException("Usuário com ID " + request.usuarioResponsavelId() + " está inativo e não pode ser responsável por pedidos.");
         }
 
         List<ItemPedido> itens = new ArrayList<>();
@@ -60,9 +62,9 @@ public class PedidoService {
 
         for (ItemPedidoDto item : request.itens()) {
             Salgado salgado = salgadoRepository.findById(item.salgadoId())
-                    .orElseThrow(() -> new BadRequestException("Salgado não encontrado com ID: " + item.salgadoId()));
+                    .orElseThrow(() -> new NotFoundException("Salgado não encontrado com ID: " + item.salgadoId()));
             if (!salgado.isAtivo()) {
-                throw new BadRequestException("Salgado com ID " + item.salgadoId() + " está inativo e não pode ser adicionado ao pedido.");
+                throw new BusinessException("Salgado com ID " + item.salgadoId() + " está inativo e não pode ser adicionado ao pedido.");
             }
 
             ItemPedido itemPedido = new ItemPedido();
@@ -111,29 +113,29 @@ public class PedidoService {
                 nomeUsuarioResponsavel, paginacao).map(PedidoMapper::mapToPedidoListagemDto);
     }
 
-    public PedidoListagemDto buscarPorId(Long id) throws BadRequestException {
+    public PedidoListagemDto buscarPorId(Long id) throws NotFoundException {
         return PedidoMapper.mapToPedidoListagemDto(pedidoRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Pedido não encontrado com ID: " + id)));
+                .orElseThrow(() -> new NotFoundException("Pedido não encontrado com ID: " + id)));
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public CriacaoPedidoResponse atualizar(Long id, CriacaoPedidoRequest request) throws BadRequestException {
+    public CriacaoPedidoResponse atualizar(Long id, CriacaoPedidoRequest request) throws BadRequestException, NotFoundException {
         Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Pedido não encontrado com ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Pedido não encontrado com ID: " + id));
 
         if (pedido.getStatus() != StatusPedido.EM_ANDAMENTO) {
-            throw new BadRequestException("Somente pedidos com status EM_ANDAMENTO podem ser atualizados. Pedido ID " + id + " tem status " + pedido.getStatus());
+            throw new BusinessException("Somente pedidos com status EM_ANDAMENTO podem ser atualizados. Pedido ID " + id + " tem status " + pedido.getStatus());
         }
 
         Cliente cliente = clienteRepository.findById(request.clienteId())
-                .orElseThrow(() -> new BadRequestException("Cliente não encontrado com ID: " + request.clienteId()));
+                .orElseThrow(() -> new NotFoundException("Cliente não encontrado com ID: " + request.clienteId()));
         Usuario usuario = usuarioRepository.findById(request.usuarioResponsavelId())
-                .orElseThrow(() -> new BadRequestException("Usuário não encontrado com ID: " + request.usuarioResponsavelId()));
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado com ID: " + request.usuarioResponsavelId()));
         if (!cliente.isAtivo()) {
-            throw new BadRequestException("Cliente com ID " + request.clienteId() + " está inativo e não pode realizar pedidos.");
+            throw new BusinessException("Cliente com ID " + request.clienteId() + " está inativo e não pode realizar pedidos.");
         }
         if (!usuario.isAtivo()) {
-            throw new BadRequestException("Usuário com ID " + request.usuarioResponsavelId() + " está inativo e não pode ser responsável por pedidos.");
+            throw new BusinessException("Usuário com ID " + request.usuarioResponsavelId() + " está inativo e não pode ser responsável por pedidos.");
         }
 
         pedido.setCliente(cliente);
@@ -154,11 +156,11 @@ public class PedidoService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void alterarStatus(Long id, AlterarStatusPedidoDto status) throws BadRequestException {
+    public void alterarStatus(Long id, AlterarStatusPedidoDto status) throws NotFoundException {
         Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Pedido não encontrado com ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Pedido não encontrado com ID: " + id));
         if (pedido.getStatus() == status.status()) {
-            throw new BadRequestException("O pedido já está com o status " + status.status());
+            throw new BusinessException("O pedido já está com o status " + status.status());
         }
 
         pedido.setStatus(status.status());
@@ -203,16 +205,16 @@ public class PedidoService {
         item.setSubTotal(item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade()))); // = item.getPrecoUnitario() * item.getQuantidade()
     }
 
-    private void atualizarItensPedido(Pedido pedido, List<ItemPedidoDto> itensDto) throws BadRequestException {
+    private void atualizarItensPedido(Pedido pedido, List<ItemPedidoDto> itensDto) throws NotFoundException {
         pedido.getItens().clear(); // remove antigos
 
         List<ItemPedido> novosItens = new ArrayList<>();
 
         for (ItemPedidoDto item : itensDto) {
             Salgado salgado = salgadoRepository.findById(item.salgadoId())
-                    .orElseThrow(() -> new BadRequestException("Salgado não encontrado com ID: " + item.salgadoId()));
+                    .orElseThrow(() -> new NotFoundException("Salgado não encontrado com ID: " + item.salgadoId()));
             if (!salgado.isAtivo()) {
-                throw new BadRequestException("Salgado com ID " + item.salgadoId() + " está inativo e não pode ser adicionado ao pedido.");
+                throw new BusinessException("Salgado com ID " + item.salgadoId() + " está inativo e não pode ser adicionado ao pedido.");
             }
 
             ItemPedido itemPedido = new ItemPedido();

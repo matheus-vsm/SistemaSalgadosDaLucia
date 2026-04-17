@@ -1,6 +1,7 @@
 package br.com.salgadosdalucia.api.cliente;
 
 import br.com.salgadosdalucia.api.cliente.dto.ClienteDto;
+import br.com.salgadosdalucia.api.exception.BusinessException;
 import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
@@ -51,12 +52,12 @@ public class ClienteService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void atualizarStatus(Long id, AlterarStatusDto status) throws BadRequestException, NotFoundException {
+    public void atualizarStatus(Long id, AlterarStatusDto status) throws NotFoundException {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
 
         if (cliente.isAtivo() == status.status()) {
-            throw new BadRequestException(
+            throw new BusinessException(
                     String.format("Cliente %s já está %s.",
                             cliente.getNome(),
                             status.status() ? "ativado" : "desativado")

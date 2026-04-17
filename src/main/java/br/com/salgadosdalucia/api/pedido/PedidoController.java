@@ -1,6 +1,7 @@
 package br.com.salgadosdalucia.api.pedido;
 
 import br.com.salgadosdalucia.api.exception.BadRequestException;
+import br.com.salgadosdalucia.api.exception.NotFoundException;
 import br.com.salgadosdalucia.api.pedido.dto.AlterarStatusPedidoDto;
 import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoRequest;
 import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoResponse;
@@ -30,7 +31,7 @@ public class PedidoController {
 
     @PostMapping
     public ResponseEntity<CriacaoPedidoResponse> cadastrarPedido(@RequestBody @Valid CriacaoPedidoRequest request,
-                                                                 UriComponentsBuilder uriBuilder) throws BadRequestException {
+                                                                 UriComponentsBuilder uriBuilder) throws NotFoundException {
         CriacaoPedidoResponse pedido = service.cadastrar(request);
         URI uri = uriBuilder.path("/pedidos/{id}").buildAndExpand(pedido.id()).toUri();
         return ResponseEntity.created(uri).body(pedido);
@@ -62,19 +63,19 @@ public class PedidoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PedidoListagemDto> buscarPorId(@PathVariable Long id) throws BadRequestException {
+    public ResponseEntity<PedidoListagemDto> buscarPorId(@PathVariable Long id) throws NotFoundException {
         PedidoListagemDto pedido = service.buscarPorId(id);
         return ResponseEntity.ok(pedido);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CriacaoPedidoResponse> atualizar(@PathVariable Long id, @RequestBody @Valid CriacaoPedidoRequest request) throws BadRequestException {
+    public ResponseEntity<CriacaoPedidoResponse> atualizar(@PathVariable Long id, @RequestBody @Valid CriacaoPedidoRequest request) throws BadRequestException, NotFoundException {
         CriacaoPedidoResponse pedido = service.atualizar(id, request);
         return ResponseEntity.ok(pedido);
     }
 
     @PatchMapping("{id}/status")
-    public ResponseEntity<Void> alterarStatus(@PathVariable Long id, @RequestBody @Valid AlterarStatusPedidoDto status) throws BadRequestException {
+    public ResponseEntity<Void> alterarStatus(@PathVariable Long id, @RequestBody @Valid AlterarStatusPedidoDto status) throws NotFoundException {
         service.alterarStatus(id, status);
         return ResponseEntity.noContent().build();
     }

@@ -59,7 +59,7 @@ public class ClienteController {
 
     @PatchMapping("/atualizar-status/{id}")
     public ResponseEntity<Void> alterarStatusCliente(@Valid @PathVariable Long id, @RequestBody AlterarStatusDto status)
-            throws BadRequestException, NotFoundException {
+            throws NotFoundException {
         service.atualizarStatus(id, status);
         return ResponseEntity.noContent().build();
     }
