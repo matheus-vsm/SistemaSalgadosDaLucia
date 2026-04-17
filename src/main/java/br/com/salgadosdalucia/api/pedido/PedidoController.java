@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/pedidos")
@@ -40,5 +39,15 @@ public class PedidoController {
         var page = service.listarTodos(paginacao);
         return ResponseEntity.ok(page);
     }
+
+    @GetMapping("/filtro")
+    public ResponseEntity<Page<PedidoListagemDto>> listarTodosFiltrado(@RequestParam(required = false) StatusPedido statusPedido,
+                                                                       @PageableDefault(size = 10, sort = {"dataEntrega"},
+                                                                               direction = Sort.Direction.ASC) Pageable paginacao) {
+        var page = service.listarTodosFiltrado(statusPedido, paginacao);
+        return ResponseEntity.ok(page);
+    }
+
+
 
 }

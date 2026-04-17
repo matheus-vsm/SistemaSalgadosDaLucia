@@ -85,7 +85,12 @@ public class PedidoService {
     }
 
     public Page<PedidoListagemDto> listarTodos(Pageable paginacao) {
-            return pedidoRepository.findAll(paginacao).map(PedidoMapper::mapToPedidoListagemDto);
+        return pedidoRepository.findAll(paginacao).map(PedidoMapper::mapToPedidoListagemDto);
+    }
+
+    public Page<PedidoListagemDto> listarTodosFiltrado(StatusPedido statusPedido, Pageable paginacao) {
+        if (statusPedido == null) statusPedido = StatusPedido.EM_ANDAMENTO;
+        return pedidoRepository.findAllByStatus(statusPedido, paginacao).map(PedidoMapper::mapToPedidoListagemDto);
     }
 
     private void calcularValorTotal(Pedido pedido) {
