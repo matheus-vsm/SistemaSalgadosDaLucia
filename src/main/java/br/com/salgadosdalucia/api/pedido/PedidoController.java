@@ -25,9 +25,9 @@ public class PedidoController {
     private final PedidoService service;
 
     @PostMapping
-    public ResponseEntity<CriacaoPedidoResponse> cadastrarPedido(@RequestBody @Valid CriacaoPedidoRequest request,
+    public ResponseEntity<CriacaoPedidoResponse> registrarPedido(@RequestBody @Valid CriacaoPedidoRequest request,
                                                                  UriComponentsBuilder uriBuilder) throws NotFoundException {
-        CriacaoPedidoResponse pedido = service.cadastrar(request);
+        CriacaoPedidoResponse pedido = service.registrar(request);
         URI uri = uriBuilder.path("/pedidos/{id}").buildAndExpand(pedido.id()).toUri();
         return ResponseEntity.created(uri).body(pedido);
     }
