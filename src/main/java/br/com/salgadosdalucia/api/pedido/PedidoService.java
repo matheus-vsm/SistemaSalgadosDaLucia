@@ -2,7 +2,6 @@ package br.com.salgadosdalucia.api.pedido;
 
 import br.com.salgadosdalucia.api.cliente.Cliente;
 import br.com.salgadosdalucia.api.cliente.ClienteRepository;
-import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.BusinessException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
 import br.com.salgadosdalucia.api.pedido.dto.*;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -86,31 +84,19 @@ public class PedidoService {
         return PedidoMapper.mapToCriacaoPedidoResponse(pedido);
     }
 
-    public Page<PedidoListagemDto> listarTodos(Pageable paginacao) {
-        return pedidoRepository.findAll(paginacao).map(PedidoMapper::mapToPedidoListagemDto);
-    }
-
-    public Page<PedidoListagemDto> listarTodosFiltrado(StatusPedido statusPedido,
-                                                       Long clienteId,
-                                                       String nomeCliente,
-                                                       LocalDate dataPedido,
-                                                       LocalDateTime dataEntrega,
-                                                       TipoEntrega tipoEntrega,
-                                                       FormaPagamento formaPagamento,
-                                                       Long usuarioResponsavelId,
-                                                       String nomeUsuarioResponsavel,
-                                                       Pageable paginacao) {
+    public Page<PedidoListagemDto> listarComFiltro(PedidoFiltroDto filtro, Pageable paginacao) {
         LocalDateTime inicioEntrega = null;
         LocalDateTime fimEntrega = null;
 
-        if (dataEntrega != null) {
-            inicioEntrega = dataEntrega.toLocalDate().atStartOfDay();
-            fimEntrega = dataEntrega.toLocalDate().atTime(23, 59, 59);
+        if (filtro.dataEntrega() != null) {
+            inicioEntrega = filtro.dataEntrega().toLocalDate().atStartOfDay();
+            fimEntrega = filtro.dataEntrega().toLocalDate().atTime(23, 59, 59);
         }
 
-        return pedidoRepository.findWithFiltros(statusPedido, clienteId, nomeCliente, dataPedido,
-                inicioEntrega, fimEntrega, tipoEntrega, formaPagamento, usuarioResponsavelId,
-                nomeUsuarioResponsavel, paginacao).map(PedidoMapper::mapToPedidoListagemDto);
+        return pedidoRepository.findWithFiltros(filtro.statusPedido(), filtro.clienteId(), filtro.nomeCliente(),
+                        filtro.dataPedido(), inicioEntrega, fimEntrega, filtro.tipoEntrega(), filtro.formaPagamento(),
+                        filtro.usuarioResponsavelId(), filtro.nomeUsuarioResponsavel(), paginacao)
+                .map(PedidoMapper::mapToPedidoListagemDto);
     }
 
     public PedidoListagemDto buscarPorId(Long id) throws NotFoundException {
@@ -119,7 +105,7 @@ public class PedidoService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public CriacaoPedidoResponse atualizar(Long id, CriacaoPedidoRequest request) throws BadRequestException, NotFoundException {
+    public CriacaoPedidoResponse atualizar(Long id, CriacaoPedidoRequest request) throws NotFoundException {
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Pedido não encontrado com ID: " + id));
 

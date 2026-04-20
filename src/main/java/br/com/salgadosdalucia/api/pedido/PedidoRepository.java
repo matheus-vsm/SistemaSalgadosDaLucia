@@ -30,5 +30,6 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
                                  LocalDateTime inicioEntrega, LocalDateTime fimEntrega,
                                  TipoEntrega tipoEntrega, FormaPagamento formaPagamento,
                                  Long usuarioResponsavelId, String nomeUsuarioResponsavel, Pageable paginacao);
+    // ACIMA adicionar @Param(ex: "statusPedido") para evitar que o hibernate se perca e garantir a injeção correta dos parâmetros
 
 }

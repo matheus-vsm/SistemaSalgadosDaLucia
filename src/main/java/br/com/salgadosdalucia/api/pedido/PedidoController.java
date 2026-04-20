@@ -2,10 +2,7 @@ package br.com.salgadosdalucia.api.pedido;
 
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
-import br.com.salgadosdalucia.api.pedido.dto.AlterarStatusPedidoDto;
-import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoRequest;
-import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoResponse;
-import br.com.salgadosdalucia.api.pedido.dto.PedidoListagemDto;
+import br.com.salgadosdalucia.api.pedido.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/pedidos")
@@ -38,27 +33,11 @@ public class PedidoController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<PedidoListagemDto>> listarTodos(@PageableDefault(size = 10, sort = {"dataEntrega"},
-            direction = Sort.Direction.DESC) Pageable paginacao) {
-        var page = service.listarTodos(paginacao);
-        return ResponseEntity.ok(page);
-    }
-
-    @GetMapping("/filtro")
-    public ResponseEntity<Page<PedidoListagemDto>> listarTodosFiltrado(
-            @RequestParam(required = false) StatusPedido statusPedido,
-            @RequestParam(required = false) Long clienteId,
-            @RequestParam(required = false) String nomeCliente,
-            @RequestParam(required = false) LocalDate dataPedido,
-            @RequestParam(required = false) LocalDateTime dataEntrega,
-            @RequestParam(required = false) TipoEntrega tipoEntrega,
-            @RequestParam(required = false) FormaPagamento formaPagamento,
-            @RequestParam(required = false) Long usuarioResponsavelId,
-            @RequestParam(required = false) String nomeUsuarioResponsavel,
+    public ResponseEntity<Page<PedidoListagemDto>> listar(
+            PedidoFiltroDto filtro,
             @PageableDefault(size = 10, sort = {"dataEntrega"},
                     direction = Sort.Direction.ASC) Pageable paginacao) {
-        var page = service.listarTodosFiltrado(statusPedido, clienteId, nomeCliente, dataPedido, dataEntrega,
-                tipoEntrega, formaPagamento, usuarioResponsavelId, nomeUsuarioResponsavel, paginacao);
+        var page = service.listarComFiltro(filtro, paginacao);
         return ResponseEntity.ok(page);
     }
 
