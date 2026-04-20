@@ -35,7 +35,7 @@ public class PedidoService {
     private final UsuarioRepository usuarioRepository;
 
     @Transactional(rollbackFor = Exception.class)
-    public CriacaoPedidoResponse cadastrar(CriacaoPedidoRequest request) throws NotFoundException {
+    public CriacaoPedidoResponse registrar(CriacaoPedidoRequest request) throws NotFoundException {
         Cliente cliente = clienteRepository.findById(request.clienteId())
                 .orElseThrow(() -> new NotFoundException("Cliente não encontrado com ID: " + request.clienteId()));
         Usuario usuario = usuarioRepository.findById(request.usuarioResponsavelId())
