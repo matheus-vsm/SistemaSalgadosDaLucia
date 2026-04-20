@@ -19,7 +19,7 @@ public class Usuario {
     private String login;
     private String senha;
     @Enumerated(EnumType.STRING)
-    private PerfilUsuario perfilUsuario;
+    private PerfilUsuario perfil;
     private boolean ativo;
 
 }

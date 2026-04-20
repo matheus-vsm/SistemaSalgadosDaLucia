@@ -1,6 +1,6 @@
 package br.com.salgadosdalucia.api.service;
 
-import br.com.salgadosdalucia.api.cliente.ClienteDto;
+import br.com.salgadosdalucia.api.cliente.dto.ClienteDto;
 import br.com.salgadosdalucia.api.cliente.ClienteService;
 import br.com.salgadosdalucia.api.shared.endereco.EnderecoDto;
 import br.com.salgadosdalucia.api.shared.endereco.EnderecoMapper;

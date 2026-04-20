@@ -1,5 +1,6 @@
 package br.com.salgadosdalucia.api.cliente;
 
+import br.com.salgadosdalucia.api.cliente.dto.ClienteDto;
 import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
@@ -58,7 +59,7 @@ public class ClienteController {
 
     @PatchMapping("/atualizar-status/{id}")
     public ResponseEntity<Void> alterarStatusCliente(@Valid @PathVariable Long id, @RequestBody AlterarStatusDto status)
-            throws BadRequestException, NotFoundException {
+            throws NotFoundException {
         service.atualizarStatus(id, status);
         return ResponseEntity.noContent().build();
     }

@@ -1,6 +1,7 @@
 package br.com.salgadosdalucia.api.handler;
 
 import br.com.salgadosdalucia.api.exception.BadRequestException;
+import br.com.salgadosdalucia.api.exception.BusinessException;
 import br.com.salgadosdalucia.api.exception.ErroResponse;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,13 +19,7 @@ public class GlobalHandlerException {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponse> handleException(Exception ex, HttpServletRequest request) {
-        ErroResponse erroResponse = new ErroResponse(
-                ex.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                request.getRequestURI(),
-                LocalDateTime.now());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(erroResponse);
+        return buildResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -48,24 +43,28 @@ public class GlobalHandlerException {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErroResponse> handleNotFound(NotFoundException ex, HttpServletRequest request) {
-        ErroResponse erroResponse = new ErroResponse(
-                ex.getMessage(),
-                HttpStatus.NOT_FOUND.value(),
-                HttpStatus.NOT_FOUND,
-                request.getRequestURI(),
-                LocalDateTime.now());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erroResponse);
+        return buildResponse(ex.getMessage(), HttpStatus.NOT_FOUND, request);
     }
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErroResponse> handleBadRequest(BadRequestException ex, HttpServletRequest request) {
-        ErroResponse erroResponse = new ErroResponse(
-                ex.getMessage(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST,
-                request.getRequestURI(),
+        return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErroResponse> handleBusiness(BusinessException ex, HttpServletRequest request) {
+        return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, request);
+    }
+
+    // metodo auxiliar para evitar repetição de código
+    private ResponseEntity<ErroResponse> buildResponse(String msg, HttpStatus status, HttpServletRequest req) {
+        ErroResponse erro = new ErroResponse(
+                msg,
+                status.value(),
+                status,
+                req.getRequestURI(),
                 LocalDateTime.now());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erroResponse);
+        return ResponseEntity.status(status).body(erro);
     }
 
 }
