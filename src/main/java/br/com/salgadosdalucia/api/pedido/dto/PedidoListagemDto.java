@@ -6,6 +6,7 @@ import br.com.salgadosdalucia.api.pedido.StatusPedido;
 import br.com.salgadosdalucia.api.pedido.TipoEntrega;
 import br.com.salgadosdalucia.api.shared.endereco.EnderecoDto;
 import br.com.salgadosdalucia.api.usuario.dto.UsuarioPedidoDto;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -21,6 +22,7 @@ public record PedidoListagemDto(
         LocalDate dataPedido,
         LocalDateTime dataEntrega,
         TipoEntrega tipoEntrega,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         EnderecoDto enderecoEntrega,
         FormaPagamento formaPagamento,
         UsuarioPedidoDto usuarioResponsavel

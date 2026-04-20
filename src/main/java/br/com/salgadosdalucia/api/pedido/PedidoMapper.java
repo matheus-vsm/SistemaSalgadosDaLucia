@@ -34,7 +34,7 @@ public class PedidoMapper {
                 pedido.getDataPedido(),
                 pedido.getDataEntrega(),
                 pedido.getTipoEntrega(),
-                EnderecoMapper.mapToDto(pedido.getEnderecoEntrega()),
+                pedido.getEnderecoEntrega() != null ? EnderecoMapper.mapToDto(pedido.getEnderecoEntrega()) : null ,
                 pedido.getFormaPagamento(),
                 UsuarioMapper.mapToUsuarioPedidoDto(pedido.getUsuarioResponsavel())
         );
