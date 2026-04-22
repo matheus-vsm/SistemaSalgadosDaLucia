@@ -40,4 +40,5 @@ public class EstoqueService {
         }
         return EstoqueMapper.mapToDto(estoque);
     }
+
 }
