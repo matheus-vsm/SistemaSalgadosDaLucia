@@ -48,7 +48,7 @@ public class PedidoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CriacaoPedidoResponse> atualizar(@PathVariable Long id, @RequestBody @Valid CriacaoPedidoRequest request) throws BadRequestException, NotFoundException {
+    public ResponseEntity<CriacaoPedidoResponse> atualizar(@PathVariable Long id, @RequestBody @Valid CriacaoPedidoRequest request) throws NotFoundException {
         CriacaoPedidoResponse pedido = service.atualizar(id, request);
         return ResponseEntity.ok(pedido);
     }
