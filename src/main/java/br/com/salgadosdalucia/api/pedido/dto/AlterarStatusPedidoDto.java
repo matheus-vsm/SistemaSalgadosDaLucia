@@ -1,6 +1,6 @@
 package br.com.salgadosdalucia.api.pedido.dto;
 
-import br.com.salgadosdalucia.api.pedido.StatusPedido;
+import br.com.salgadosdalucia.api.pedido.enums.StatusPedido;
 import jakarta.validation.constraints.NotNull;
 
 public record AlterarStatusPedidoDto(

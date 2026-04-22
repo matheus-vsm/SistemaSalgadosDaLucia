@@ -1,5 +1,8 @@
 package br.com.salgadosdalucia.api.pedido;
 
+import br.com.salgadosdalucia.api.pedido.enums.FormaPagamento;
+import br.com.salgadosdalucia.api.pedido.enums.StatusPedido;
+import br.com.salgadosdalucia.api.pedido.enums.TipoEntrega;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

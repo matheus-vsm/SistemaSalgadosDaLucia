@@ -1,8 +1,8 @@
 package br.com.salgadosdalucia.api.pedido.dto;
 
-import br.com.salgadosdalucia.api.pedido.FormaPagamento;
-import br.com.salgadosdalucia.api.pedido.StatusPedido;
-import br.com.salgadosdalucia.api.pedido.TipoEntrega;
+import br.com.salgadosdalucia.api.pedido.enums.FormaPagamento;
+import br.com.salgadosdalucia.api.pedido.enums.StatusPedido;
+import br.com.salgadosdalucia.api.pedido.enums.TipoEntrega;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

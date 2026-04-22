@@ -1,6 +1,6 @@
 package br.com.salgadosdalucia.api.pedido.dto;
 
-import br.com.salgadosdalucia.api.pedido.TipoPreco;
+import br.com.salgadosdalucia.api.pedido.enums.TipoPreco;
 
 import java.math.BigDecimal;
 

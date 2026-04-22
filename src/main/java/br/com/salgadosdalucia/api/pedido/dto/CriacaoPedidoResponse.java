@@ -1,9 +1,9 @@
 package br.com.salgadosdalucia.api.pedido.dto;
 
 import br.com.salgadosdalucia.api.cliente.dto.ClientePedidoDto;
-import br.com.salgadosdalucia.api.pedido.FormaPagamento;
-import br.com.salgadosdalucia.api.pedido.StatusPedido;
-import br.com.salgadosdalucia.api.pedido.TipoEntrega;
+import br.com.salgadosdalucia.api.pedido.enums.FormaPagamento;
+import br.com.salgadosdalucia.api.pedido.enums.StatusPedido;
+import br.com.salgadosdalucia.api.pedido.enums.TipoEntrega;
 import br.com.salgadosdalucia.api.shared.endereco.Endereco;
 import br.com.salgadosdalucia.api.usuario.dto.UsuarioPedidoDto;
 
