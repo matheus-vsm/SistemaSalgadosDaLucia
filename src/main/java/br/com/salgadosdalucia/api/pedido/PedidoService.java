@@ -156,8 +156,6 @@ public class PedidoService {
     }
 
     private void calcularValorTotal(Pedido pedido) {
-        if (pedido == null) return;
-
         if (pedido.getItens().isEmpty()) {
             pedido.setValorTotal(BigDecimal.ZERO);
             return;
