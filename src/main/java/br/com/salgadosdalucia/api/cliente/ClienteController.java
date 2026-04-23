@@ -1,6 +1,7 @@
 package br.com.salgadosdalucia.api.cliente;
 
 import br.com.salgadosdalucia.api.cliente.dto.ClienteDto;
+import br.com.salgadosdalucia.api.cliente.dto.ClienteResponse;
 import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
@@ -26,34 +27,34 @@ public class ClienteController {
     private final ClienteService service;
 
     @PostMapping
-    public ResponseEntity<Cliente> cadastrarCliente(@Valid @RequestBody ClienteDto dto, UriComponentsBuilder uriBuilder) {
-        Cliente cliente = service.cadastrar(dto);
-        URI uri = uriBuilder.path("/clientes/{id}").buildAndExpand(cliente.getId()).toUri();
+    public ResponseEntity<ClienteResponse> cadastrarCliente(@Valid @RequestBody ClienteDto dto, UriComponentsBuilder uriBuilder) {
+        ClienteResponse cliente = service.cadastrar(dto);
+        URI uri = uriBuilder.path("/clientes/{id}").buildAndExpand(cliente.id()).toUri();
 
         return ResponseEntity.created(uri).body(cliente);
     }
 
     @GetMapping
-    public ResponseEntity<Page<Cliente>> listarClientes(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao) {
+    public ResponseEntity<Page<ClienteResponse>> listarClientes(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao) {
         var page = service.listarTodos(paginacao);
         return ResponseEntity.ok(page);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente> buscarClientePorId(@PathVariable Long id) throws NotFoundException {
-        Cliente cliente = service.buscarPorId(id);
+    public ResponseEntity<ClienteResponse> buscarClientePorId(@PathVariable Long id) throws NotFoundException {
+        ClienteResponse cliente = service.buscarPorId(id);
         return ResponseEntity.ok(cliente);
     }
 
-    @GetMapping("/nome/{nome}")
-    public ResponseEntity<List<Cliente>> buscarClientePorNome(@PathVariable String nome) {
-        List<Cliente> cliente = service.buscarPorNome(nome);
-        return ResponseEntity.ok(cliente);
+    @GetMapping("/nome")
+    public ResponseEntity<Page<ClienteResponse>> buscarClientePorNome(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao, @RequestParam String nome) {
+        var page = service.buscarPorNome(paginacao, nome);
+        return ResponseEntity.ok(page);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Cliente> atualizarCliente(@Valid @PathVariable Long id, @RequestBody ClienteDto dto) throws NotFoundException {
-        Cliente cliente = service.atualizar(id, dto);
+    public ResponseEntity<ClienteResponse> atualizarCliente(@Valid @PathVariable Long id, @RequestBody ClienteDto dto) throws NotFoundException {
+        ClienteResponse cliente = service.atualizar(id, dto);
         return ResponseEntity.ok(cliente);
     }
 

@@ -1,6 +1,7 @@
 package br.com.salgadosdalucia.api.cliente;
 
 import br.com.salgadosdalucia.api.cliente.dto.ClienteDto;
+import br.com.salgadosdalucia.api.cliente.dto.ClienteResponse;
 import br.com.salgadosdalucia.api.exception.BusinessException;
 import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
@@ -21,36 +22,37 @@ public class ClienteService {
     private final ClienteRepository clienteRepository;
 
     @Transactional(rollbackFor = Exception.class)
-    public Cliente cadastrar(ClienteDto dto) {
+    public ClienteResponse cadastrar(ClienteDto dto) {
         Cliente cliente = ClienteMapper.mapToEntity(dto);
-        return clienteRepository.save(cliente);
+        clienteRepository.save(cliente);
+        return ClienteMapper.mapToResponse(cliente);
     }
 
-    public Page<Cliente> listarTodos(Pageable paginacao) {
-        return clienteRepository.findAllByAtivoTrue(paginacao);
+    public Page<ClienteResponse> listarTodos(Pageable paginacao) {
+        return clienteRepository.findAllByAtivoTrue(paginacao).map(ClienteMapper::mapToResponse);
         // só se devolver dto .map(this::mapToDto); // equivalente a .map(cliente -> mapToDto(cliente))
         // map do page aplica FUNÇÃO de conversão
     }
 
-    public Cliente buscarPorId(Long id) throws NotFoundException {
+    public ClienteResponse buscarPorId(Long id) throws NotFoundException {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
-        return cliente;
+        return ClienteMapper.mapToResponse(cliente);
     }
 
-    public List<Cliente> buscarPorNome(String nome) {
-        return clienteRepository.findByNomeContainingIgnoreCase(nome);
+    public Page<ClienteResponse> buscarPorNome(Pageable paginacao, String nome) {
+        return clienteRepository.findByNomeContainingIgnoreCase(paginacao, nome).map(ClienteMapper::mapToResponse);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Cliente atualizar(Long id, ClienteDto dto) throws NotFoundException {
+    public ClienteResponse atualizar(Long id, ClienteDto dto) throws NotFoundException {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
         cliente.setNome(dto.nome());
         cliente.setTelefone(dto.telefone());
         cliente.setEndereco(EnderecoMapper.mapToEntity(dto.endereco()));
 
-        return cliente; // @Transactional faz o save automaticamente no final da transação
+        return ClienteMapper.mapToResponse(cliente); // @Transactional faz o save automaticamente no final da transação
     }
 
     @Transactional(rollbackFor = Exception.class)

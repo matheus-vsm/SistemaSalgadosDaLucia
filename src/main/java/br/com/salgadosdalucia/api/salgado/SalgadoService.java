@@ -2,6 +2,8 @@ package br.com.salgadosdalucia.api.salgado;
 
 import br.com.salgadosdalucia.api.estoque.Estoque;
 import br.com.salgadosdalucia.api.estoque.EstoqueRepository;
+import br.com.salgadosdalucia.api.salgado.dto.SalgadoDto;
+import br.com.salgadosdalucia.api.salgado.dto.SalgadoResponse;
 import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
@@ -22,7 +24,7 @@ public class SalgadoService {
     private final EstoqueRepository estoqueRepository;
 
     @Transactional(rollbackFor = Exception.class)
-    public Salgado cadastrar(SalgadoDto salgado) {
+    public SalgadoResponse cadastrar(SalgadoDto salgado) {
         Salgado novoSalgado = salgadoRepository.save(SalgadoMapper.mapToEntity(salgado));
 
         Estoque estoque = Estoque.builder()
@@ -31,7 +33,7 @@ public class SalgadoService {
                 .build();
         estoqueRepository.save(estoque);
 
-        return novoSalgado;
+        return SalgadoMapper.mapToResponse(novoSalgado);
     }
 
     public Page<Salgado> listarSalgados(Pageable paginacao) {

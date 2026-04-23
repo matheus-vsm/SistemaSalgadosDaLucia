@@ -12,6 +12,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/compras")
@@ -22,9 +25,11 @@ public class CompraController {
     private final CompraService service;
 
     @PostMapping
-    public ResponseEntity<CriacaoCompraResponse> registrar(@RequestBody @Valid CriacaoCompraRequest request) {
+    public ResponseEntity<CriacaoCompraResponse> registrar(@RequestBody @Valid CriacaoCompraRequest request, UriComponentsBuilder uriBuilder) {
         CriacaoCompraResponse compra = service.registrarCompra(request);
-        return ResponseEntity.ok(compra);
+        URI uri = uriBuilder.path("/compras/{id}").buildAndExpand(compra.id()).toUri();
+
+        return ResponseEntity.created(uri).body(compra);
     }
 
     @GetMapping("/filtro")

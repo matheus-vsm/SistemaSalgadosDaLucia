@@ -1,5 +1,7 @@
 package br.com.salgadosdalucia.api.salgado;
 
+import br.com.salgadosdalucia.api.salgado.dto.SalgadoDto;
+import br.com.salgadosdalucia.api.salgado.dto.SalgadoResponse;
 import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
@@ -24,9 +26,10 @@ public class SalgadoController {
     private final SalgadoService salgadoService;
 
     @PostMapping
-    public ResponseEntity<Salgado> cadastrar(@RequestBody @Valid SalgadoDto salgado, UriComponentsBuilder uriBuilder) {
-        Salgado novoSalgado = salgadoService.cadastrar(salgado);
-        var uri = uriBuilder.path("/salgados/{id}").buildAndExpand(novoSalgado.getId()).toUri();
+    public ResponseEntity<SalgadoResponse> cadastrar(@RequestBody @Valid SalgadoDto salgado, UriComponentsBuilder uriBuilder) {
+        SalgadoResponse novoSalgado = salgadoService.cadastrar(salgado);
+        var uri = uriBuilder.path("/salgados/{id}").buildAndExpand(novoSalgado.id()).toUri();
+
         return ResponseEntity.created(uri).body(novoSalgado);
     }
 
