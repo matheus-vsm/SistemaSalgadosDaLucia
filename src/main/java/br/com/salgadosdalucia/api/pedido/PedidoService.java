@@ -103,8 +103,9 @@ public class PedidoService {
     }
 
     public PedidoListagemDto buscarPorId(Long id) throws NotFoundException {
-        return PedidoMapper.mapToPedidoListagemDto(pedidoRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Pedido não encontrado com ID: " + id)));
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Pedido não encontrado com ID: " + id));
+        return PedidoMapper.mapToPedidoListagemDto(pedido);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -156,8 +157,6 @@ public class PedidoService {
     }
 
     private void calcularValorTotal(Pedido pedido) {
-        if (pedido == null) return;
-
         if (pedido.getItens().isEmpty()) {
             pedido.setValorTotal(BigDecimal.ZERO);
             return;

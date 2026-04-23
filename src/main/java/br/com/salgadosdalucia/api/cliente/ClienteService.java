@@ -33,7 +33,9 @@ public class ClienteService {
     }
 
     public Cliente buscarPorId(Long id) throws NotFoundException {
-        return clienteRepository.findById(id).orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
+        return cliente;
     }
 
     public List<Cliente> buscarPorNome(String nome) {

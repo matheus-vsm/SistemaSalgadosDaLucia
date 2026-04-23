@@ -19,10 +19,15 @@ public class Compra {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @OneToMany(mappedBy = "compra")
+    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemCompra> itens;
     private BigDecimal valorTotal;
     private LocalDate dataCompra;
     private String observacao;
+
+    @PrePersist // É chamado antes de salvar um objeto novo no banco
+    public void gerarData() {
+        if (this.dataCompra == null) this.dataCompra = LocalDate.now();
+    }
 
 }

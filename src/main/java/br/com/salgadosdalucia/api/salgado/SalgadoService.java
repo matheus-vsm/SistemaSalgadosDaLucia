@@ -39,8 +39,9 @@ public class SalgadoService {
     }
 
     public Salgado buscarPorId(Long id) throws NotFoundException {
-        return salgadoRepository.findById(id)
+        Salgado salgado = salgadoRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Salgado não encontrado"));
+        return salgado;
     }
 
     public List<Salgado> buscarPorNome(String nome) {
