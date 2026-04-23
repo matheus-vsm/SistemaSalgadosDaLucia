@@ -1,13 +1,17 @@
 package br.com.salgadosdalucia.api.compra;
 
+import br.com.salgadosdalucia.api.compra.dto.CompraFiltroDto;
 import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraRequest;
 import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraResponse;
 import br.com.salgadosdalucia.api.compra.dto.ItemCompraRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,6 +62,12 @@ public class CompraService {
 
     private void calcularSubTotal(ItemCompra item) {
         item.setSubTotal(item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade())));
+    }
+
+    public Page<CriacaoCompraResponse> listarComFiltro(CompraFiltroDto filtro, Pageable paginacao) {
+        return compraRepository.findAllWithFiltros(filtro.dataCompra(), filtro.dataInicioCompra(),
+                        filtro.dataFimCompra(), filtro.nomeItem(), filtro.observacao(), paginacao)
+                .map(CompraMapper::mapToResponse);
     }
 
 }

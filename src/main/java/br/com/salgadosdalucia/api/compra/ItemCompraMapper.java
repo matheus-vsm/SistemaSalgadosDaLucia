@@ -9,6 +9,7 @@ public class ItemCompraMapper {
     public static List<ItemCompraResponse> mapToResponse(List<ItemCompra> itensCompra) {
         return itensCompra.stream()
                 .map(item -> new ItemCompraResponse(
+                        item.getId(),
                         item.getNome(),
                         item.getQuantidade(),
                         item.getPrecoUnitario(),
