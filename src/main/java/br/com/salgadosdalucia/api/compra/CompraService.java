@@ -4,6 +4,7 @@ import br.com.salgadosdalucia.api.compra.dto.CompraFiltroDto;
 import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraRequest;
 import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraResponse;
 import br.com.salgadosdalucia.api.compra.dto.ItemCompraRequest;
+import br.com.salgadosdalucia.api.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -68,6 +69,12 @@ public class CompraService {
         return compraRepository.findAllWithFiltros(filtro.dataCompra(), filtro.dataInicioCompra(),
                         filtro.dataFimCompra(), filtro.nomeItem(), filtro.observacao(), paginacao)
                 .map(CompraMapper::mapToResponse);
+    }
+
+    public CriacaoCompraResponse buscarPorId(Long id) throws NotFoundException {
+        Compra compra = compraRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Compra não encontrada com id: " + id));
+        return CompraMapper.mapToResponse(compra);
     }
 
 }
