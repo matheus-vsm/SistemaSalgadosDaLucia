@@ -2,7 +2,7 @@ package br.com.salgadosdalucia.api.compra;
 
 import br.com.salgadosdalucia.api.compra.dto.CompraFiltroDto;
 import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraRequest;
-import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraResponse;
+import br.com.salgadosdalucia.api.compra.dto.CompraResponse;
 import br.com.salgadosdalucia.api.compra.dto.ItemCompraRequest;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +22,7 @@ public class CompraService {
     private final CompraRepository compraRepository;
 
     @Transactional(rollbackFor = Exception.class)
-    public CriacaoCompraResponse registrarCompra(CriacaoCompraRequest request) {
+    public CompraResponse registrarCompra(CriacaoCompraRequest request) {
         Compra compra = Compra.builder()
                 .dataCompra(request.dataCompra())
                 .observacao(request.observacao())
@@ -65,13 +64,13 @@ public class CompraService {
         item.setSubTotal(item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade())));
     }
 
-    public Page<CriacaoCompraResponse> listarComFiltro(CompraFiltroDto filtro, Pageable paginacao) {
+    public Page<CompraResponse> listarComFiltro(CompraFiltroDto filtro, Pageable paginacao) {
         return compraRepository.findAllWithFiltros(filtro.dataCompra(), filtro.dataInicioCompra(),
                         filtro.dataFimCompra(), filtro.nomeItem(), filtro.observacao(), paginacao)
                 .map(CompraMapper::mapToResponse);
     }
 
-    public CriacaoCompraResponse buscarPorId(Long id) throws NotFoundException {
+    public CompraResponse buscarPorId(Long id) throws NotFoundException {
         Compra compra = compraRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Compra não encontrada com id: " + id));
         return CompraMapper.mapToResponse(compra);

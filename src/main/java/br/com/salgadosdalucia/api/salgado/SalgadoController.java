@@ -1,5 +1,7 @@
 package br.com.salgadosdalucia.api.salgado;
 
+import br.com.salgadosdalucia.api.salgado.dto.SalgadoDto;
+import br.com.salgadosdalucia.api.salgado.dto.SalgadoResponse;
 import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
@@ -24,34 +26,35 @@ public class SalgadoController {
     private final SalgadoService salgadoService;
 
     @PostMapping
-    public ResponseEntity<Salgado> cadastrar(@RequestBody @Valid SalgadoDto salgado, UriComponentsBuilder uriBuilder) {
-        Salgado novoSalgado = salgadoService.cadastrar(salgado);
-        var uri = uriBuilder.path("/salgados/{id}").buildAndExpand(novoSalgado.getId()).toUri();
+    public ResponseEntity<SalgadoResponse> cadastrar(@RequestBody @Valid SalgadoDto salgado, UriComponentsBuilder uriBuilder) {
+        SalgadoResponse novoSalgado = salgadoService.cadastrar(salgado);
+        var uri = uriBuilder.path("/salgados/{id}").buildAndExpand(novoSalgado.id()).toUri();
+
         return ResponseEntity.created(uri).body(novoSalgado);
     }
 
     @GetMapping
-    public ResponseEntity<Page<Salgado>> listarSalgados(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao) {
+    public ResponseEntity<Page<SalgadoResponse>> listarSalgados(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao) {
         var page = salgadoService.listarSalgados(paginacao);
         return ResponseEntity.ok(page);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Salgado> buscarPorId(@PathVariable Long id) throws NotFoundException {
-        Salgado salgado = salgadoService.buscarPorId(id);
+    public ResponseEntity<SalgadoResponse> buscarPorId(@PathVariable Long id) throws NotFoundException {
+        SalgadoResponse salgado = salgadoService.buscarPorId(id);
         return ResponseEntity.ok(salgado);
     }
 
-    @GetMapping("/nome/{nome}")
-    public ResponseEntity<List<Salgado>> buscarPorNome(@PathVariable String nome) throws NotFoundException {
-        List<Salgado> salgados = salgadoService.buscarPorNome(nome);
+    @GetMapping("/nome")
+    public ResponseEntity<Page<SalgadoResponse>> buscarPorNome(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao, @RequestParam String nome) {
+        var salgados = salgadoService.buscarPorNome(paginacao, nome);
         return ResponseEntity.ok(salgados);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Salgado> atualizar(@Valid @PathVariable Long id, @RequestBody SalgadoDto salgado)
+    public ResponseEntity<SalgadoResponse> atualizar(@Valid @PathVariable Long id, @RequestBody SalgadoDto salgado)
             throws NotFoundException {
-        Salgado salgadoAtualizado = salgadoService.atualizar(id, salgado);
+        SalgadoResponse salgadoAtualizado = salgadoService.atualizar(id, salgado);
         return ResponseEntity.ok(salgadoAtualizado);
     }
 

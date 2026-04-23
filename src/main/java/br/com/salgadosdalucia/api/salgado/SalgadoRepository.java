@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface SalgadoRepository extends JpaRepository<Salgado, Long> {
 
-    List<Salgado> findByNomeContainingIgnoreCase(String nome);
+    Page<Salgado> findByNomeContainingIgnoreCase(Pageable paginacao, String nome);
 
     Page<Salgado> findAllByAtivoTrue(Pageable paginacao);
 

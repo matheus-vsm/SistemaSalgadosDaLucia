@@ -2,6 +2,8 @@ package br.com.salgadosdalucia.api.salgado;
 
 import br.com.salgadosdalucia.api.estoque.Estoque;
 import br.com.salgadosdalucia.api.estoque.EstoqueRepository;
+import br.com.salgadosdalucia.api.salgado.dto.SalgadoDto;
+import br.com.salgadosdalucia.api.salgado.dto.SalgadoResponse;
 import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
@@ -22,7 +24,7 @@ public class SalgadoService {
     private final EstoqueRepository estoqueRepository;
 
     @Transactional(rollbackFor = Exception.class)
-    public Salgado cadastrar(SalgadoDto salgado) {
+    public SalgadoResponse cadastrar(SalgadoDto salgado) {
         Salgado novoSalgado = salgadoRepository.save(SalgadoMapper.mapToEntity(salgado));
 
         Estoque estoque = Estoque.builder()
@@ -31,25 +33,26 @@ public class SalgadoService {
                 .build();
         estoqueRepository.save(estoque);
 
-        return novoSalgado;
+        return SalgadoMapper.mapToResponse(novoSalgado);
     }
 
-    public Page<Salgado> listarSalgados(Pageable paginacao) {
-        return salgadoRepository.findAllByAtivoTrue(paginacao);
+    public Page<SalgadoResponse> listarSalgados(Pageable paginacao) {
+        return salgadoRepository.findAllByAtivoTrue(paginacao).map(SalgadoMapper::mapToResponse);
     }
 
-    public Salgado buscarPorId(Long id) throws NotFoundException {
+    public SalgadoResponse buscarPorId(Long id) throws NotFoundException {
         Salgado salgado = salgadoRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Salgado não encontrado"));
-        return salgado;
+        return SalgadoMapper.mapToResponse(salgado);
     }
 
-    public List<Salgado> buscarPorNome(String nome) {
-        return salgadoRepository.findByNomeContainingIgnoreCase(nome);
+    public Page<SalgadoResponse> buscarPorNome(Pageable paginacao, String nome) {
+        return salgadoRepository.findByNomeContainingIgnoreCase(paginacao, nome)
+                .map(SalgadoMapper::mapToResponse);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Salgado atualizar(Long id, SalgadoDto dto) throws NotFoundException {
+    public SalgadoResponse atualizar(Long id, SalgadoDto dto) throws NotFoundException {
         Salgado salgado = salgadoRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Salgado não encontrado"));
 
@@ -59,7 +62,7 @@ public class SalgadoService {
         salgado.setPrecoCentoCongelado(dto.precoCentoCongelado());
         salgado.setPrecoCentoProcessado(dto.precoCentoProcessado());
 
-        return salgado;
+        return SalgadoMapper.mapToResponse(salgado);
     }
 
     @Transactional(rollbackFor = Exception.class)
