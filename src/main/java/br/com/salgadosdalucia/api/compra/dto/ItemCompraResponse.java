@@ -1,4 +1,11 @@
 package br.com.salgadosdalucia.api.compra.dto;
 
-public record ItemCompraResponse() {
+import java.math.BigDecimal;
+
+public record ItemCompraResponse(
+        String nome,
+        Integer quantidade,
+        BigDecimal precoUnitario,
+        BigDecimal subTotal
+) {
 }

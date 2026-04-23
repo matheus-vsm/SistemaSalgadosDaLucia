@@ -1,15 +1,50 @@
 package br.com.salgadosdalucia.api.compra;
 
+import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraRequest;
+import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraResponse;
+import br.com.salgadosdalucia.api.compra.dto.ItemCompraRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CompraService {
 
-    private void calcularValorTotal(Compra compra) {
-        if (compra == null) return;
+    private final CompraRepository compraRepository;
 
+    @Transactional(rollbackFor = Exception.class)
+    public CriacaoCompraResponse registrarCompra(CriacaoCompraRequest request) {
+        Compra compra = Compra.builder()
+                .dataCompra(request.dataCompra())
+                .observacao(request.observacao())
+                .build();
+        List<ItemCompra> itens = new ArrayList<>();
+
+        for (ItemCompraRequest itemRequest : request.itens()) {
+            ItemCompra item = new ItemCompra();
+            item.setCompra(compra);
+            item.setNome(itemRequest.nome());
+            item.setQuantidade(itemRequest.quantidade());
+            item.setPrecoUnitario(itemRequest.precoUnitario());
+            calcularSubTotal(item);
+
+            itens.add(item);
+        }
+
+        compra.setItens(itens);
+        calcularValorTotal(compra);
+
+        compraRepository.save(compra);
+
+        return CompraMapper.mapToResponse(compra);
+    }
+
+    private void calcularValorTotal(Compra compra) {
         if (compra.getItens().isEmpty()) {
             compra.setValorTotal(BigDecimal.ZERO);
             return;
