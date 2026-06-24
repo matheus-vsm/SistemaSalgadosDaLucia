@@ -1,0 +1,1 @@
+ALTER TABLE pedidos ADD COLUMN frete DECIMAL(10,2) NULL;

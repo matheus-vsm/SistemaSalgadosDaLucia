@@ -18,6 +18,7 @@ public record PedidoListagemDto(
         ClientePedidoDto cliente,
         StatusPedido status,
         List<ItemPedidoResponse> itens,
+        BigDecimal frete,
         BigDecimal valorTotal,
         LocalDate dataPedido,
         LocalDateTime dataEntrega,
