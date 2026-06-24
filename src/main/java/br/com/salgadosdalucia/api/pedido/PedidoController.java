@@ -34,7 +34,7 @@ public class PedidoController {
     @GetMapping
     public ResponseEntity<Page<PedidoListagemDto>> listar(
             PedidoFiltroDto filtro,
-            @PageableDefault(sort = {"dataEntrega"},
+            @PageableDefault(size = 10, sort = {"dataEntrega"},
                     direction = Sort.Direction.ASC) Pageable paginacao) {
         var page = service.listarComFiltro(filtro, paginacao);
         return ResponseEntity.ok(page);
