@@ -7,7 +7,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +30,8 @@ public record CriacaoPedidoRequest(
         @NotNull(message = "Forma de pagamento é obrigatória!")
         FormaPagamento formaPagamento,
         @NotNull(message = "ID do Usuário Responsável é obrigatório!")
-        Long usuarioResponsavelId
+        Long usuarioResponsavelId,
+        @Positive(message = "O valor do frete deve ser positivo!")
+        BigDecimal frete
 ) {
 }

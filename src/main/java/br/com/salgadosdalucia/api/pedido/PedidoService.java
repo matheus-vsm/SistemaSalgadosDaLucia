@@ -59,6 +59,7 @@ public class PedidoService {
                 .tipoEntrega(request.tipoEntrega())
                 .formaPagamento(request.formaPagamento())
                 .usuarioResponsavel(usuario)
+                .frete(request.frete())
                 .build();
 
         for (ItemPedidoDto item : request.itens()) {
@@ -166,6 +167,10 @@ public class PedidoService {
                 .filter(item -> item.getSubTotal() != null)
                 .map(ItemPedido::getSubTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)); // começa com 0 e vai somando todos os valores
+
+        if (pedido.getFrete() != null) {
+            pedido.setValorTotal(pedido.getValorTotal().add(pedido.getFrete()));
+        }
     }
 
     private void defineEnderecoEntrega(Pedido pedido) {

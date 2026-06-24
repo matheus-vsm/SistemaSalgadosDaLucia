@@ -17,6 +17,7 @@ public record CriacaoPedidoResponse(
         ClientePedidoDto cliente,
         List<ItemPedidoResponse> itens,
         Endereco enderecoEntrega,
+        BigDecimal frete,
         BigDecimal valorTotal,
         LocalDate dataPedido,
         LocalDateTime dataEntrega,

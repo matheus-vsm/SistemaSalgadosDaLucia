@@ -56,6 +56,8 @@ public class Pedido {
     @JoinColumn(name = "usuario_id")
     private Usuario usuarioResponsavel;
 
+    private BigDecimal frete;
+
     @PrePersist // É chamado antes de salvar um objeto novo no banco
     public void gerarData() {
         if (this.dataPedido == null) this.dataPedido = LocalDate.now();
