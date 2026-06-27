@@ -1,0 +1,1 @@
+ALTER TABLE usuarios CHANGE login username VARCHAR(50);
