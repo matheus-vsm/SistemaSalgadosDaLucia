@@ -40,6 +40,18 @@ public class TokenService {
         }
     }
 
+    public String gerarRefreshToken(Usuario usuario) {
+        try {
+            return JWT.create()
+                    .withIssuer(issuer)
+                    .withSubject(usuario.getId().toString())
+                    .withExpiresAt(expiracao(120))
+                    .sign(ALGORITHM);
+        } catch (JWTCreationException e) {
+            throw new BusinessException("Erro ao gerar token JWT!" + e.getMessage());
+        }
+    }
+
     public String verificaToken(String token) {
         DecodedJWT decodedJWT;
         try {

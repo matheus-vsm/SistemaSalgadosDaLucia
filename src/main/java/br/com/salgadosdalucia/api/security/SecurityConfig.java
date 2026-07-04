@@ -25,6 +25,7 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests(req -> {
                     req.requestMatchers("/login").permitAll();
+                    req.requestMatchers("/atualizar-token").permitAll();
                     req.anyRequest().authenticated();
                 })
                 .sessionManagement(sm ->
