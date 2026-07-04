@@ -1,4 +1,4 @@
-package br.com.salgadosdalucia.api.autenticacao;
+package br.com.salgadosdalucia.api.autenticacao.dto;
 
 public record TokenResponse(
         String tokenAcesso,

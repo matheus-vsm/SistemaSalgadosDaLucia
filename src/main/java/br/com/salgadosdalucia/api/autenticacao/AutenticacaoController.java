@@ -1,6 +1,7 @@
 package br.com.salgadosdalucia.api.autenticacao;
 
-import br.com.salgadosdalucia.api.autenticacao.dto.DadosLogin;
+import br.com.salgadosdalucia.api.autenticacao.dto.DadosLoginDto;
+import br.com.salgadosdalucia.api.autenticacao.dto.TokenResponse;
 import br.com.salgadosdalucia.api.usuario.Usuario;
 import br.com.salgadosdalucia.api.usuario.UsuarioRepository;
 import jakarta.validation.Valid;
@@ -25,8 +26,8 @@ public class AutenticacaoController {
     private final UsuarioRepository usuarioRepository;
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> efetuarLogin(@RequestBody @Valid DadosLogin dadosLogin) {
-        var authenticationToken = new UsernamePasswordAuthenticationToken(dadosLogin.username(), dadosLogin.senha());
+    public ResponseEntity<TokenResponse> efetuarLogin(@RequestBody @Valid DadosLoginDto dadosLoginDto) {
+        var authenticationToken = new UsernamePasswordAuthenticationToken(dadosLoginDto.username(), dadosLoginDto.senha());
         var authenticaction = authenticationManager.authenticate(authenticationToken);
 
         String tokenAcesso = tokenService.gerarToken((Usuario) authenticaction.getPrincipal());

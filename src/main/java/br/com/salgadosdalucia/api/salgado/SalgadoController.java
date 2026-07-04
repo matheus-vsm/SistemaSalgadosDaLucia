@@ -1,6 +1,6 @@
 package br.com.salgadosdalucia.api.salgado;
 
-import br.com.salgadosdalucia.api.salgado.dto.SalgadoDto;
+import br.com.salgadosdalucia.api.salgado.dto.SalgadoRequest;
 import br.com.salgadosdalucia.api.salgado.dto.SalgadoResponse;
 import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
@@ -15,8 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/salgados")
 @RequiredArgsConstructor
@@ -26,7 +24,7 @@ public class SalgadoController {
     private final SalgadoService salgadoService;
 
     @PostMapping
-    public ResponseEntity<SalgadoResponse> cadastrar(@RequestBody @Valid SalgadoDto salgado, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<SalgadoResponse> cadastrar(@RequestBody @Valid SalgadoRequest salgado, UriComponentsBuilder uriBuilder) {
         SalgadoResponse novoSalgado = salgadoService.cadastrar(salgado);
         var uri = uriBuilder.path("/salgados/{id}").buildAndExpand(novoSalgado.id()).toUri();
 
@@ -52,7 +50,7 @@ public class SalgadoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SalgadoResponse> atualizar(@Valid @PathVariable Long id, @RequestBody SalgadoDto salgado)
+    public ResponseEntity<SalgadoResponse> atualizar(@Valid @PathVariable Long id, @RequestBody SalgadoRequest salgado)
             throws NotFoundException {
         SalgadoResponse salgadoAtualizado = salgadoService.atualizar(id, salgado);
         return ResponseEntity.ok(salgadoAtualizado);

@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
-public record SalgadoDto(
+public record SalgadoRequest(
         @NotBlank(message = "Nome do Salgado é obrigatório!")
         String nome,
         @NotBlank(message = "Descrição do Salgado é obrigatório!")

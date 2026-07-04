@@ -4,7 +4,7 @@ import br.com.salgadosdalucia.api.cliente.ClienteMapper;
 import br.com.salgadosdalucia.api.pedido.dto.CriacaoPedidoResponse;
 import br.com.salgadosdalucia.api.pedido.dto.PedidoListagemDto;
 import br.com.salgadosdalucia.api.shared.endereco.EnderecoMapper;
-import br.com.salgadosdalucia.api.usuario.dto.UsuarioMapper;
+import br.com.salgadosdalucia.api.usuario.UsuarioMapper;
 
 public class PedidoMapper {
 
