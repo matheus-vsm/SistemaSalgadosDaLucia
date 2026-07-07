@@ -22,6 +22,7 @@ public class Usuario implements UserDetails {
     private Long id;
     private String nome;
     private String username;
+    @Setter(AccessLevel.NONE)
     private String senha;
     @Enumerated(EnumType.STRING)
     private PerfilUsuario perfil;
