@@ -1,10 +1,12 @@
 package br.com.salgadosdalucia.api.usuario;
 
+import br.com.salgadosdalucia.api.perfil.Perfil;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -24,13 +26,16 @@ public class Usuario implements UserDetails {
     private String username;
     @Setter(AccessLevel.NONE)
     private String senha;
-    @Enumerated(EnumType.STRING)
-    private PerfilUsuario perfil;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "usuarios_perfis",
+            joinColumns = @JoinColumn(name = "usuario_id"),
+            inverseJoinColumns = @JoinColumn(name = "perfil_id"))
+    private List<Perfil> perfis = new ArrayList<>();
     private boolean ativo;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        return perfis;
     }
 
     @Override
