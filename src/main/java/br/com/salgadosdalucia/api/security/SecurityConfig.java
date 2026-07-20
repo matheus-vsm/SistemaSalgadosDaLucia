@@ -3,6 +3,9 @@ package br.com.salgadosdalucia.api.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,6 +28,11 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests(req -> {
                     req.requestMatchers("/login", "/atualizar-token", "/usuarios/cadastrar").permitAll();
+
+                    // Qualquer outra requisição que não foi mapeada acima exige que o usuário esteja autenticado.
+                    // Se houver uma rota não listada e um FUNCIONARIO tentar acessar, ele será barrado.
+                    // Um ADMIN, por sua vez, como tem a role mais alta e a hierarquia configurada,
+                    // terá acesso a essas rotas não explicitamente restritas a uma role inferior.
                     req.anyRequest().authenticated();
                 })
                 .sessionManagement(sm ->
@@ -42,6 +50,14 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder encriptador() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public RoleHierarchy hierarquiaPerfis() {
+        // String hierarquia = "ROLE_ADMIN > ROLE_MODERADOR\n" + "ROLE_MODERADOR > ROLE_INSTRUTOR\n" + "ROLE_MODERADOR > ROLE_ESTUDANTE";
+        // String hierarquia = "ROLE_ADMIN > ROLE_FUNCIONARIO";
+        return RoleHierarchyImpl.withDefaultRolePrefix()
+                .role("ADMIN").implies("FUNCIONARIO").build();
     }
 
 }
