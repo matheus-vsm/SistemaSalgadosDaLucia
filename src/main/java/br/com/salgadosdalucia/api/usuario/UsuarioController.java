@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,7 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @PostMapping("/cadastrar")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UsuarioResponse> cadastrar(@RequestBody @Valid UsuarioRequest dados,
                                                      UriComponentsBuilder uriBuilder) {
         Usuario usuario = usuarioService.cadastrar(dados);
@@ -35,6 +37,7 @@ public class UsuarioController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('FUNCIONARIO')")
     public ResponseEntity<Page<UsuarioResponse>> listar(@PageableDefault(sort = {"nome"},
             direction = Sort.Direction.ASC) Pageable paginacao) {
         var page = usuarioService.listar(paginacao);
@@ -42,12 +45,14 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('FUNCIONARIO')")
     public ResponseEntity<UsuarioResponse> buscarPorId(@PathVariable Long id) throws NotFoundException {
         var usuario = usuarioService.buscarPorId(id);
         return ResponseEntity.ok(usuario);
     }
 
     @PatchMapping("/alterar-senha")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> alterarSenha(@RequestBody @Valid AlterarSenhaUsuarioDto dados,
                                              @AuthenticationPrincipal Usuario usuarioLogado) {
         usuarioService.alterarSenha(dados, usuarioLogado);
@@ -55,6 +60,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/desativar/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> desativar(@PathVariable Long id) {
         usuarioService.desativar(id);
         return ResponseEntity.noContent().build();

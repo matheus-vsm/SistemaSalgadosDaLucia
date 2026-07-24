@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -24,6 +25,7 @@ public class SalgadoController {
     private final SalgadoService salgadoService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SalgadoResponse> cadastrar(@RequestBody @Valid SalgadoRequest salgado, UriComponentsBuilder uriBuilder) {
         SalgadoResponse novoSalgado = salgadoService.cadastrar(salgado);
         var uri = uriBuilder.path("/salgados/{id}").buildAndExpand(novoSalgado.id()).toUri();
@@ -32,24 +34,28 @@ public class SalgadoController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('FUNCIONARIO')")
     public ResponseEntity<Page<SalgadoResponse>> listarSalgados(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao) {
         var page = salgadoService.listarSalgados(paginacao);
         return ResponseEntity.ok(page);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('FUNCIONARIO')")
     public ResponseEntity<SalgadoResponse> buscarPorId(@PathVariable Long id) throws NotFoundException {
         SalgadoResponse salgado = salgadoService.buscarPorId(id);
         return ResponseEntity.ok(salgado);
     }
 
     @GetMapping("/nome")
+    @PreAuthorize("hasRole('FUNCIONARIO')")
     public ResponseEntity<Page<SalgadoResponse>> buscarPorNome(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao, @RequestParam String nome) {
         var salgados = salgadoService.buscarPorNome(paginacao, nome);
         return ResponseEntity.ok(salgados);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SalgadoResponse> atualizar(@Valid @PathVariable Long id, @RequestBody SalgadoRequest salgado)
             throws NotFoundException {
         SalgadoResponse salgadoAtualizado = salgadoService.atualizar(id, salgado);
@@ -57,6 +63,7 @@ public class SalgadoController {
     }
 
     @PatchMapping("/atualizar-status/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> atualizarStatus(@Valid @PathVariable Long id, @RequestBody AlterarStatusDto status)
             throws NotFoundException, BadRequestException {
         salgadoService.atualizarStatus(id, status);

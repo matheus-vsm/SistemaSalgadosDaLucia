@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -24,6 +25,7 @@ public class PedidoController {
     private final PedidoService service;
 
     @PostMapping
+    @PreAuthorize("hasRole('FUNCIONARIO')")
     public ResponseEntity<CriacaoPedidoResponse> registrar(@RequestBody @Valid CriacaoPedidoRequest request,
                                                            UriComponentsBuilder uriBuilder) throws NotFoundException {
         CriacaoPedidoResponse pedido = service.registrar(request);
@@ -32,6 +34,7 @@ public class PedidoController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('FUNCIONARIO')")
     public ResponseEntity<Page<PedidoListagemDto>> listar(
             PedidoFiltroDto filtro,
             @PageableDefault(size = 10, sort = {"dataEntrega"},
@@ -41,12 +44,14 @@ public class PedidoController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('FUNCIONARIO')")
     public ResponseEntity<PedidoListagemDto> buscarPorId(@PathVariable Long id) throws NotFoundException {
         PedidoListagemDto pedido = service.buscarPorId(id);
         return ResponseEntity.ok(pedido);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('FUNCIONARIO')")
     public ResponseEntity<CriacaoPedidoResponse> atualizar(@PathVariable Long id,
                                                            @RequestBody @Valid CriacaoPedidoRequest request) throws NotFoundException {
         CriacaoPedidoResponse pedido = service.atualizar(id, request);
@@ -54,6 +59,7 @@ public class PedidoController {
     }
 
     @PatchMapping("{id}/status")
+    @PreAuthorize("hasRole('FUNCIONARIO')")
     public ResponseEntity<Void> alterarStatus(@PathVariable Long id,
                                               @RequestBody @Valid AlterarStatusPedidoDto status) throws NotFoundException {
         service.alterarStatus(id, status);
