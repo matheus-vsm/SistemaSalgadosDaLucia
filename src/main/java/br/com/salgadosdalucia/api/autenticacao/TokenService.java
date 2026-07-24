@@ -21,10 +21,12 @@ import java.time.ZoneOffset;
 public class TokenService {
 
     @Value("${jwt.secret}")
-    private String secret;
+    private static String secret;
 
     @Value("${jwt.issuer}")
     private String issuer;
+
+    private static final Algorithm ALGORITHM = Algorithm.HMAC256(secret);
 
     public String gerarToken(Usuario usuario) {
         try {
@@ -32,7 +34,7 @@ public class TokenService {
                     .withIssuer(issuer)
                     .withSubject(usuario.getUsername())
                     .withExpiresAt(expiracao(60))
-                    .sign(algoritmo());
+                    .sign(ALGORITHM);
         } catch (JWTCreationException e) {
             throw new BusinessException("Erro ao gerar token JWT!" + e.getMessage());
         }
@@ -44,30 +46,28 @@ public class TokenService {
                     .withIssuer(issuer)
                     .withSubject(usuario.getId().toString())
                     .withExpiresAt(expiracao(120))
-                    .sign(algoritmo());
+                    .sign(ALGORITHM);
         } catch (JWTCreationException e) {
             throw new BusinessException("Erro ao gerar token JWT!" + e.getMessage());
         }
     }
 
     public String verificaToken(String token) {
+        DecodedJWT decodedJWT;
         try {
-            JWTVerifier verifier = JWT.require(algoritmo())
+            JWTVerifier verifier = JWT.require(ALGORITHM)
                     .withIssuer(issuer)
                     .build();
-            DecodedJWT decodedJWT = verifier.verify(token);
+            decodedJWT = verifier.verify(token);
             return decodedJWT.getSubject();
         } catch (JWTVerificationException e) {
-            throw new BusinessException("Token JWT invalido ou expirado!" + e.getMessage());
+            throw new BusinessException("Token JWT inválido ou expirado!" + e.getMessage());
         }
     }
 
     private Instant expiracao(Integer minutos) {
-        return LocalDateTime.now().plusMinutes(minutos)
-                .toInstant(ZoneOffset.of("-03:00"));
+        return LocalDateTime.now().plusMinutes(minutos) // data/hora atual + minutos sem fuso
+                .toInstant(ZoneOffset.of("-03:00")); // converte para UTC assumindo UTC-3 (Brasília)
     }
 
-    private Algorithm algoritmo() {
-        return Algorithm.HMAC256(secret);
-    }
 }
