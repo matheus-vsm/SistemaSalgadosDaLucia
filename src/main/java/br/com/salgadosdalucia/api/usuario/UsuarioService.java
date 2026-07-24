@@ -6,6 +6,7 @@ import br.com.salgadosdalucia.api.usuario.dto.AlterarSenhaUsuarioDto;
 import br.com.salgadosdalucia.api.usuario.dto.UsuarioRequest;
 import br.com.salgadosdalucia.api.usuario.dto.UsuarioResponse;
 import br.com.salgadosdalucia.api.perfil.PerfilRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +30,7 @@ public class UsuarioService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return usuarioRepository.findByUsernameIgnoreCase(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com username: " + username));
     }
 
     @Transactional
@@ -41,12 +42,12 @@ public class UsuarioService implements UserDetailsService {
     }
 
     public Page<UsuarioResponse> listar(Pageable paginacao) {
-        return usuarioRepository.findAll(paginacao).map(UsuarioMapper::mapToUsuarioResponse);
+        return usuarioRepository.findAllByAtivoTrue(paginacao).map(UsuarioMapper::mapToUsuarioResponse);
     }
 
     public UsuarioResponse buscarPorId(Long id) throws NotFoundException {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado com id: " + id));
         return UsuarioMapper.mapToUsuarioResponse(usuario);
     }
 
@@ -62,7 +63,12 @@ public class UsuarioService implements UserDetailsService {
         usuarioRepository.alterarSenha(usuarioLogado.getId(), novaSenhaCriptografada);
     }
 
-    public void desativar() {
-        return;
+    @Transactional
+    public void desativar(Long id) {
+        usuarioRepository.findById(id).ifPresentOrElse(
+                usuario -> usuario.setAtivo(false),
+                () -> { throw new EntityNotFoundException("Usuário não encontrado com id: " + id); }
+        );
     }
+
 }

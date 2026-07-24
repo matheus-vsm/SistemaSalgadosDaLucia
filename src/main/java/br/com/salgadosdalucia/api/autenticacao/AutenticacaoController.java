@@ -2,6 +2,7 @@ package br.com.salgadosdalucia.api.autenticacao;
 
 import br.com.salgadosdalucia.api.autenticacao.dto.DadosLoginDto;
 import br.com.salgadosdalucia.api.autenticacao.dto.TokenResponse;
+import br.com.salgadosdalucia.api.exception.BusinessException;
 import br.com.salgadosdalucia.api.usuario.Usuario;
 import br.com.salgadosdalucia.api.usuario.UsuarioRepository;
 import jakarta.validation.Valid;
@@ -40,7 +41,8 @@ public class AutenticacaoController {
     public ResponseEntity<TokenResponse> atualizarToken(@RequestBody @Valid DadosRefreshToken dados) {
         var refreshToken = dados.refreshToken();
         Long idUsuario = Long.valueOf(tokenService.verificaToken(refreshToken));
-        var usuario = usuarioRepository.findById(idUsuario).orElseThrow();
+        var usuario = usuarioRepository.findById(idUsuario).orElseThrow(() -> new BusinessException(
+                "Usuário não encontrado com id: " + idUsuario));
 
         String tokenAcesso = tokenService.gerarToken(usuario);
         String refreshTokenAtualizado = tokenService.gerarRefreshToken(usuario);
