@@ -3,17 +3,15 @@ package br.com.salgadosdalucia.api.cliente;
 import br.com.salgadosdalucia.api.cliente.dto.ClienteDto;
 import br.com.salgadosdalucia.api.cliente.dto.ClienteResponse;
 import br.com.salgadosdalucia.api.exception.BusinessException;
-import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
-import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
+import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.shared.endereco.EnderecoMapper;
+import br.com.salgadosdalucia.api.shared.helper.ValidacaoEntidadeHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -35,8 +33,7 @@ public class ClienteService {
     }
 
     public ClienteResponse buscarPorId(Long id) throws NotFoundException {
-        Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
+        Cliente cliente = ValidacaoEntidadeHelper.buscarEntidadePorId(clienteRepository, id, "Cliente");
         return ClienteMapper.mapToResponse(cliente);
     }
 
@@ -46,8 +43,7 @@ public class ClienteService {
 
     @Transactional(rollbackFor = Exception.class)
     public ClienteResponse atualizar(Long id, ClienteDto dto) throws NotFoundException {
-        Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
+        Cliente cliente = ValidacaoEntidadeHelper.buscarEntidadePorId(clienteRepository, id, "Cliente");
         cliente.setNome(dto.nome());
         cliente.setTelefone(dto.telefone());
         cliente.setEndereco(EnderecoMapper.mapToEntity(dto.endereco()));
@@ -57,8 +53,7 @@ public class ClienteService {
 
     @Transactional(rollbackFor = Exception.class)
     public void atualizarStatus(Long id, AlterarStatusDto status) throws NotFoundException {
-        Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
+        Cliente cliente = ValidacaoEntidadeHelper.buscarEntidadePorId(clienteRepository, id, "Cliente");
 
         if (cliente.isAtivo() == status.status()) {
             throw new BusinessException(

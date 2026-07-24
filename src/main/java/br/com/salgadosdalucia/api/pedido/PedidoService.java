@@ -11,6 +11,7 @@ import br.com.salgadosdalucia.api.pedido.enums.TipoPreco;
 import br.com.salgadosdalucia.api.salgado.Salgado;
 import br.com.salgadosdalucia.api.salgado.SalgadoRepository;
 import br.com.salgadosdalucia.api.shared.endereco.EnderecoMapper;
+import br.com.salgadosdalucia.api.shared.helper.ValidacaoEntidadeHelper;
 import br.com.salgadosdalucia.api.usuario.Usuario;
 import br.com.salgadosdalucia.api.usuario.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,10 +40,10 @@ public class PedidoService {
 
     @Transactional(rollbackFor = Exception.class)
     public CriacaoPedidoResponse registrar(CriacaoPedidoRequest request) throws NotFoundException {
-        Cliente cliente = buscarEntidadePorId(request.clienteId, "Cliente");
-        validarStatusAtivo(cliente.ativo, cliente.id, "Cliente", "não pode realizar pedidos.");
-        Usuario usuario = buscarEntidadePorId(request.usuarioResponsavelId, "Usuario");
-        validarStatusAtivo(usuario.ativo, usuario.id, "Usuario", "não pode ser responsável por pedidos.");
+        Cliente cliente = ValidacaoEntidadeHelper.buscarEntidadePorId(clienteRepository, request.clienteId(), "Cliente");
+        ValidacaoEntidadeHelper.validarStatusAtivo(cliente.isAtivo(), cliente.getId(), "Cliente", "não pode realizar pedidos.");
+        Usuario usuario = ValidacaoEntidadeHelper.buscarEntidadePorId(usuarioRepository, request.usuarioResponsavelId(), "Usuario");
+        ValidacaoEntidadeHelper.validarStatusAtivo(usuario.isAtivo(), usuario.getId(), "Usuario", "não pode ser responsável por pedidos.");
 
         List<ItemPedido> itens = new ArrayList<>();
         Pedido pedido = Pedido.builder()
@@ -57,8 +58,8 @@ public class PedidoService {
                 .build();
 
         for (ItemPedidoDto item : request.itens()) {
-            Salgado salgado = buscarEntidadePorId(item.salgadoId, "Salgado");
-            validarStatusAtivo(salgado.ativo, salgado.id, "Salgado", "não pode ser adicionado ao pedido.");
+            Salgado salgado = ValidacaoEntidadeHelper.buscarEntidadePorId(salgadoRepository, item.salgadoId(), "Salgado");
+            ValidacaoEntidadeHelper.validarStatusAtivo(salgado.isAtivo(), salgado.getId(), "Salgado", "não pode ser adicionado ao pedido.");
 
             ItemPedido itemPedido = new ItemPedido();
             itemPedido.setSalgado(salgado);
@@ -95,21 +96,21 @@ public class PedidoService {
     }
 
     public PedidoListagemDto buscarPorId(Long id) throws NotFoundException {
-        Pedido pedido = buscarEntidadePorId(id, "Pedido");
+        Pedido pedido = ValidacaoEntidadeHelper.buscarEntidadePorId(pedidoRepository, id, "Pedido");
         return PedidoMapper.mapToPedidoListagemDto(pedido);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public CriacaoPedidoResponse atualizar(Long id, CriacaoPedidoRequest request) throws NotFoundException {
-        Pedido pedido = buscarEntidadePorId(id, "Pedido");
+        Pedido pedido = ValidacaoEntidadeHelper.buscarEntidadePorId(pedidoRepository, id, "Pedido");
         if (pedido.getStatus() != StatusPedido.EM_ANDAMENTO) {
             throw new BusinessException("Somente pedidos com status EM_ANDAMENTO podem ser atualizados. Pedido ID " + id + " tem status " + pedido.getStatus());
         }
 
-        Cliente cliente = buscarEntidadePorId(request.clienteId, "Cliente");
-        validarStatusAtivo(cliente.ativo, cliente.id, "Cliente", "não pode realizar pedidos.");
-        Usuario usuario = buscarEntidadePorId(request.usuarioResponsavelId, "Usuario");
-        validarStatusAtivo(usuario.ativo, usuario.id, "Usuario", "não pode ser responsável por pedidos.");
+        Cliente cliente = ValidacaoEntidadeHelper.buscarEntidadePorId(clienteRepository, request.clienteId(), "Cliente");
+        ValidacaoEntidadeHelper.validarStatusAtivo(cliente.isAtivo(), cliente.getId(), "Cliente", "não pode realizar pedidos.");
+        Usuario usuario = ValidacaoEntidadeHelper.buscarEntidadePorId(usuarioRepository, request.usuarioResponsavelId(), "Usuario");
+        ValidacaoEntidadeHelper.validarStatusAtivo(usuario.isAtivo(), usuario.getId(), "Usuario", "não pode ser responsável por pedidos.");
         
         pedido.setCliente(cliente);
         pedido.setDataEntrega(request.dataEntrega());
@@ -130,7 +131,7 @@ public class PedidoService {
 
     @Transactional(rollbackFor = Exception.class)
     public void alterarStatus(Long id, AlterarStatusPedidoDto status) throws NotFoundException {
-        Pedido pedido = buscarEntidadePorId(id, "Pedido");
+        Pedido pedido = ValidacaoEntidadeHelper.buscarEntidadePorId(pedidoRepository, id, "Pedido");
         if (pedido.getStatus() == status.status()) {
             throw new BusinessException("O pedido já está com o status " + status.status());
         }
@@ -185,8 +186,8 @@ public class PedidoService {
         List<ItemPedido> novosItens = new ArrayList<>();
 
         for (ItemPedidoDto item : itensDto) {
-            Salgado salgado = buscarEntidadePorId(item.salgadoId, "Salgado");
-            validarStatusAtivo(salgado.ativo, salgado.id, "Salgado", "não pode ser adicionado ao pedido.");
+            Salgado salgado = ValidacaoEntidadeHelper.buscarEntidadePorId(salgadoRepository, item.salgadoId(), "Salgado");
+            ValidacaoEntidadeHelper.validarStatusAtivo(salgado.isAtivo(), salgado.getId(), "Salgado", "não pode ser adicionado ao pedido.");
             
             ItemPedido itemPedido = new ItemPedido();
             itemPedido.setPedido(pedido);
@@ -200,17 +201,6 @@ public class PedidoService {
         }
 
         pedido.getItens().addAll(novosItens);
-    }
-
-    private <T> T buscarEntidadePorId(JpaRepository<T, Long> repository, Long id, String nomeEntidade) {
-        return repository.findById(id)
-            .orElseThrow(() -> new NotFoundException(String.format("%s não encontrado com o ID: %s", nomeEntidade, id)));
-    }
-
-    private void validarStatusAtivo(boolean ativo, Long id, String nomeEntidade, String acao) {
-        if (!ativo) {
-            throw new BusinessException(String.format("%s com ID %d está inativo e %s.", nomeEntidade, id, acao));
-        }
     }
 
 }

@@ -7,6 +7,7 @@ import br.com.salgadosdalucia.api.salgado.dto.SalgadoResponse;
 import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
+import br.com.salgadosdalucia.api.shared.helper.ValidacaoEntidadeHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,8 +40,7 @@ public class SalgadoService {
     }
 
     public SalgadoResponse buscarPorId(Long id) throws NotFoundException {
-        Salgado salgado = salgadoRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Salgado não encontrado"));
+        Salgado salgado = ValidacaoEntidadeHelper.buscarEntidadePorId(salgadoRepository, id, "Salgado");
         return SalgadoMapper.mapToResponse(salgado);
     }
 
@@ -51,8 +51,7 @@ public class SalgadoService {
 
     @Transactional(rollbackFor = Exception.class)
     public SalgadoResponse atualizar(Long id, SalgadoRequest dto) throws NotFoundException {
-        Salgado salgado = salgadoRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Salgado não encontrado"));
+        Salgado salgado = ValidacaoEntidadeHelper.buscarEntidadePorId(salgadoRepository, id, "Salgado");
 
         salgado.setNome(dto.nome());
         salgado.setDescricao(dto.descricao());
@@ -65,8 +64,7 @@ public class SalgadoService {
 
     @Transactional(rollbackFor = Exception.class)
     public void atualizarStatus(Long id, AlterarStatusDto status) throws NotFoundException, BadRequestException {
-        Salgado salgado = salgadoRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Salgado não encontrado"));
+        Salgado salgado = ValidacaoEntidadeHelper.buscarEntidadePorId(salgadoRepository, id, "Salgado");
 
         if (salgado.isAtivo() == status.status()) {
             throw new BadRequestException(String.format("Salgado %s já está %s.", salgado.getNome(),

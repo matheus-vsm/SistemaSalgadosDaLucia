@@ -2,6 +2,7 @@ package br.com.salgadosdalucia.api.usuario;
 
 import br.com.salgadosdalucia.api.exception.BusinessException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
+import br.com.salgadosdalucia.api.shared.helper.ValidacaoEntidadeHelper;
 import br.com.salgadosdalucia.api.usuario.dto.AlterarSenhaUsuarioDto;
 import br.com.salgadosdalucia.api.usuario.dto.UsuarioRequest;
 import br.com.salgadosdalucia.api.usuario.dto.UsuarioResponse;
@@ -46,8 +47,7 @@ public class UsuarioService implements UserDetailsService {
     }
 
     public UsuarioResponse buscarPorId(Long id) throws NotFoundException {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Usuário não encontrado com id: " + id));
+        Usuario usuario = ValidacaoEntidadeHelper.buscarEntidadePorId(usuarioRepository, id, "Usuario");
         return UsuarioMapper.mapToUsuarioResponse(usuario);
     }
 
