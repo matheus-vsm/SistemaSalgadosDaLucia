@@ -1,9 +1,6 @@
 package br.com.salgadosdalucia.api.handler;
 
-import br.com.salgadosdalucia.api.exception.BadRequestException;
-import br.com.salgadosdalucia.api.exception.BusinessException;
-import br.com.salgadosdalucia.api.exception.ErroResponse;
-import br.com.salgadosdalucia.api.exception.NotFoundException;
+import br.com.salgadosdalucia.api.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.http.HttpStatus;
@@ -67,6 +64,11 @@ public class GlobalHandlerException {
     // 401 não autorizado
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErroResponse> handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+        return buildResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED, request);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErroResponse> handleInvalidCredentials(InvalidCredentialsException ex, HttpServletRequest request) {
         return buildResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED, request);
     }
 

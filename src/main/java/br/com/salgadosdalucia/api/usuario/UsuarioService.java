@@ -2,12 +2,11 @@ package br.com.salgadosdalucia.api.usuario;
 
 import br.com.salgadosdalucia.api.exception.BusinessException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
+import br.com.salgadosdalucia.api.perfil.PerfilRepository;
 import br.com.salgadosdalucia.api.shared.helper.ValidacaoEntidadeHelper;
 import br.com.salgadosdalucia.api.usuario.dto.AlterarSenhaUsuarioDto;
 import br.com.salgadosdalucia.api.usuario.dto.UsuarioRequest;
 import br.com.salgadosdalucia.api.usuario.dto.UsuarioResponse;
-import br.com.salgadosdalucia.api.perfil.PerfilRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -67,7 +66,7 @@ public class UsuarioService implements UserDetailsService {
     public void desativar(Long id) {
         usuarioRepository.findById(id).ifPresentOrElse(
                 usuario -> usuario.setAtivo(false),
-                () -> { throw new EntityNotFoundException("Usuário não encontrado com id: " + id); }
+                () -> { throw new NotFoundException("Usuário não encontrado com id: " + id); }
         );
     }
 

@@ -88,7 +88,7 @@ public class ClienteController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos."),
             @ApiResponse(responseCode = "404", description = "Cliente não encontrado.")
     })
-    public ResponseEntity<ClienteResponse> atualizarCliente(@Valid @PathVariable Long id, @RequestBody ClienteDto dto) throws NotFoundException {
+    public ResponseEntity<ClienteResponse> atualizarCliente(@PathVariable Long id, @Valid @RequestBody ClienteDto dto) throws NotFoundException {
         ClienteResponse cliente = service.atualizar(id, dto);
         return ResponseEntity.ok(cliente);
     }
@@ -100,7 +100,7 @@ public class ClienteController {
             @ApiResponse(responseCode = "204", description = "Status atualizado com sucesso."),
             @ApiResponse(responseCode = "404", description = "Cliente não encontrado.")
     })
-    public ResponseEntity<Void> alterarStatusCliente(@Valid @PathVariable Long id, @RequestBody AlterarStatusDto status)
+    public ResponseEntity<Void> alterarStatusCliente(@PathVariable Long id, @Valid @RequestBody AlterarStatusDto status)
             throws NotFoundException {
         service.atualizarStatus(id, status);
         return ResponseEntity.noContent().build();

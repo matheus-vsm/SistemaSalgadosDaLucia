@@ -40,7 +40,7 @@ public class SalgadoController {
             @ApiResponse(responseCode = "201", description = "Salgado cadastrado com sucesso."),
             @ApiResponse(responseCode = "400", description = "Dados inválidos.")
     })
-    public ResponseEntity<SalgadoResponse> cadastrar(@RequestBody @Valid SalgadoRequest salgado, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<SalgadoResponse> cadastrar(@Valid @RequestBody SalgadoRequest salgado, UriComponentsBuilder uriBuilder) {
         SalgadoResponse novoSalgado = salgadoService.cadastrar(salgado);
         var uri = uriBuilder.path("/salgados/{id}").buildAndExpand(novoSalgado.id()).toUri();
 
@@ -85,7 +85,7 @@ public class SalgadoController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos."),
             @ApiResponse(responseCode = "404", description = "Salgado não encontrado.")
     })
-    public ResponseEntity<SalgadoResponse> atualizar(@Valid @PathVariable Long id, @RequestBody SalgadoRequest salgado)
+    public ResponseEntity<SalgadoResponse> atualizar(@PathVariable Long id, @Valid @RequestBody SalgadoRequest salgado)
             throws NotFoundException {
         SalgadoResponse salgadoAtualizado = salgadoService.atualizar(id, salgado);
         return ResponseEntity.ok(salgadoAtualizado);
@@ -99,7 +99,7 @@ public class SalgadoController {
             @ApiResponse(responseCode = "400", description = "Status ou dados inválidos."),
             @ApiResponse(responseCode = "404", description = "Salgado não encontrado.")
     })
-    public ResponseEntity<Void> atualizarStatus(@Valid @PathVariable Long id, @RequestBody AlterarStatusDto status)
+    public ResponseEntity<Void> atualizarStatus(@PathVariable Long id, @Valid @RequestBody AlterarStatusDto status)
             throws NotFoundException, BadRequestException {
         salgadoService.atualizarStatus(id, status);
         return ResponseEntity.noContent().build();
