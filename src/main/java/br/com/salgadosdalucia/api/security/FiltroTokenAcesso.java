@@ -1,7 +1,7 @@
 package br.com.salgadosdalucia.api.security;
 
 import br.com.salgadosdalucia.api.autenticacao.TokenService;
-import br.com.salgadosdalucia.api.exception.BusinessException;
+import br.com.salgadosdalucia.api.exception.NotFoundException;
 import br.com.salgadosdalucia.api.usuario.Usuario;
 import br.com.salgadosdalucia.api.usuario.UsuarioRepository;
 import jakarta.servlet.FilterChain;
@@ -30,7 +30,7 @@ public class FiltroTokenAcesso extends OncePerRequestFilter {
         if (token != null) {
             String username = tokenService.verificaToken(token);
             Usuario usuario = usuarioRepository.findByUsernameIgnoreCase(username).orElseThrow(() ->
-                    new BusinessException("Usuário não encontrado com username: " + username));
+                    new NotFoundException("Usuário não encontrado com username: " + username));
 
             Authentication authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);

@@ -1,18 +1,16 @@
 package br.com.salgadosdalucia.api.handler;
 
-import br.com.salgadosdalucia.api.exception.BadRequestException;
-import br.com.salgadosdalucia.api.exception.BusinessException;
-import br.com.salgadosdalucia.api.exception.ErroResponse;
-import br.com.salgadosdalucia.api.exception.NotFoundException;
+import br.com.salgadosdalucia.api.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
@@ -43,6 +41,12 @@ public class GlobalHandlerException {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erroResponse);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErroResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
+                                                                       HttpServletRequest request) {
+        return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, request);
+    }
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErroResponse> handleNotFound(NotFoundException ex, HttpServletRequest request) {
         return buildResponse(ex.getMessage(), HttpStatus.NOT_FOUND, request);
@@ -67,6 +71,11 @@ public class GlobalHandlerException {
     // 401 não autorizado
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErroResponse> handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+        return buildResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED, request);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErroResponse> handleInvalidCredentials(InvalidCredentialsException ex, HttpServletRequest request) {
         return buildResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED, request);
     }
 

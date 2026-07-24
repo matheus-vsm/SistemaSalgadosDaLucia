@@ -3,8 +3,8 @@ package br.com.salgadosdalucia.api.autenticacao.dto;
 import jakarta.validation.constraints.NotBlank;
 
 public record DadosLoginDto(
-        @NotBlank
+        @NotBlank(message = "Username é obrigatório!")
         String username,
-        @NotBlank
+        @NotBlank(message = "Senha é obrigatória!")
         String senha) {
 }
