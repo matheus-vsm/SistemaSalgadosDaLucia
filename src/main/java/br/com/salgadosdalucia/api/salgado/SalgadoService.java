@@ -2,7 +2,7 @@ package br.com.salgadosdalucia.api.salgado;
 
 import br.com.salgadosdalucia.api.estoque.Estoque;
 import br.com.salgadosdalucia.api.estoque.EstoqueRepository;
-import br.com.salgadosdalucia.api.salgado.dto.SalgadoDto;
+import br.com.salgadosdalucia.api.salgado.dto.SalgadoRequest;
 import br.com.salgadosdalucia.api.salgado.dto.SalgadoResponse;
 import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
@@ -13,8 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class SalgadoService {
@@ -24,7 +22,7 @@ public class SalgadoService {
     private final EstoqueRepository estoqueRepository;
 
     @Transactional(rollbackFor = Exception.class)
-    public SalgadoResponse cadastrar(SalgadoDto salgado) {
+    public SalgadoResponse cadastrar(SalgadoRequest salgado) {
         Salgado novoSalgado = salgadoRepository.save(SalgadoMapper.mapToEntity(salgado));
 
         Estoque estoque = Estoque.builder()
@@ -52,7 +50,7 @@ public class SalgadoService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public SalgadoResponse atualizar(Long id, SalgadoDto dto) throws NotFoundException {
+    public SalgadoResponse atualizar(Long id, SalgadoRequest dto) throws NotFoundException {
         Salgado salgado = salgadoRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Salgado não encontrado"));
 

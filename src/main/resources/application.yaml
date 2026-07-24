@@ -21,6 +21,9 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+jwt:
+  secret: ${JWT_HMAC256_SECRET}
+  issuer: ${JWT_ISSUER_SALGADOS_DA_LUCIA}
 #validate → o Hibernate verifica se as entidades batem com o banco, e lança erro se tiver divergência. Útil para pegar inconsistências entre o código e o banco.
 #none → o Hibernate não faz nada, nem valida. O Flyway cuida de tudo sozinho.
 #No mercado com Flyway o mais comum é validate em desenvolvimento e none em produção.

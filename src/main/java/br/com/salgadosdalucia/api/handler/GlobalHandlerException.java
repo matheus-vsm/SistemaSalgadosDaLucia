@@ -5,12 +5,14 @@ import br.com.salgadosdalucia.api.exception.BusinessException;
 import br.com.salgadosdalucia.api.exception.ErroResponse;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
@@ -54,6 +56,18 @@ public class GlobalHandlerException {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErroResponse> handleBusiness(BusinessException ex, HttpServletRequest request) {
         return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, request);
+    }
+
+    // 403 proibido
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErroResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        return buildResponse(ex.getMessage(), HttpStatus.FORBIDDEN, request);
+    }
+
+    // 401 não autorizado
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErroResponse> handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+        return buildResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED, request);
     }
 
     // metodo auxiliar para evitar repetição de código
