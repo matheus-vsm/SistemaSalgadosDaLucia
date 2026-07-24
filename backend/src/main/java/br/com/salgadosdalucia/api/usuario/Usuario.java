@@ -30,6 +30,7 @@ public class Usuario implements UserDetails {
     @JoinTable(name = "usuarios_perfis",
             joinColumns = @JoinColumn(name = "usuario_id"),
             inverseJoinColumns = @JoinColumn(name = "perfil_id"))
+    @Builder.Default
     private List<Perfil> perfis = new ArrayList<>();
     private boolean ativo;
 
