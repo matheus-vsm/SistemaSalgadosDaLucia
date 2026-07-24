@@ -1,5 +1,7 @@
 package br.com.salgadosdalucia.api.security;
 
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +23,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@SecurityScheme(name = SecurityConfig.SECURITY, type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 public class SecurityConfig {
+
+    public static final String SECURITY = "bearer auth";
 
     private final FiltroTokenAcesso FiltroTokenAcesso;
 
@@ -29,7 +34,10 @@ public class SecurityConfig {
     public SecurityFilterChain filtrosSeguranca(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(req -> {
-                    req.requestMatchers("/login", "/atualizar-token").permitAll();
+                    req.requestMatchers(
+                            "/login", "/atualizar-token",
+                            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**"
+                    ).permitAll();
 
                     // Qualquer outra requisição que não foi mapeada acima exige que o usuário esteja autenticado.
                     // Se houver uma rota não listada e um FUNCIONARIO tentar acessar, ele será barrado.
