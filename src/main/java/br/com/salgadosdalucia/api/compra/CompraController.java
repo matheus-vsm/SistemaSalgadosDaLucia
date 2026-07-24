@@ -29,6 +29,10 @@ import java.net.URI;
 @Validated
 @Tag(name = "Compras", description = "Endpoints para registro e consulta de compras de insumos")
 @SecurityRequirement(name = SecurityConfig.SECURITY)
+@ApiResponses({
+        @ApiResponse(responseCode = "401", description = "Autenticação necessária ou token inválido."),
+        @ApiResponse(responseCode = "403", description = "Usuário sem permissão para esta operação.")
+})
 public class CompraController {
 
     private final CompraService service;

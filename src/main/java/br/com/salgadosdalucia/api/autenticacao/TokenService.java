@@ -21,12 +21,12 @@ import java.time.ZoneOffset;
 public class TokenService {
 
     @Value("${jwt.secret}")
-    private static String secret;
+    private String secret;
 
     @Value("${jwt.issuer}")
     private String issuer;
 
-    private static final Algorithm ALGORITHM = Algorithm.HMAC256(secret);
+    private static final Algorithm ALGORITHM = Algorithm.HMAC256("secret");
 
     public String gerarToken(Usuario usuario) {
         try {

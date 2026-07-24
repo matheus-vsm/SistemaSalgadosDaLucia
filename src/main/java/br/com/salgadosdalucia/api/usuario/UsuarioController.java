@@ -31,6 +31,10 @@ import java.net.URI;
 @Validated
 @Tag(name = "Usuários", description = "Endpoints para administração de usuários e credenciais")
 @SecurityRequirement(name = SecurityConfig.SECURITY)
+@ApiResponses({
+        @ApiResponse(responseCode = "401", description = "Autenticação necessária ou token inválido."),
+        @ApiResponse(responseCode = "403", description = "Usuário sem permissão para esta operação.")
+})
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
@@ -54,7 +58,7 @@ public class UsuarioController {
     @Operation(summary = "Listar usuários", description = "Retorna os usuários ativos de forma paginada.")
     @ApiResponse(responseCode = "200", description = "Usuários listados com sucesso.")
     public ResponseEntity<Page<UsuarioResponse>> listar(@PageableDefault(sort = {"nome"},
-            direction = Sort.Direction.ASC) Pageable paginacao) {
+            direction = Sort.Direction.ASC, size = 10) Pageable paginacao) {
         var page = usuarioService.listar(paginacao);
         return ResponseEntity.ok(page);
     }

@@ -32,6 +32,10 @@ import java.util.List;
 @Validated
 @Tag(name = "Clientes", description = "Endpoints para o gerenciamento de clientes")
 @SecurityRequirement(name = SecurityConfig.SECURITY)
+@ApiResponses({
+        @ApiResponse(responseCode = "401", description = "Autenticação necessária ou token inválido."),
+        @ApiResponse(responseCode = "403", description = "Usuário sem permissão para esta operação.")
+})
 public class ClienteController {
 
     private final ClienteService service;
