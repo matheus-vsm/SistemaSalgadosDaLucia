@@ -1,6 +1,10 @@
+server:
+  servlet:
+    context-path: /api/salgados-da-lucia-kojima
+
 spring:
   application:
-    name: api_salgadosdalucia
+    name: api-salgados-da-lucia-kojima
 
   datasource:
     url: jdbc:mysql://localhost:3306/${DB_NAME_SALGADOS_MYSQL}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true

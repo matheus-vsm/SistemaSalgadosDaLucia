@@ -4,15 +4,59 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <script src="js/app.js" defer></script>
-    <script src="js/menu.js" defer></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+    <script src="cliente/js/viacep.js" defer></script>
+    <script src="cliente/js/cliente.js" defer></script>
 </head>
 
 <body>
 
-<h1>Salgados da Lúcia Kojima</h1>
-<div id="container-do-menu"></div>
+<!-- 1. TELA DE LOGIN (Aparece primeiro) -->
+<section id="tela-login" class="login-container">
+    <div class="card-login">
+        <img class="login-logo" src="imagens/logo.jpg" alt="Logo">
+        <h2>Login</h2>
+        <form id="form-login">
+            <input type="text" id="usuario" placeholder="Usuário" required>
+            <input type="password" id="senha" placeholder="Senha" required>
+            <button type="submit">Entrar</button>
+        </form>
+    </div>
+</section>
+
+<!-- 2. PAINEL DO SISTEMA (Fica escondido até o login) -->
+<div id="painel-sistema" class="hidden">
+
+    <header>
+        <a class="brand" href="#inicio" aria-label="Salgados da Lúcia Kojima - início">
+            <img class="brand-logo" src="imagens/logo.jpg" alt="Logo Salgados da Lúcia Kojima">
+            <span>Salgados da Lúcia Kojima</span>
+        </a>
+    </header>
+
+    <div class="layout-container">
+        <aside class="sidebar">
+            <nav>
+                <a class="nav-link active" data-target="inicio/html/inicio.html" href="#">Início</a>
+                <a class="nav-link" data-target="pedido/html/pedido.html" href="#">Pedidos</a>
+                <a class="nav-link" data-target="salgado/html/salgado.html" href="#">Salgados</a>
+                <a class="nav-link" data-target="cliente/html/cliente.html" href="#">Clientes</a>
+                <a class="nav-link" data-target="compra/html/compra.html" href="#">Compras</a>
+                <a class="nav-link" data-target="estoque/html/estoque.html" href="#">Estoque</a>
+                <a class="nav-link" data-target="usuario/html/usuario.html" href="#">Usuários</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <!--O JavaScript vai injetar as páginas dentro desta tag -->
+            <section id="conteudo-dinamico" class="page-section">
+                <h1>Bem-vindo ao Painel</h1>
+            </section>
+        </main>
+    </div>
+
+</div>
 
 </body>
-
 </html>

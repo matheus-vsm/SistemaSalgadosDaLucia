@@ -1,0 +1,91 @@
+/* Esconde as seções que não estão ativas */
+.hidden {
+    display: none !important;
+}
+
+/* Centraliza a tela de login na tela inteira */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    background-color: #f5f5f5;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+}
+
+/* Card flutuante do formulário */
+.card-login {
+    background: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%;
+    max-width: 350px;
+}
+
+.login-logo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+}
+
+.card-login input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.card-login button {
+    width: 100%;
+    padding: 12px;
+    background-color: #d32f2f; /* Cor vermelha baseada em salgados */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Layout básico para alinhar lado a lado */
+.layout-container {
+    display: flex;
+}
+
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+}
+
+.content {
+    margin-left: 250px;
+    padding: 20px;
+    width: 100%;
+}
+
+.nav-link {
+    padding: 12px 16px;
+    color: var(--muted);
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.sidebar {
+    padding: 28px 16px;
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+}
+
+.sidebar nav {
+    display: grid;
+    gap: 6px;
+}
