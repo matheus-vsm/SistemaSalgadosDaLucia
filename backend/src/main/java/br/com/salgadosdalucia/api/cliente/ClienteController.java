@@ -30,6 +30,7 @@ import java.util.List;
 @RequestMapping("/clientes")
 @RequiredArgsConstructor
 @Validated
+@CrossOrigin
 @Tag(name = "Clientes", description = "Endpoints para o gerenciamento de clientes")
 @SecurityRequirement(name = SecurityConfig.SECURITY)
 @ApiResponses({
