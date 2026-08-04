@@ -29,6 +29,7 @@ import java.net.URI;
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
 @Validated
+@CrossOrigin
 @Tag(name = "Usuários", description = "Endpoints para administração de usuários e credenciais")
 @SecurityRequirement(name = SecurityConfig.SECURITY)
 @ApiResponses({

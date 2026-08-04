@@ -27,6 +27,7 @@ import java.net.URI;
 @RequestMapping("/compras")
 @RequiredArgsConstructor
 @Validated
+@CrossOrigin
 @Tag(name = "Compras", description = "Endpoints para registro e consulta de compras de insumos")
 @SecurityRequirement(name = SecurityConfig.SECURITY)
 @ApiResponses({

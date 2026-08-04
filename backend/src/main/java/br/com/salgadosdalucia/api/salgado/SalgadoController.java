@@ -27,6 +27,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequestMapping("/salgados")
 @RequiredArgsConstructor
 @Validated
+@CrossOrigin
 @Tag(name = "Salgados", description = "Endpoints relacionados aos salgados")
 @SecurityRequirement(name = SecurityConfig.SECURITY)
 @ApiResponses({

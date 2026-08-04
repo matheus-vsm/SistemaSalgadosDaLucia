@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/estoque")
 @RequiredArgsConstructor
 @Validated
+@CrossOrigin
 @Tag(name = "Estoque", description = "Endpoints para consulta e ajuste de estoque")
 @SecurityRequirement(name = SecurityConfig.SECURITY)
 @ApiResponses({

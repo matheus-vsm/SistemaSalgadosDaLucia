@@ -26,6 +26,7 @@ import java.net.URI;
 @RequestMapping("/pedidos")
 @RequiredArgsConstructor
 @Validated
+@CrossOrigin
 @Tag(name = "Pedidos", description = "Endpoints para o ciclo de vida dos pedidos")
 @SecurityRequirement(name = SecurityConfig.SECURITY)
 @ApiResponses({
