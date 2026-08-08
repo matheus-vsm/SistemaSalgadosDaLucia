@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salgados da Lúcia Kojima</title>
     <link rel="stylesheet" href="style.css">
+    <script src="js/api.js" defer></script>
+    <script src="js/modal.js" defer></script>
+    <script src="js/viacep.js" defer></script>
     <script src="app.js" defer></script>
-    <script src="cliente/js/viacep.js" defer></script>
-    <script src="cliente/js/cliente.js" defer></script>
 </head>
 
 <body>
@@ -38,24 +40,34 @@
     <div class="layout-container">
         <aside class="sidebar">
             <nav>
-                <a class="nav-link active" data-target="inicio/html/inicio.html" href="#">Início</a>
-                <a class="nav-link" data-target="pedido/html/pedido.html" href="#">Pedidos</a>
-                <a class="nav-link" data-target="salgado/html/salgado.html" href="#">Salgados</a>
-                <a class="nav-link" data-target="cliente/html/cliente.html" href="#">Clientes</a>
-                <a class="nav-link" data-target="compra/html/compra.html" href="#">Compras</a>
-                <a class="nav-link" data-target="estoque/html/estoque.html" href="#">Estoque</a>
-                <a class="nav-link" data-target="usuario/html/usuario.html" href="#">Usuários</a>
+                <a class="nav-link active" data-module="inicio" href="#">Início</a>
+                <a class="nav-link" data-module="pedido" href="#">Pedidos</a>
+                <a class="nav-link" data-module="salgado" href="#">Salgados</a>
+                <a class="nav-link" data-module="cliente" href="#">Clientes</a>
+                <a class="nav-link" data-module="compra" href="#">Compras</a>
+                <a class="nav-link" data-module="estoque" href="#">Estoque</a>
+                <a class="nav-link" data-module="usuario" href="#">Usuários</a>
             </nav>
         </aside>
 
         <main class="content">
-            <!--O JavaScript vai injetar as páginas dentro desta tag -->
             <section id="conteudo-dinamico" class="page-section">
                 <h1>Bem-vindo ao Painel</h1>
             </section>
         </main>
     </div>
 
+</div>
+
+<!-- Modal reutilizável para todas as telas -->
+<div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="modal-titulo"></h2>
+            <button id="modal-fechar" type="button" class="modal-fechar" aria-label="Fechar">&times;</button>
+        </div>
+        <div id="modal-corpo" class="modal-corpo"></div>
+    </div>
 </div>
 
 </body>

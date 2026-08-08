@@ -1,5 +1,4 @@
 async function buscarEnderecoPorCep(cep) {
-    console.log('Buscando endereço...')
     const cepLimpo = cep.replace(/\D/g, '');
 
     if (cepLimpo.length !== 8) {

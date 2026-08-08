@@ -1,28 +1,18 @@
-const API_BASE_URL = 'http://localhost:8080/api/salgados-da-lucia-kojima';
-const conteudoDinamico = document.getElementById('conteudo-dinamico');
 let paginaAtual = 0;
 
 async function listarClientes(pagina = 0) {
-    const corpoTabela = document.getElementById('corpo-tabela-clientes');
-    const paginacaoDiv = document.getElementById('paginacao-clientes');
     const lista = document.getElementById('lista');
-    if (!lista) return; // não é a página de cliente, ignora
+    if (!lista) return;
 
-    console.log('Buscando clientes...');
     try {
-        const response = await fetch(`${API_BASE_URL}/clientes?page=${pagina}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            }
-        });
+        const { response, data: clientesPage } = await apiJson(`/clientes?page=${pagina}&size=2`);
 
         if (!response.ok) {
             lista.innerHTML = '<div class="estado">Erro ao carregar clientes</div>';
             return;
         }
 
-        const clientesPage = await response.json();
-        const clientes = clientesPage.content; // extrai o array
+        const clientes = clientesPage.content;
 
         if (!clientes || clientes.length === 0) {
             lista.innerHTML = '<div class="estado">Nenhum cliente cadastrado</div>';
@@ -45,28 +35,27 @@ async function listarClientes(pagina = 0) {
         lista.innerHTML = '<div class="estado">Erro ao conectar com o servidor</div>';
     }
 }
+
 function criarCardHTML(cliente) {
     const ativo = cliente.ativo === true;
-    const statusClasse = ativo ? "ativo" : "inativo";
-    const statusTexto = ativo ? "Ativo" : "Inativo";
+    const statusClasse = ativo ? 'ativo' : 'inativo';
+    const statusTexto = ativo ? 'Ativo' : 'Inativo';
 
     return `
       <div class="card">
         <div class="card-info">
           <h2>${cliente.nome}</h2>
-          <p>${cliente.telefone ?? ""}</p>
-          <p>${cliente.endereco?.logradouro ?? ""} - ${cliente.endereco?.cidade ?? ""}</p>
+          <p>${cliente.telefone ?? ''}</p>
+          <p>${cliente.endereco?.logradouro ?? ''} - ${cliente.endereco?.cidade ?? ''}</p>
         </div>
         <span class="status ${statusClasse}">${statusTexto}</span>
-        <button class="btn-editar" onclick="abrirModalEdicao(${cliente.id})">Editar</button>
+        <button class="btn btn-secundario btn-editar" onclick="abrirModalEdicao(${cliente.id})">Editar</button>
       </div>
-      <br>
     `;
 }
 
-async function preencherEndereco() {
-    const cep = event.target.value;
-    const endereco = await buscarEnderecoPorCep(cep);
+async function preencherEndereco(event) {
+    const endereco = await buscarEnderecoPorCep(event.target.value);
 
     if (!endereco) {
         alert('CEP não encontrado');
@@ -92,48 +81,49 @@ async function cadastrarCliente() {
             cidade: document.getElementById('cidade').value,
             uf: document.getElementById('uf').value
         }
-    }
+    };
 
     try {
-        const response = await fetch(`${API_BASE_URL}/clientes`, {
+        const { response, data: resultado } = await apiJson('/clientes', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            },
             body: JSON.stringify(dados)
         });
 
         if (response.ok) {
             alert('Cliente cadastrado com sucesso!');
+            document.getElementById('form-cliente').reset();
             listarClientes();
         } else {
-            const resultado = await response.json();
-            alert(resultado.mensagem || 'Erro ao cadastrar cliente');
+            alert(resultado?.mensagem || 'Erro ao cadastrar cliente');
         }
     } catch (erro) {
         console.error('Erro na requisição:', erro);
-        alert('Erro ao conectar com o servidor.');
+        alert(erro.message || 'Erro ao conectar com o servidor.');
     }
 }
 
-// Dispara a listagem toda vez que uma página é injetada
+function abrirModalEdicao(id) {
+    abrirModal({
+        titulo: 'Editar Cliente',
+        conteudoHtml: '<p class="estado">Modal de edição será implementado em breve.</p>'
+    });
+}
+
+const conteudoDinamico = document.getElementById('conteudo-dinamico');
+
 conteudoDinamico.addEventListener('pagina:carregada', (event) => {
-    if (event.detail.url === 'cliente/html/cliente.html') {
+    if (event.detail.modulo === 'cliente') {
         listarClientes();
     }
 });
 
-// endereco
 conteudoDinamico.addEventListener('focusout', (event) => {
     if (event.target.id !== 'cep') return;
-    preencherEndereco();
+    preencherEndereco(event);
 });
 
-// cadastrar cliente
 conteudoDinamico.addEventListener('submit', async (event) => {
-   if (event.target.id !== 'form-cliente') return;
-   event.preventDefault();
-   await cadastrarCliente();
-   event.target.reset();
+    if (event.target.id !== 'form-cliente') return;
+    event.preventDefault();
+    await cadastrarCliente();
 });
