@@ -2,19 +2,12 @@
 
 <section>
     <h2>Lista de Clientes Ativos</h2>
-    <table id="tabela-clientes" border="1">
-        <thead>
-        <tr>
-            <th>Nome</th>
-            <th>Telefone</th>
-            <th>Cidade</th>
-            <th>Logradouro</th>
-        </tr>
-        </thead>
-        <tbody id="corpo-tabela-clientes">
-        <!-- linhas injetadas via JS -->
-        </tbody>
-    </table>
+    <div class="container">
+        <div id="lista">
+            <div class="estado" id="estado-inicial">Carregando clientes...</div>
+        </div>
+    </div>
+
     <div id="paginacao-clientes">
         <button id="btn-anterior">Anterior</button>
         <span id="pagina-atual"></span>

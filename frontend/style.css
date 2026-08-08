@@ -89,3 +89,7 @@
     display: grid;
     gap: 6px;
 }
+
+.card {
+    border: 1px solid black;
+}

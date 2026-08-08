@@ -1,21 +1,23 @@
+const API_BASE_URL = 'http://localhost:8080/api/salgados-da-lucia-kojima';
 const conteudoDinamico = document.getElementById('conteudo-dinamico');
 let paginaAtual = 0;
 
 async function listarClientes(pagina = 0) {
     const corpoTabela = document.getElementById('corpo-tabela-clientes');
     const paginacaoDiv = document.getElementById('paginacao-clientes');
-    if (!corpoTabela) return; // não é a página de cliente, ignora
+    const lista = document.getElementById('lista');
+    if (!lista) return; // não é a página de cliente, ignora
 
     console.log('Buscando clientes...');
     try {
-        const response = await fetch(`http://localhost:8080/api/salgados-da-lucia-kojima/clientes?page=${pagina}`, {
+        const response = await fetch(`${API_BASE_URL}/clientes?page=${pagina}`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
             }
         });
 
         if (!response.ok) {
-            corpoTabela.innerHTML = '<tr><td colspan="4">Erro ao carregar clientes</td></tr>';
+            lista.innerHTML = '<div class="estado">Erro ao carregar clientes</div>';
             return;
         }
 
@@ -23,18 +25,11 @@ async function listarClientes(pagina = 0) {
         const clientes = clientesPage.content; // extrai o array
 
         if (!clientes || clientes.length === 0) {
-            corpoTabela.innerHTML = '<tr><td colspan="4">Nenhum cliente cadastrado</td></tr>';
+            lista.innerHTML = '<div class="estado">Nenhum cliente cadastrado</div>';
             return;
         }
 
-        corpoTabela.innerHTML = clientes.map(cliente => `
-            <tr>
-                <td>${cliente.nome}</td>
-                <td>${cliente.telefone}</td>
-                <td>${cliente.endereco?.cidade ?? ''}</td>
-                <td>${cliente.endereco?.logradouro ?? ''}</td>
-            </tr>
-        `).join('');
+        lista.innerHTML = clientes.map(cliente => criarCardHTML(cliente)).join('');
 
         // Atualiza paginação
         paginaAtual = clientesPage.page.number;
@@ -47,8 +42,26 @@ async function listarClientes(pagina = 0) {
         document.getElementById('btn-proximo').onclick = () => listarClientes(paginaAtual + 1);
     } catch (erro) {
         console.error('Erro ao listar clientes:', erro);
-        corpoTabela.innerHTML = '<tr><td colspan="4">Erro ao conectar com o servidor</td></tr>';
+        lista.innerHTML = '<div class="estado">Erro ao conectar com o servidor</div>';
     }
+}
+function criarCardHTML(cliente) {
+    const ativo = cliente.ativo === true;
+    const statusClasse = ativo ? "ativo" : "inativo";
+    const statusTexto = ativo ? "Ativo" : "Inativo";
+
+    return `
+      <div class="card">
+        <div class="card-info">
+          <h2>${cliente.nome}</h2>
+          <p>${cliente.telefone ?? ""}</p>
+          <p>${cliente.endereco?.logradouro ?? ""} - ${cliente.endereco?.cidade ?? ""}</p>
+        </div>
+        <span class="status ${statusClasse}">${statusTexto}</span>
+        <button class="btn-editar" onclick="abrirModalEdicao(${cliente.id})">Editar</button>
+      </div>
+      <br>
+    `;
 }
 
 async function preencherEndereco() {
@@ -82,7 +95,7 @@ async function cadastrarCliente() {
     }
 
     try {
-        const response = await fetch('http://localhost:8080/api/salgados-da-lucia-kojima/clientes', {
+        const response = await fetch(`${API_BASE_URL}/clientes`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
