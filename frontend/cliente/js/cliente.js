@@ -53,6 +53,8 @@ function criarCardHTML(cliente) {
         </div>
         <span class="status ${statusClasse}">${statusTexto}</span>
         <button type="button" class="btn btn-secundario btn-editar" onclick="abrirModalEdicao(${cliente.id})">Editar</button>
+        <button type="button" class="btn btn-secundario btn-exibir" onclick="abrirModalExibicao(${cliente.id})">Exibir</button>
+        <button type="button" class="btn btn-secundario btn-alterarStatus" onclick="abrirModalAlterarStatus(${cliente.id})">Ativar/Inativar</button>
       </div>
     `;
 }
@@ -120,14 +122,32 @@ async function abrirModalEdicao(id) {
             titulo: 'Editar Cliente',
             conteudoHtml: htmlModal
         });
-        await buscarClientePorId(id);
+        await buscarClientePorId(id, 'edicao');
     } catch (erro) {
         console.error('Erro ao abrir modal de edição:', erro);
         alert('Erro ao abrir modal de edição.');
     }
 }
+async function abrirModalExibicao(id) {
+    try {
+        const response = await fetch('cliente/html/modal-exibir-cliente.html');
 
-async function buscarClientePorId(id) {
+        if (!response.ok) throw new Error('Erro ao carregar modal de exibição');
+
+        const htmlModal = await response.text();
+
+        abrirModal({
+            titulo: 'Exibir Cliente',
+            conteudoHtml: htmlModal
+        });
+        await buscarClientePorId(id, 'exibicao');
+    } catch (erro) {
+        console.error('Erro ao abrir modal de exibição:', erro);
+        alert('Erro ao abrir modal de exibição.');
+    }
+}
+
+async function buscarClientePorId(id, tipo) {
     try {
         const { response, data: cliente } = await apiJson(`/clientes/${id}`);
 
@@ -135,27 +155,47 @@ async function buscarClientePorId(id) {
             alert('Erro ao carregar dados do cliente');
             return;
         }
-        preencherDadosCliente(cliente);
+        preencherDadosCliente(cliente, tipo);
     } catch (erro) {
         console.error('Erro ao buscar cliente para edição:', erro);
         alert('Erro ao conectar com o servidor.');
     }
 }
-function preencherDadosCliente(cliente) {
-    document.getElementById('cliente-id').value = cliente.id ?? '';
-    document.getElementById('nome-edicao').value = cliente.nome ?? '';
-    document.getElementById('telefone-edicao').value = cliente.telefone ?? '';
-    document.getElementById('cep-edicao').value = cliente.endereco?.cep ?? '';
-    document.getElementById('logradouro-edicao').value = cliente.endereco?.logradouro ?? '';
-    document.getElementById('numero-edicao').value = cliente.endereco?.numero ?? '';
-    document.getElementById('complemento-edicao').value = cliente.endereco?.complemento ?? '';
-    document.getElementById('bairro-edicao').value = cliente.endereco?.bairro ?? '';
-    document.getElementById('cidade-edicao').value = cliente.endereco?.cidade ?? '';
-    document.getElementById('uf-edicao').value = cliente.endereco?.uf ?? '';
+function preencherCampo(idCampo, valor) {
+    const campo = document.getElementById(idCampo);
+
+    if (!campo) {
+        console.warn(`Campo não encontrado: ${idCampo}`);
+        return;
+    }
+
+    if (campo.tagName === 'SPAN') {
+        campo.textContent = valor ?? '';
+    } else {
+        campo.value = valor ?? '';
+    }
+}
+function preencherDadosCliente(cliente, tipo) {
+    preencherCampo(`cliente-id-${tipo}`, cliente.id);
+    preencherCampo(`nome-${tipo}`, cliente.nome);
+    preencherCampo(`telefone-${tipo}`, cliente.telefone);
+    preencherCampo(`cep-${tipo}`, cliente.endereco?.cep);
+    preencherCampo(`logradouro-${tipo}`, cliente.endereco?.logradouro);
+    preencherCampo(`numero-${tipo}`, cliente.endereco?.numero);
+    preencherCampo(`complemento-${tipo}`, cliente.endereco?.complemento);
+    preencherCampo(`bairro-${tipo}`, cliente.endereco?.bairro);
+    preencherCampo(`cidade-${tipo}`, cliente.endereco?.cidade);
+    preencherCampo(`uf-${tipo}`, cliente.endereco?.uf);
+    if (tipo === 'exibicao') {
+        preencherCampo(`endereco-${tipo}`, `${cliente.endereco?.logradouro ?? ''}, 
+        ${cliente.endereco?.numero ?? ''}${cliente.endereco?.complemento ? ', ' + 
+            cliente.endereco.complemento : ''} - ${cliente.endereco?.bairro ?? ''}, 
+            ${cliente.endereco?.cidade ?? ''} - ${cliente.endereco?.uf ?? ''}`);
+    }
 }
 
 async function editarCliente() {
-    const id = document.getElementById('cliente-id').value;
+    const id = document.getElementById('cliente-id-edicao').value;
     const dados = {
         nome: document.getElementById('nome-edicao').value,
         telefone: document.getElementById('telefone-edicao').value,
@@ -188,6 +228,11 @@ async function editarCliente() {
         console.error('Erro na requisição:', erro);
         alert(erro.message || 'Erro ao conectar com o servidor.');
     }
+}
+async function editarClientePelaExibicao() {
+    const id = document.getElementById('cliente-id-exibicao').value;
+    fecharModal();
+    await abrirModalEdicao(id);
 }
 
 const conteudoDinamico = document.getElementById('conteudo-dinamico');

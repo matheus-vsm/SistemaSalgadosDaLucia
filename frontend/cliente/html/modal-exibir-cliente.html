@@ -1,0 +1,28 @@
+<div class="dados-cliente">
+    <fieldset>
+        <input type="hidden" id="cliente-id-exibicao" name="clienteId"> <!--campo que guarda o valor do id-->
+        <p><strong>Nome:</strong> <span id="nome-exibicao"></span></p>
+        <p><strong>Telefone:</strong> <span id="telefone-exibicao"></span></p>
+    </fieldset>
+
+    <fieldset>
+        <legend>Endereço</legend>
+
+        <div class="endereco-grid">
+            <div class="endereco-coluna">
+                <p><strong>CEP:</strong> <span id="cep-exibicao"></span></p>
+                <p><strong>Logradouro:</strong> <span id="logradouro-exibicao"></span></p>
+                <p><strong>Número:</strong> <span id="numero-exibicao"></span></p>
+                <p><strong>Complemento:</strong> <span id="complemento-exibicao"></span></p>
+            </div>
+
+            <div class="endereco-coluna">
+                <p><strong>Bairro:</strong> <span id="bairro-exibicao"></span></p>
+                <p><strong>Cidade:</strong> <span id="cidade-exibicao"></span></p>
+                <p><strong>UF:</strong> <span id="uf-exibicao"></span></p>
+                <p><strong>Endereço Completo:</strong> <span id="endereco-exibicao"></span></p>
+            </div>
+        </div>
+    </fieldset>
+    <button type="button" class="btn btn-primario" onclick="editarClientePelaExibicao()">Editar</button>
+</div>
