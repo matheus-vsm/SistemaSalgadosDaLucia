@@ -32,32 +32,32 @@
             <fieldset>
                 <legend>Endereço</legend>
 
-                <label for="cep">CEP:</label>
-                <input type="text" id="cep" name="cep" maxlength="8" required>
-                <br><br>
+                <div class="endereco-grid">
+                    <div class="endereco-coluna">
+                        <label for="cep">CEP:</label>
+                        <input type="text" id="cep" name="cep" maxlength="8" required>
 
-                <label for="logradouro">Logradouro:</label>
-                <input type="text" id="logradouro" name="logradouro" readonly="true" required>
-                <br><br>
+                        <label for="logradouro">Logradouro:</label>
+                        <input type="text" id="logradouro" name="logradouro" readonly="true" required>
 
-                <label for="numero">Número:</label>
-                <input type="text" id="numero" name="numero" required>
-                <br><br>
+                        <label for="numero">Número:</label>
+                        <input type="text" id="numero" name="numero" required>
 
-                <label for="complemento">Complemento:</label>
-                <input type="text" id="complemento" name="complemento">
-                <br><br>
+                        <label for="complemento">Complemento:</label>
+                        <input type="text" id="complemento" name="complemento">
+                    </div>
 
-                <label for="bairro">Bairro:</label>
-                <input type="text" id="bairro" name="bairro" readonly="true" required>
-                <br><br>
+                    <div class="endereco-coluna">
+                        <label for="bairro">Bairro:</label>
+                        <input type="text" id="bairro" name="bairro" readonly="true" required>
 
-                <label for="cidade">Cidade:</label>
-                <input type="text" id="cidade" name="cidade" readonly="true" required>
-                <br><br>
+                        <label for="cidade">Cidade:</label>
+                        <input type="text" id="cidade" name="cidade" readonly="true" required>
 
-                <label for="uf">UF:</label>
-                <input type="text" id="uf" name="uf" maxlength="2" readonly="true" required>
+                        <label for="uf">UF:</label>
+                        <input type="text" id="uf" name="uf" maxlength="2" readonly="true" required>
+                    </div>
+                </div>
             </fieldset>
         </fieldset>
         <br>

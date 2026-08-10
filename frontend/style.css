@@ -234,6 +234,30 @@ legend {
     padding: 0 8px;
 }
 
+.endereco-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 900px;
+}
+
+.endereco-coluna {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.endereco-coluna input {
+    max-width: 100%;
+    margin-bottom: 14px;
+}
+
+@media (max-width: 768px) {
+    .endereco-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* --- Cards --- */
 
 .card {
@@ -319,7 +343,7 @@ legend {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     width: 100%;
-    max-width: 560px;
+    max-width: 660px;
     max-height: 90vh;
     overflow-y: auto;
 }

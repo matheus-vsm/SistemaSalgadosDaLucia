@@ -5,7 +5,10 @@ async function listarClientes(pagina = 0) {
     if (!lista) return;
 
     try {
-        const { response, data: clientesPage } = await apiJson(`/clientes?page=${pagina}&size=2`);
+        const {
+            response, // info da requisição (status, headers, etc.) - salva na variavel response
+            data: clientesPage // os dados retornados (clientes) - salva na variavel clientesPage
+        } = await apiJson(`/clientes?page=${pagina}&size=2`);
 
         if (!response.ok) {
             lista.innerHTML = '<div class="estado">Erro ao carregar clientes</div>';
@@ -49,7 +52,7 @@ function criarCardHTML(cliente) {
           <p>${cliente.endereco?.logradouro ?? ''} - ${cliente.endereco?.cidade ?? ''}</p>
         </div>
         <span class="status ${statusClasse}">${statusTexto}</span>
-        <button class="btn btn-secundario btn-editar" onclick="abrirModalEdicao(${cliente.id})">Editar</button>
+        <button type="button" class="btn btn-secundario btn-editar" onclick="abrirModalEdicao(${cliente.id})">Editar</button>
       </div>
     `;
 }
@@ -84,7 +87,10 @@ async function cadastrarCliente() {
     };
 
     try {
-        const { response, data: resultado } = await apiJson('/clientes', {
+        const {
+            response,
+            data: resultado
+        } = await apiJson('/clientes', {
             method: 'POST',
             body: JSON.stringify(dados)
         });
@@ -102,11 +108,86 @@ async function cadastrarCliente() {
     }
 }
 
-function abrirModalEdicao(id) {
-    abrirModal({
-        titulo: 'Editar Cliente',
-        conteudoHtml: '<p class="estado">Modal de edição será implementado em breve.</p>'
-    });
+async function abrirModalEdicao(id) {
+    try {
+        const response = await fetch('cliente/html/modal-editar-cliente.html');
+
+        if (!response.ok) throw new Error('Erro ao carregar modal de edição');
+
+        const htmlModal = await response.text();
+
+        abrirModal({
+            titulo: 'Editar Cliente',
+            conteudoHtml: htmlModal
+        });
+        await buscarClientePorId(id);
+    } catch (erro) {
+        console.error('Erro ao abrir modal de edição:', erro);
+        alert('Erro ao abrir modal de edição.');
+    }
+}
+
+async function buscarClientePorId(id) {
+    try {
+        const { response, data: cliente } = await apiJson(`/clientes/${id}`);
+
+        if (!response.ok) {
+            alert('Erro ao carregar dados do cliente');
+            return;
+        }
+        preencherDadosCliente(cliente);
+    } catch (erro) {
+        console.error('Erro ao buscar cliente para edição:', erro);
+        alert('Erro ao conectar com o servidor.');
+    }
+}
+function preencherDadosCliente(cliente) {
+    document.getElementById('cliente-id').value = cliente.id ?? '';
+    document.getElementById('nome-edicao').value = cliente.nome ?? '';
+    document.getElementById('telefone-edicao').value = cliente.telefone ?? '';
+    document.getElementById('cep-edicao').value = cliente.endereco?.cep ?? '';
+    document.getElementById('logradouro-edicao').value = cliente.endereco?.logradouro ?? '';
+    document.getElementById('numero-edicao').value = cliente.endereco?.numero ?? '';
+    document.getElementById('complemento-edicao').value = cliente.endereco?.complemento ?? '';
+    document.getElementById('bairro-edicao').value = cliente.endereco?.bairro ?? '';
+    document.getElementById('cidade-edicao').value = cliente.endereco?.cidade ?? '';
+    document.getElementById('uf-edicao').value = cliente.endereco?.uf ?? '';
+}
+
+async function editarCliente() {
+    const id = document.getElementById('cliente-id').value;
+    const dados = {
+        nome: document.getElementById('nome-edicao').value,
+        telefone: document.getElementById('telefone-edicao').value,
+        endereco: {
+            logradouro: document.getElementById('logradouro-edicao').value,
+            numero: document.getElementById('numero-edicao').value,
+            complemento: document.getElementById('complemento-edicao').value,
+            cep: document.getElementById('cep-edicao').value,
+            bairro: document.getElementById('bairro-edicao').value,
+            cidade: document.getElementById('cidade-edicao').value,
+            uf: document.getElementById('uf-edicao').value
+        }
+    };
+
+    try {
+        const {response, data: resultado} = await apiJson(`/clientes/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(dados)
+        });
+
+        if (response.ok) {
+            alert('Cliente editado com sucesso!');
+            document.getElementById('form-cliente-edicao').reset();
+            fecharModal();
+            listarClientes();
+        } else {
+            alert(resultado?.mensagem || 'Erro ao editar cliente');
+        }
+    } catch (erro) {
+        console.error('Erro na requisição:', erro);
+        alert(erro.message || 'Erro ao conectar com o servidor.');
+    }
 }
 
 const conteudoDinamico = document.getElementById('conteudo-dinamico');
@@ -123,7 +204,13 @@ conteudoDinamico.addEventListener('focusout', (event) => {
 });
 
 conteudoDinamico.addEventListener('submit', async (event) => {
-    if (event.target.id !== 'form-cliente') return;
-    event.preventDefault();
-    await cadastrarCliente();
+    if (event.target.id === 'form-cliente') {
+        event.preventDefault();
+        await cadastrarCliente();
+    } else if (event.target.id === 'form-cliente-edicao') {
+        event.preventDefault();
+        await editarCliente();
+    } else {
+        return;
+    }
 });
