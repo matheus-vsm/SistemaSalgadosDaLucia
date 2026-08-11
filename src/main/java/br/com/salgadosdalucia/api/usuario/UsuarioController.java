@@ -39,7 +39,7 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    @PostMapping("/cadastrar")
+    @PostMapping(value = "/cadastrar")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Cadastrar usuário", description = "Cria um usuário com senha criptografada e perfil de acesso.")
     @ApiResponses({
@@ -55,15 +55,16 @@ public class UsuarioController {
 
     @GetMapping
     @PreAuthorize("hasRole('FUNCIONARIO')")
-    @Operation(summary = "Listar usuários", description = "Retorna os usuários ativos de forma paginada.")
+    @Operation(summary = "Listar usuários", description = "Retorna os usuários ativos/inativos de forma paginada.")
     @ApiResponse(responseCode = "200", description = "Usuários listados com sucesso.")
     public ResponseEntity<Page<UsuarioResponse>> listar(@PageableDefault(sort = {"nome"},
-            direction = Sort.Direction.ASC, size = 10) Pageable paginacao) {
-        var page = usuarioService.listar(paginacao);
+            direction = Sort.Direction.ASC, size = 10) Pageable paginacao,
+                                                        @RequestParam Boolean ativo) {
+        var page = usuarioService.listar(paginacao, ativo);
         return ResponseEntity.ok(page);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Buscar usuário por ID")
     @ApiResponses({
@@ -75,7 +76,7 @@ public class UsuarioController {
         return ResponseEntity.ok(usuario);
     }
 
-    @PatchMapping("/alterar-senha")
+    @PatchMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Alterar senha do usuário autenticado")
     @ApiResponses({
@@ -88,7 +89,7 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/desativar/{id}")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Desativar usuário", description = "Desativa o usuário sem removê-lo do histórico do sistema.")
     @ApiResponses({

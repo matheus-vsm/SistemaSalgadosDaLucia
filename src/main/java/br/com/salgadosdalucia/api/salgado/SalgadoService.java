@@ -35,8 +35,8 @@ public class SalgadoService {
         return SalgadoMapper.mapToResponse(novoSalgado);
     }
 
-    public Page<SalgadoResponse> listarSalgados(Pageable paginacao) {
-        return salgadoRepository.findAllByAtivoTrue(paginacao).map(SalgadoMapper::mapToResponse);
+    public Page<SalgadoResponse> listarSalgados(Pageable paginacao, Boolean ativo) {
+        return salgadoRepository.findAllByAtivo(paginacao, ativo).map(SalgadoMapper::mapToResponse);
     }
 
     public SalgadoResponse buscarPorId(Long id) throws NotFoundException {

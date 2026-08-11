@@ -41,8 +41,8 @@ public class UsuarioService implements UserDetailsService {
         return usuarioRepository.save(usuario);
     }
 
-    public Page<UsuarioResponse> listar(Pageable paginacao) {
-        return usuarioRepository.findAllByAtivoTrue(paginacao).map(UsuarioMapper::mapToUsuarioResponse);
+    public Page<UsuarioResponse> listar(Pageable paginacao, Boolean ativo) {
+        return usuarioRepository.findAllByAtivo(paginacao, ativo).map(UsuarioMapper::mapToUsuarioResponse);
     }
 
     public UsuarioResponse buscarPorId(Long id) throws NotFoundException {

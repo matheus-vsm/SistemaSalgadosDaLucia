@@ -1,8 +1,8 @@
 package br.com.salgadosdalucia.api.compra;
 
 import br.com.salgadosdalucia.api.compra.dto.CompraFiltroDto;
-import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraRequest;
 import br.com.salgadosdalucia.api.compra.dto.CompraResponse;
+import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraRequest;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
 import br.com.salgadosdalucia.api.security.SecurityConfig;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,7 +51,7 @@ public class CompraController {
         return ResponseEntity.created(uri).body(compra);
     }
 
-    @GetMapping("/filtro")
+    @GetMapping
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Listar compras com filtros", description = "Permite filtrar por data, período, nome do item ou observação.")
     @ApiResponse(responseCode = "200", description = "Compras listadas com sucesso.")
@@ -62,7 +62,7 @@ public class CompraController {
         return ResponseEntity.ok(page);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Buscar compra por ID")
     @ApiResponses({

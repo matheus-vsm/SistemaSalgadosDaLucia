@@ -2,11 +2,9 @@ package br.com.salgadosdalucia.api.cliente;
 
 import br.com.salgadosdalucia.api.cliente.dto.ClienteDto;
 import br.com.salgadosdalucia.api.cliente.dto.ClienteResponse;
-import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
-import br.com.salgadosdalucia.api.exception.BadRequestException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
-import br.com.salgadosdalucia.api.shared.page.PageResponse;
 import br.com.salgadosdalucia.api.security.SecurityConfig;
+import br.com.salgadosdalucia.api.shared.AlterarStatusDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -24,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/clientes")
@@ -56,35 +53,38 @@ public class ClienteController {
 
     @GetMapping
     @PreAuthorize("hasRole('FUNCIONARIO')")
-    @Operation(summary = "Listar clientes", description = "Retorna os clientes ativos de forma paginada.")
+    @Operation(summary = "Listar clientes", description = "Retorna os clientes ativos/inativos de forma paginada.")
     @ApiResponse(responseCode = "200", description = "Clientes listados com sucesso.")
-    public ResponseEntity<Page<ClienteResponse>> listarClientes(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao) {
-        var page = service.listarTodos(paginacao);
+    public ResponseEntity<Page<ClienteResponse>> listarClientes(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao,
+                                                                @RequestParam Boolean ativo) {
+        var page = service.listarTodos(paginacao, ativo);
         return ResponseEntity.ok(page);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Buscar cliente por ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Cliente encontrado."),
             @ApiResponse(responseCode = "404", description = "Cliente não encontrado.")
     })
-    public ResponseEntity<ClienteResponse> buscarClientePorId(@PathVariable Long id) throws NotFoundException {
+    public ResponseEntity<ClienteResponse> buscarClientePorId(@PathVariable Long id)
+            throws NotFoundException {
         ClienteResponse cliente = service.buscarPorId(id);
         return ResponseEntity.ok(cliente);
     }
 
-    @GetMapping("/nome")
+    @GetMapping(value = "/nome")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Buscar clientes por nome")
     @ApiResponse(responseCode = "200", description = "Busca realizada com sucesso.")
-    public ResponseEntity<Page<ClienteResponse>> buscarClientePorNome(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao, @RequestParam String nome) {
+    public ResponseEntity<Page<ClienteResponse>> buscarClientePorNome(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao,
+                                                                      @RequestParam String nome) {
         var page = service.buscarPorNome(paginacao, nome);
         return ResponseEntity.ok(page);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Atualizar cliente")
     @ApiResponses({
@@ -92,12 +92,13 @@ public class ClienteController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos."),
             @ApiResponse(responseCode = "404", description = "Cliente não encontrado.")
     })
-    public ResponseEntity<ClienteResponse> atualizarCliente(@PathVariable Long id, @Valid @RequestBody ClienteDto dto) throws NotFoundException {
+    public ResponseEntity<ClienteResponse> atualizarCliente(@PathVariable Long id, @Valid @RequestBody ClienteDto dto)
+            throws NotFoundException {
         ClienteResponse cliente = service.atualizar(id, dto);
         return ResponseEntity.ok(cliente);
     }
 
-    @PatchMapping("/atualizar-status/{id}")
+    @PatchMapping(value = "/{id}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Alterar status do cliente", description = "Ativa ou inativa um cliente.")
     @ApiResponses({

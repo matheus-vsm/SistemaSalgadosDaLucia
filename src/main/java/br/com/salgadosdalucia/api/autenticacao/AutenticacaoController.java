@@ -13,9 +13,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/autenticacao")
 @Validated
 @RequiredArgsConstructor
 @Tag(name = "Autenticação", description = "Endpoints públicos para autenticação e renovação de tokens")
@@ -23,7 +25,7 @@ public class AutenticacaoController {
 
     private final AutenticacaoService autenticacaoService;
 
-    @PostMapping("/login")
+    @PostMapping(value = "/login")
     @Operation(summary = "Efetuar login", description = "Valida as credenciais e retorna tokens de acesso e renovação.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Login realizado com sucesso."),
@@ -35,7 +37,7 @@ public class AutenticacaoController {
         return ResponseEntity.ok(tokenResponse);
     }
 
-    @PostMapping("/atualizar-token")
+    @PostMapping(value = "/atualizar-token")
     @Operation(summary = "Atualizar tokens", description = "Gera um novo token de acesso e um novo refresh token a partir de um refresh token válido.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Tokens atualizados com sucesso."),
