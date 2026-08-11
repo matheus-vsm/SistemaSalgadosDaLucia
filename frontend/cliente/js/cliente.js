@@ -67,10 +67,12 @@ async function preencherEndereco(event) {
         return;
     }
 
-    document.getElementById('logradouro').value = endereco.logradouro;
-    document.getElementById('bairro').value = endereco.bairro;
-    document.getElementById('cidade').value = endereco.cidade;
-    document.getElementById('uf').value = endereco.uf;
+    const sufixo = event.target.id === 'cep-edicao' ? '-edicao' : '';
+
+    document.getElementById(`logradouro${sufixo}`).value = endereco.logradouro;
+    document.getElementById(`bairro${sufixo}`).value = endereco.bairro;
+    document.getElementById(`cidade${sufixo}`).value = endereco.cidade;
+    document.getElementById(`uf${sufixo}`).value = endereco.uf;
 }
 
 async function cadastrarCliente() {
@@ -243,8 +245,8 @@ conteudoDinamico.addEventListener('pagina:carregada', (event) => {
     }
 });
 
-conteudoDinamico.addEventListener('focusout', (event) => {
-    if (event.target.id !== 'cep') return;
+document.addEventListener('focusout', (event) => {
+    if (!event.target.id.includes('cep')) return;
     preencherEndereco(event);
 });
 
