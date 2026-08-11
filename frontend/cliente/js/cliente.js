@@ -1,24 +1,32 @@
 let paginaAtual = 0;
 let clientesAtivos = true;
+let termoBusca = '';
 
-async function listarClientes(pagina = 0, tipo = clientesAtivos) {
+async function listarClientes(pagina = 0, tipo = clientesAtivos, busca = termoBusca) {
     const lista = document.getElementById('lista');
     if (!lista) return;
 
     clientesAtivos = tipo;
+    termoBusca = busca.trim();
     atualizarFiltroClientes();
     try {
+        const endpoint = termoBusca ? '/clientes/nome' : '/clientes';
+        const parametros = termoBusca
+            ? `nome=${encodeURIComponent(termoBusca)}&ativo=${tipo}&page=${pagina}&size=2`
+            : `page=${pagina}&size=2&ativo=${tipo}`;
         const {
             response, // info da requisição (status, headers, etc.) - salva na variavel response
             data: clientesPage // os dados retornados (clientes) - salva na variavel clientesPage
-        } = await apiJson(`/clientes?page=${pagina}&size=2&ativo=${tipo}`);
+        } = await apiJson(`${endpoint}?${parametros}`);
 
         if (!response.ok) {
             lista.innerHTML = '<div class="estado">Erro ao carregar clientes</div>';
             return;
         }
 
-        const clientes = clientesPage.content;
+        const clientes = termoBusca
+            ? clientesPage.content.filter(cliente => cliente.ativo === true)
+            : clientesPage.content;
 
         if (!clientes || clientes.length === 0) {
             lista.innerHTML = '<div class="estado">Nenhum cliente cadastrado</div>';
@@ -34,8 +42,8 @@ async function listarClientes(pagina = 0, tipo = clientesAtivos) {
         document.getElementById('btn-anterior').disabled = paginaAtual === 0;
         document.getElementById('btn-proximo').disabled = paginaAtual + 1 >= clientesPage.page.totalPages;
 
-        document.getElementById('btn-anterior').onclick = () => listarClientes(paginaAtual - 1, clientesAtivos);
-        document.getElementById('btn-proximo').onclick = () => listarClientes(paginaAtual + 1, clientesAtivos);
+        document.getElementById('btn-anterior').onclick = () => listarClientes(paginaAtual - 1, clientesAtivos, termoBusca);
+        document.getElementById('btn-proximo').onclick = () => listarClientes(paginaAtual + 1, clientesAtivos, termoBusca);
     } catch (erro) {
         console.error('Erro ao listar clientes:', erro);
         lista.innerHTML = '<div class="estado">Erro ao conectar com o servidor</div>';
@@ -325,7 +333,10 @@ conteudoDinamico.addEventListener('click', (event) => {
     if (event.target.id === 'btn-clientes-ativos') {
         listarClientes(0, true);
     } else if (event.target.id === 'btn-clientes-inativos') {
-        listarClientes(0, false);
+        termoBusca = '';
+        const campoBusca = document.getElementById('busca-clientes');
+        if (campoBusca) campoBusca.value = '';
+        listarClientes(0, false, '');
     }
 })
 
@@ -335,7 +346,11 @@ document.addEventListener('focusout', (event) => {
 });
 
 conteudoDinamico.addEventListener('submit', async (event) => {
-    if (event.target.id === 'form-cliente') {
+    if (event.target.id === 'form-busca-clientes') {
+        event.preventDefault();
+        const busca = document.getElementById('busca-clientes').value;
+        await listarClientes(0, true, busca);
+    } else if (event.target.id === 'form-cliente') {
         event.preventDefault();
         await cadastrarCliente();
     } else if (event.target.id === 'form-cliente-edicao') {
