@@ -56,10 +56,11 @@ public class ClienteController {
 
     @GetMapping
     @PreAuthorize("hasRole('FUNCIONARIO')")
-    @Operation(summary = "Listar clientes", description = "Retorna os clientes ativos de forma paginada.")
+    @Operation(summary = "Listar clientes", description = "Retorna os clientes ativos/inativos de forma paginada.")
     @ApiResponse(responseCode = "200", description = "Clientes listados com sucesso.")
-    public ResponseEntity<Page<ClienteResponse>> listarClientes(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao) {
-        var page = service.listarTodos(paginacao);
+    public ResponseEntity<Page<ClienteResponse>> listarClientes(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao,
+                                                                @RequestParam Boolean ativo) {
+        var page = service.listarTodos(paginacao, ativo);
         return ResponseEntity.ok(page);
     }
 
