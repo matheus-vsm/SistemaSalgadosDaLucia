@@ -53,10 +53,11 @@ public class SalgadoController {
 
     @GetMapping
     @PreAuthorize("hasRole('FUNCIONARIO')")
-    @Operation(summary = "Listar salgados", description = "Retorna os salgados ativos de forma paginada.")
+    @Operation(summary = "Listar salgados", description = "Retorna os salgados ativos/inativos de forma paginada.")
     @ApiResponse(responseCode = "200", description = "Salgados listados com sucesso.")
-    public ResponseEntity<Page<SalgadoResponse>> listarSalgados(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao) {
-        var page = salgadoService.listarSalgados(paginacao);
+    public ResponseEntity<Page<SalgadoResponse>> listarSalgados(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao,
+                                                                @RequestParam Boolean ativo) {
+        var page = salgadoService.listarSalgados(paginacao, ativo);
         return ResponseEntity.ok(page);
     }
 
