@@ -25,7 +25,7 @@ public class AutenticacaoController {
 
     private final AutenticacaoService autenticacaoService;
 
-    @PostMapping("/login")
+    @PostMapping(value = "/login")
     @Operation(summary = "Efetuar login", description = "Valida as credenciais e retorna tokens de acesso e renovação.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Login realizado com sucesso."),
@@ -37,7 +37,7 @@ public class AutenticacaoController {
         return ResponseEntity.ok(tokenResponse);
     }
 
-    @PostMapping("/atualizar-token")
+    @PostMapping(value = "/atualizar-token")
     @Operation(summary = "Atualizar tokens", description = "Gera um novo token de acesso e um novo refresh token a partir de um refresh token válido.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Tokens atualizados com sucesso."),

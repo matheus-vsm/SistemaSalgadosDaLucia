@@ -60,7 +60,7 @@ public class SalgadoController {
         return ResponseEntity.ok(page);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Buscar salgado por ID")
     @ApiResponses({
@@ -72,7 +72,7 @@ public class SalgadoController {
         return ResponseEntity.ok(salgado);
     }
 
-    @GetMapping("/nome")
+    @GetMapping(value = "/nome")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Buscar salgados por nome", description = "Retorna salgados cujo nome contenha o termo informado.")
     @ApiResponse(responseCode = "200", description = "Busca realizada com sucesso.")
@@ -95,7 +95,7 @@ public class SalgadoController {
         return ResponseEntity.ok(salgadoAtualizado);
     }
 
-    @PatchMapping(value = "/atualizar-status/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Alterar status do salgado", description = "Ativa ou inativa um salgado.")
     @ApiResponses({

@@ -39,7 +39,7 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    @PostMapping("/cadastrar")
+    @PostMapping(value = "/cadastrar")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Cadastrar usuário", description = "Cria um usuário com senha criptografada e perfil de acesso.")
     @ApiResponses({
@@ -63,7 +63,7 @@ public class UsuarioController {
         return ResponseEntity.ok(page);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Buscar usuário por ID")
     @ApiResponses({
@@ -75,7 +75,7 @@ public class UsuarioController {
         return ResponseEntity.ok(usuario);
     }
 
-    @PatchMapping("/alterar-senha")
+    @PatchMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Alterar senha do usuário autenticado")
     @ApiResponses({
@@ -88,7 +88,7 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/desativar/{id}")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Desativar usuário", description = "Desativa o usuário sem removê-lo do histórico do sistema.")
     @ApiResponses({
