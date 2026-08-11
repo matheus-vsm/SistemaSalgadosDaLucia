@@ -1,0 +1,46 @@
+<form id="form-cliente-edicao" onsubmit="event.preventDefault(); editarCliente();">
+    <input type="hidden" id="cliente-id-edicao" name="clienteId"> <!--campo que guarda o valor do id-->
+    <fieldset>
+        <label for="nome">Nome completo:</label>
+        <input type="text" id="nome-edicao" name="nome" required>
+        <br><br>
+
+        <label for="telefone">Telefone:</label>
+        <input type="text" id="telefone-edicao" name="telefone" maxlength="11" required>
+        <br><br>
+
+        <fieldset>
+            <legend>Endereço</legend>
+
+            <label for="cep">CEP:</label>
+            <input type="text" id="cep-edicao" name="cep" maxlength="8" required>
+            <br><br>
+
+            <label for="logradouro">Logradouro:</label>
+            <input type="text" id="logradouro-edicao" name="logradouro" readonly="true" required>
+            <br><br>
+
+            <label for="numero">Número:</label>
+            <input type="text" id="numero-edicao" name="numero" required>
+            <br><br>
+
+            <label for="complemento">Complemento:</label>
+            <input type="text" id="complemento-edicao" name="complemento">
+            <br><br>
+
+            <label for="bairro">Bairro:</label>
+            <input type="text" id="bairro-edicao" name="bairro" readonly="true" required>
+            <br><br>
+
+            <label for="cidade">Cidade:</label>
+            <input type="text" id="cidade-edicao" name="cidade" readonly="true" required>
+            <br><br>
+
+            <label for="uf">UF:</label>
+            <input type="text" id="uf-edicao" name="uf" maxlength="2" readonly="true" required>
+        </fieldset>
+    </fieldset>
+    <br>
+
+    <button type="submit">Concluir Edição</button>
+</form>

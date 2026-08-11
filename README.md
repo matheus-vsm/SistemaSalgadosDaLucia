@@ -95,7 +95,7 @@ $env:JWT_ISSUER_SALGADOS_DA_LUCIA=""
 mvn spring-boot:run
 ```
 
-Por padrão, a API fica disponível em `http://localhost:8080`. Ao iniciar, o Flyway cria e atualiza o schema automaticamente a partir de [`src/main/resources/db/migration`](src/main/resources/db/migration).
+Por padrão, a API fica disponível em `http://localhost:8080`. Ao iniciar, o Flyway cria e atualiza o schema automaticamente a partir de [`backend/src/main/resources/db/migration`](src/main/resources/db/migration).
 
 Para um banco H2 efêmero de desenvolvimento, use o perfil `fora`:
 

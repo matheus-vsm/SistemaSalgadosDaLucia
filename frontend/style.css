@@ -1,0 +1,380 @@
+:root {
+    --primary: #d32f2f;
+    --primary-dark: #b71c1c;
+    --surface: #ffffff;
+    --background: #f5f5f5;
+    --text: #212121;
+    --muted: #757575;
+    --line: #e0e0e0;
+    --success: #2e7d32;
+    --danger: #c62828;
+    --radius: 8px;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    background: var(--background);
+}
+
+body.modal-aberto {
+    overflow: hidden;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* --- Login --- */
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    background-color: var(--background);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+}
+
+.card-login {
+    background: var(--surface);
+    padding: 40px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    text-align: center;
+    width: 100%;
+    max-width: 350px;
+}
+
+.login-logo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    object-fit: cover;
+}
+
+.card-login input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+
+/* --- Header --- */
+
+header {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.brand-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* --- Layout --- */
+
+.layout-container {
+    display: flex;
+}
+
+.sidebar {
+    width: 250px;
+    height: calc(100vh - 73px);
+    position: fixed;
+    padding: 28px 16px;
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+}
+
+.sidebar nav {
+    display: grid;
+    gap: 6px;
+}
+
+.content {
+    margin-left: 250px;
+    padding: 24px;
+    width: calc(100% - 250px);
+}
+
+.page-section h1 {
+    margin-top: 0;
+}
+
+/* --- Navegação --- */
+
+.nav-link {
+    display: block;
+    padding: 12px 16px;
+    color: var(--muted);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+
+.nav-link:hover {
+    background: var(--background);
+    color: var(--text);
+}
+
+.nav-link.active {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+}
+
+/* --- Botões --- */
+
+.btn {
+    display: inline-block;
+    padding: 10px 18px;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background 0.15s;
+}
+
+.btn-primario,
+.card-login button,
+button[type="submit"] {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primario:hover,
+.card-login button:hover,
+button[type="submit"]:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-secundario {
+    background-color: var(--background);
+    color: var(--text);
+    border: 1px solid var(--line);
+}
+
+.btn-secundario:hover {
+    background-color: var(--line);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* --- Formulários --- */
+
+label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="email"],
+select,
+textarea {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+}
+
+input[readonly] {
+    background: var(--background);
+}
+
+fieldset {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+legend {
+    font-weight: 600;
+    padding: 0 8px;
+}
+
+.endereco-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 900px;
+}
+
+.endereco-coluna {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.endereco-coluna input {
+    max-width: 100%;
+    margin-bottom: 14px;
+}
+
+@media (max-width: 768px) {
+    .endereco-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- Cards --- */
+
+.card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+}
+
+.card-info {
+    flex: 1;
+}
+
+.card-info h2 {
+    margin: 0 0 4px;
+    font-size: 1.1rem;
+}
+
+.card-info p {
+    margin: 2px 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+/* --- Status --- */
+
+.status {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status.ativo {
+    background: #e8f5e9;
+    color: var(--success);
+}
+
+.status.inativo {
+    background: #ffebee;
+    color: var(--danger);
+}
+
+/* --- Paginação --- */
+
+.paginacao {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+/* --- Estados (loading, vazio, erro) --- */
+
+.estado {
+    padding: 24px;
+    text-align: center;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+}
+
+/* --- Modal --- */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 16px;
+}
+
+.modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 660px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.modal-fechar {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--muted);
+    line-height: 1;
+    padding: 4px 8px;
+}
+
+.modal-fechar:hover {
+    color: var(--text);
+}
+
+.modal-corpo {
+    padding: 20px;
+}

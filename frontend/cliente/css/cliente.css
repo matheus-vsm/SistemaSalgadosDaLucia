@@ -1,0 +1,146 @@
+.clientes-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.clientes-cabecalho h2 {
+    margin: 0;
+}
+
+.filtro-clientes {
+    display: flex;
+    gap: 8px;
+}
+
+.busca-clientes {
+    display: flex;
+    gap: 8px;
+    max-width: 480px;
+    margin: 12px 0 16px;
+}
+
+.busca-clientes input {
+    flex: 1;
+    max-width: none;
+    min-width: 0;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+}
+
+.busca-clientes input:focus {
+    outline: 2px solid rgba(211, 47, 47, 0.25);
+    border-color: var(--primary);
+}
+
+.busca-clientes button {
+    padding: 9px 16px;
+    border: 1px solid var(--primary);
+    border-radius: var(--radius);
+    background-color: #fff3f3;
+    color: var(--primary-dark);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.busca-clientes button:hover {
+    background-color: #ffe0e0;
+}
+
+.btn-clientes {
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.btn-clientes:hover,
+.btn-clientes:focus-visible {
+    filter: brightness(0.95);
+}
+
+.btn-clientes:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+.mensagem-alterar-status {
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius);
+    background-color: #fff3f3;
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.acoes-alterar-status {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.paginacao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin: 20px 0;
+}
+
+.paginacao button {
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background-color: var(--surface);
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.paginacao button:hover:not(:disabled) {
+    background-color: var(--background);
+    border-color: var(--muted);
+}
+
+.paginacao button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.paginacao span {
+    min-width: 96px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+#btn-clientes-ativos {
+    background-color: #c8e6c9;
+}
+
+#btn-clientes-ativos.ativo-selecionado {
+    background-color: var(--success);
+    border-color: #000;
+    color: #fff;
+}
+
+#btn-clientes-inativos {
+    background-color: #ffcdd2;
+}
+
+#btn-clientes-inativos.inativo-selecionado {
+    background-color: var(--danger);
+    border-color: #000;
+    color: #fff;
+}
