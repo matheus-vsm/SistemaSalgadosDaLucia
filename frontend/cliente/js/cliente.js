@@ -1,14 +1,17 @@
 let paginaAtual = 0;
+let clientesAtivos = true;
 
-async function listarClientes(pagina = 0) {
+async function listarClientes(pagina = 0, tipo = clientesAtivos) {
     const lista = document.getElementById('lista');
     if (!lista) return;
 
+    clientesAtivos = tipo;
+    atualizarFiltroClientes();
     try {
         const {
             response, // info da requisição (status, headers, etc.) - salva na variavel response
             data: clientesPage // os dados retornados (clientes) - salva na variavel clientesPage
-        } = await apiJson(`/clientes?page=${pagina}&size=2`);
+        } = await apiJson(`/clientes?page=${pagina}&size=2&ativo=${tipo}`);
 
         if (!response.ok) {
             lista.innerHTML = '<div class="estado">Erro ao carregar clientes</div>';
@@ -31,18 +34,31 @@ async function listarClientes(pagina = 0) {
         document.getElementById('btn-anterior').disabled = paginaAtual === 0;
         document.getElementById('btn-proximo').disabled = paginaAtual + 1 >= clientesPage.page.totalPages;
 
-        document.getElementById('btn-anterior').onclick = () => listarClientes(paginaAtual - 1);
-        document.getElementById('btn-proximo').onclick = () => listarClientes(paginaAtual + 1);
+        document.getElementById('btn-anterior').onclick = () => listarClientes(paginaAtual - 1, clientesAtivos);
+        document.getElementById('btn-proximo').onclick = () => listarClientes(paginaAtual + 1, clientesAtivos);
     } catch (erro) {
         console.error('Erro ao listar clientes:', erro);
         lista.innerHTML = '<div class="estado">Erro ao conectar com o servidor</div>';
     }
 }
 
+function atualizarFiltroClientes() {
+    const btnAtivos = document.getElementById('btn-clientes-ativos');
+    const btnInativos = document.getElementById('btn-clientes-inativos');
+
+    if (!btnAtivos || !btnInativos) return;
+
+    btnAtivos.classList.toggle('ativo-selecionado', clientesAtivos);
+    btnInativos.classList.toggle('inativo-selecionado', !clientesAtivos);
+    btnAtivos.setAttribute('aria-pressed', String(clientesAtivos));
+    btnInativos.setAttribute('aria-pressed', String(!clientesAtivos));
+}
+
 function criarCardHTML(cliente) {
     const ativo = cliente.ativo === true;
     const statusClasse = ativo ? 'ativo' : 'inativo';
     const statusTexto = ativo ? 'Ativo' : 'Inativo';
+    const statusBotao = ativo ? 'Inativar' : 'Ativar';
 
     return `
       <div class="card">
@@ -54,7 +70,7 @@ function criarCardHTML(cliente) {
         <span class="status ${statusClasse}">${statusTexto}</span>
         <button type="button" class="btn btn-secundario btn-editar" onclick="abrirModalEdicao(${cliente.id})">Editar</button>
         <button type="button" class="btn btn-secundario btn-exibir" onclick="abrirModalExibicao(${cliente.id})">Exibir</button>
-        <button type="button" class="btn btn-secundario btn-alterarStatus" onclick="abrirModalAlterarStatus(${cliente.id})">Ativar/Inativar</button>
+        <button type="button" class="btn btn-secundario btn-alterarStatus" onclick="abrirModalAlterarStatus(${cliente.id})">${statusBotao}</button>
       </div>
     `;
 }
@@ -130,6 +146,7 @@ async function abrirModalEdicao(id) {
         alert('Erro ao abrir modal de edição.');
     }
 }
+
 async function abrirModalExibicao(id) {
     try {
         const response = await fetch('cliente/html/modal-exibir-cliente.html');
@@ -149,9 +166,45 @@ async function abrirModalExibicao(id) {
     }
 }
 
+async function abrirModalAlterarStatus(id) {
+    try {
+        const response = await fetch('cliente/html/modal-alterar-status-cliente.html');
+
+        if (!response.ok) throw new Error('Erro ao carregar modal de alteração de status');
+
+        const htmlModal = await response.text();
+        const {response: respostaCliente, data: cliente} = await apiJson(`/clientes/${id}`);
+
+        if (!respostaCliente.ok) {
+            throw new Error('Erro ao carregar dados do cliente');
+        }
+
+        const ativar = cliente.ativo !== true;
+        const estado = ativar ? 'ativar' : 'inativar';
+        abrirModal({
+            titulo: `${estado[0].toUpperCase()}${estado.slice(1)} Cliente`,
+            conteudoHtml: htmlModal
+        });
+
+        configurarModalAlterarStatus(id, cliente, ativar, estado);
+    } catch (erro) {
+        console.error('Erro ao abrir modal de alteração de status:', erro);
+        alert('Erro ao abrir modal de alteração de status.');
+    }
+}
+
+function configurarModalAlterarStatus(id, cliente, ativar, estado) {
+    const conteudoStatus = document.getElementById('modal-alterar-status');
+    const mensagem = conteudoStatus.querySelector('.mensagem-alterar-status');
+    const botaoConfirmar = conteudoStatus.querySelector('.btn-confirmar-status');
+
+    mensagem.textContent = `Tem certeza que deseja ${estado} o cliente ${cliente?.nome}?`;
+    botaoConfirmar.onclick = () => alterarStatusCliente(id, ativar);
+}
+
 async function buscarClientePorId(id, tipo) {
     try {
-        const { response, data: cliente } = await apiJson(`/clientes/${id}`);
+        const {response, data: cliente} = await apiJson(`/clientes/${id}`);
 
         if (!response.ok) {
             alert('Erro ao carregar dados do cliente');
@@ -163,6 +216,7 @@ async function buscarClientePorId(id, tipo) {
         alert('Erro ao conectar com o servidor.');
     }
 }
+
 function preencherCampo(idCampo, valor) {
     const campo = document.getElementById(idCampo);
 
@@ -177,6 +231,7 @@ function preencherCampo(idCampo, valor) {
         campo.value = valor ?? '';
     }
 }
+
 function preencherDadosCliente(cliente, tipo) {
     preencherCampo(`cliente-id-${tipo}`, cliente.id);
     preencherCampo(`nome-${tipo}`, cliente.nome);
@@ -190,7 +245,7 @@ function preencherDadosCliente(cliente, tipo) {
     preencherCampo(`uf-${tipo}`, cliente.endereco?.uf);
     if (tipo === 'exibicao') {
         preencherCampo(`endereco-${tipo}`, `${cliente.endereco?.logradouro ?? ''}, 
-        ${cliente.endereco?.numero ?? ''}${cliente.endereco?.complemento ? ', ' + 
+        ${cliente.endereco?.numero ?? ''}${cliente.endereco?.complemento ? ', ' +
             cliente.endereco.complemento : ''} - ${cliente.endereco?.bairro ?? ''}, 
             ${cliente.endereco?.cidade ?? ''} - ${cliente.endereco?.uf ?? ''}`);
     }
@@ -231,19 +286,48 @@ async function editarCliente() {
         alert(erro.message || 'Erro ao conectar com o servidor.');
     }
 }
+
 async function editarClientePelaExibicao() {
     const id = document.getElementById('cliente-id-exibicao').value;
     fecharModal();
     await abrirModalEdicao(id);
 }
 
+async function alterarStatusCliente(id, estado) {
+    try {
+        const {response, data: resultado} = await apiJson(`/clientes/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({status: estado})
+        });
+
+        if (response.ok) {
+            alert(`Cliente ${estado ? 'ativado' : 'inativado'} com sucesso!`);
+            fecharModal();
+            listarClientes();
+        } else {
+            alert(resultado?.mensagem || `Erro ao ${estado ? 'ativar' : 'inativar'} cliente`);
+        }
+    } catch (erro) {
+        console.error('Erro na requisição:', erro);
+        alert(erro.message || 'Erro ao conectar com o servidor.');
+    }
+}
+
 const conteudoDinamico = document.getElementById('conteudo-dinamico');
 
 conteudoDinamico.addEventListener('pagina:carregada', (event) => {
     if (event.detail.modulo === 'cliente') {
-        listarClientes();
+        listarClientes(0, true);
     }
 });
+
+conteudoDinamico.addEventListener('click', (event) => {
+    if (event.target.id === 'btn-clientes-ativos') {
+        listarClientes(0, true);
+    } else if (event.target.id === 'btn-clientes-inativos') {
+        listarClientes(0, false);
+    }
+})
 
 document.addEventListener('focusout', (event) => {
     if (!event.target.id.includes('cep')) return;

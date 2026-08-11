@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             try {
-                const {response, data: result} = await apiJson('/login', {
+                const {response, data: result} = await apiJson('/autenticacao/login', {
                     method: 'POST',
                     body: JSON.stringify(dadosLogin),
                     skipAuth: true

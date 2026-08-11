@@ -1,7 +1,14 @@
 <h1>Área de Clientes</h1>
 
 <section>
-    <h2>Lista de Clientes Ativos</h2>
+    <div class="clientes-cabecalho">
+        <h2>Clientes Cadastrados</h2>
+        <div class="filtro-clientes" role="group" aria-label="Filtrar clientes por situação">
+            <button type="button" id="btn-clientes-ativos" class="btn-clientes ativo-selecionado" aria-pressed="true">Ativos</button>
+            <button type="button" id="btn-clientes-inativos" class="btn-clientes" aria-pressed="false">Inativos</button>
+        </div>
+    </div>
+    <br>
     <div class="container">
         <div id="lista">
             <div class="estado" id="estado-inicial">Carregando clientes...</div>

@@ -1,0 +1,73 @@
+.clientes-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.clientes-cabecalho h2 {
+    margin: 0;
+}
+
+.filtro-clientes {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-clientes {
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.btn-clientes:hover,
+.btn-clientes:focus-visible {
+    filter: brightness(0.95);
+}
+
+.btn-clientes:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+.mensagem-alterar-status {
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius);
+    background-color: #fff3f3;
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.acoes-alterar-status {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+#btn-clientes-ativos {
+    background-color: #c8e6c9;
+}
+
+#btn-clientes-ativos.ativo-selecionado {
+    background-color: var(--success);
+    border-color: #000;
+    color: #fff;
+}
+
+#btn-clientes-inativos {
+    background-color: #ffcdd2;
+}
+
+#btn-clientes-inativos.inativo-selecionado {
+    background-color: var(--danger);
+    border-color: #000;
+    color: #fff;
+}
