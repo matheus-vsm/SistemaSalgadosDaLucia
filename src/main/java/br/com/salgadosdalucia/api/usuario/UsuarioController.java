@@ -55,11 +55,12 @@ public class UsuarioController {
 
     @GetMapping
     @PreAuthorize("hasRole('FUNCIONARIO')")
-    @Operation(summary = "Listar usuários", description = "Retorna os usuários ativos de forma paginada.")
+    @Operation(summary = "Listar usuários", description = "Retorna os usuários ativos/inativos de forma paginada.")
     @ApiResponse(responseCode = "200", description = "Usuários listados com sucesso.")
     public ResponseEntity<Page<UsuarioResponse>> listar(@PageableDefault(sort = {"nome"},
-            direction = Sort.Direction.ASC, size = 10) Pageable paginacao) {
-        var page = usuarioService.listar(paginacao);
+            direction = Sort.Direction.ASC, size = 10) Pageable paginacao,
+                                                        @RequestParam Boolean ativo) {
+        var page = usuarioService.listar(paginacao, ativo);
         return ResponseEntity.ok(page);
     }
 
