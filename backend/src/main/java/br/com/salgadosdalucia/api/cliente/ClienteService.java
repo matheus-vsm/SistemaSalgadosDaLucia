@@ -26,8 +26,8 @@ public class ClienteService {
         return ClienteMapper.mapToResponse(cliente);
     }
 
-    public Page<ClienteResponse> listarTodos(Pageable paginacao) {
-        return clienteRepository.findAllByAtivoTrue(paginacao).map(ClienteMapper::mapToResponse);
+    public Page<ClienteResponse> listarTodos(Pageable paginacao, Boolean ativo) {
+        return clienteRepository.findAllByAtivo(paginacao, ativo).map(ClienteMapper::mapToResponse);
         // só se devolver dto .map(this::mapToDto); // equivalente a .map(cliente -> mapToDto(cliente))
         // map do page aplica FUNÇÃO de conversão
     }

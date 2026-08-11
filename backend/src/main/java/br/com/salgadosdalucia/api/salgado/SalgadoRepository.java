@@ -12,6 +12,6 @@ public interface SalgadoRepository extends JpaRepository<Salgado, Long> {
 
     Page<Salgado> findByNomeContainingIgnoreCase(Pageable paginacao, String nome);
 
-    Page<Salgado> findAllByAtivoTrue(Pageable paginacao);
+    Page<Salgado> findAllByAtivo(Pageable paginacao, Boolean ativo);
 
 }

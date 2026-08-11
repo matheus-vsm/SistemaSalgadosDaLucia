@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
-    Page<Usuario> findAllByAtivoTrue(Pageable paginacao);
+    Page<Usuario> findAllByAtivo(Pageable paginacao, Boolean ativo);
 
     Optional<Usuario> findByUsernameIgnoreCase(String username);
 

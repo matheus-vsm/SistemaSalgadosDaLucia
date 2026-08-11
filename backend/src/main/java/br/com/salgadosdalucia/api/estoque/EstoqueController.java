@@ -34,7 +34,7 @@ public class EstoqueController {
 
     private final EstoqueService service;
 
-    @PatchMapping("/{id}")
+    @PatchMapping(value = "/{id}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Ajustar quantidade em estoque", description = "Aplica uma variação positiva ou negativa sem permitir saldo negativo.")
     @ApiResponses({
@@ -56,7 +56,7 @@ public class EstoqueController {
         return ResponseEntity.ok(page);
     }
 
-    @GetMapping("/{salgadoId}")
+    @GetMapping(value = "/{salgadoId}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Consultar estoque por salgado")
     @ApiResponses({

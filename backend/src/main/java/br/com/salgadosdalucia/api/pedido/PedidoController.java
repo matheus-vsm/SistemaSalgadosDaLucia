@@ -64,7 +64,7 @@ public class PedidoController {
         return ResponseEntity.ok(page);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Buscar pedido por ID")
     @ApiResponses({
@@ -76,7 +76,7 @@ public class PedidoController {
         return ResponseEntity.ok(pedido);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Atualizar pedido", description = "Atualiza dados e itens de um pedido que esteja em andamento.")
     @ApiResponses({
@@ -90,7 +90,7 @@ public class PedidoController {
         return ResponseEntity.ok(pedido);
     }
 
-    @PatchMapping("/{id}/status")
+    @PatchMapping(value = "/{id}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Alterar status do pedido")
     @ApiResponses({

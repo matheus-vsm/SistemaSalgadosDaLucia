@@ -35,7 +35,7 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests(req -> {
                     req.requestMatchers(
-                            "/login", "/atualizar-token",
+                            "/autenticacao/**",
                             "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**"
                     ).permitAll();
 
