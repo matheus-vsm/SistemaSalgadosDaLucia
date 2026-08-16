@@ -1,14 +1,14 @@
-package br.com.salgadosdalucia.api.perfil;
+package br.com.salgadosdalucia.api.salgado.enums;
 
 import br.com.salgadosdalucia.api.enums.EnumDescritivo;
 
-public enum PerfilUsuarioNome implements EnumDescritivo {
-    ADMIN("Administrador"),
-    FUNCIONARIO("Funcionário");
+public enum Categoria implements EnumDescritivo {
+    FRITO("Frito"),
+    ASSADO("Assado");
 
     private final String descricao;
 
-    PerfilUsuarioNome(String descricao) {
+    Categoria(String descricao) {
         this.descricao = descricao;
     }
 
