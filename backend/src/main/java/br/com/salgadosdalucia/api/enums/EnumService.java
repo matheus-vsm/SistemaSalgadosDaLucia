@@ -1,5 +1,6 @@
 package br.com.salgadosdalucia.api.enums;
 
+import br.com.salgadosdalucia.api.exception.NotFoundException;
 import br.com.salgadosdalucia.api.pedido.enums.FormaPagamento;
 import br.com.salgadosdalucia.api.pedido.enums.StatusPedido;
 import br.com.salgadosdalucia.api.pedido.enums.TipoEntrega;
@@ -32,7 +33,7 @@ public class EnumService {
                     "perfis", converterEnum(PerfilUsuarioNome.values())
             );
 
-            default -> throw new RuntimeException("Entidade não encontrada");
+            default -> throw new NotFoundException("Entidade não encontrada.");
         };
     }
 
