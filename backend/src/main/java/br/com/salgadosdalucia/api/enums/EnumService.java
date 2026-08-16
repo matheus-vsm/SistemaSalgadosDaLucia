@@ -1,7 +1,9 @@
 package br.com.salgadosdalucia.api.enums;
 
 import br.com.salgadosdalucia.api.pedido.enums.FormaPagamento;
+import br.com.salgadosdalucia.api.pedido.enums.StatusPedido;
 import br.com.salgadosdalucia.api.pedido.enums.TipoEntrega;
+import br.com.salgadosdalucia.api.pedido.enums.TipoPreco;
 import br.com.salgadosdalucia.api.perfil.PerfilUsuarioNome;
 import br.com.salgadosdalucia.api.salgado.enums.Categoria;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,9 @@ public class EnumService {
         return switch (entidade.toUpperCase()) {
             case "PEDIDO" -> Map.of(
                     "formasPagamento", converterEnum(FormaPagamento.values()),
-                    "tiposEntrega", converterEnum(TipoEntrega.values())
+                    "tiposEntrega", converterEnum(TipoEntrega.values()),
+                    "statusPedido", converterEnum(StatusPedido.values()),
+                    "tiposPrecos", converterEnum(TipoPreco.values())
             );
 
             case "SALGADO" -> Map.of(
