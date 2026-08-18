@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', function () {
             html: 'pedidos/html/pedidos.html'
         },
         salgado: {
-            html: 'salgado/html/salgado.html'
+            html: 'salgado/html/salgado.html',
+            css: 'salgado/css/salgado.css',
+            js: 'salgado/js/salgado.js'
         },
         cliente: {
             html: 'cliente/html/cliente.html',

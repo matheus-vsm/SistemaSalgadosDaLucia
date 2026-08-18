@@ -1,0 +1,29 @@
+<form id="form-salgado-edicao" class="form-salgado">
+    <input type="hidden" id="salgado-id-edicao">
+    <fieldset class="salgado-form-grid">
+        <div class="salgado-campos">
+            <label for="nome-salgado-edicao">Nome:</label>
+            <input type="text" id="nome-salgado-edicao" required>
+            <label for="descricao-salgado-edicao">Descrição:</label>
+            <textarea id="descricao-salgado-edicao" rows="3" required></textarea>
+            <label for="categoria-salgado-edicao">Categoria:</label>
+            <select id="categoria-salgado-edicao" required></select>
+            <label for="preco-congelado-salgado-edicao">Preço do cento congelado:</label>
+            <input type="number" id="preco-congelado-salgado-edicao" min="0" step="0.01" required>
+            <label for="preco-processado-salgado-edicao">Preço do cento frito/assado:</label>
+            <input type="number" id="preco-processado-salgado-edicao" min="0" step="0.01" required>
+        </div>
+        <div class="salgado-imagem-campo">
+            <label for="imagem-salgado-edicao">Imagem:</label>
+            <label class="seletor-imagem" for="imagem-salgado-edicao">
+                <img id="preview-imagem-salgado-edicao" src="imagens/coxinha.jpg" alt="Imagem padrão do salgado">
+                <span>Selecionar imagem</span>
+            </label>
+            <input class="input-imagem" type="file" id="imagem-salgado-edicao" accept="image/*">
+        </div>
+    </fieldset>
+    <div class="acoes-modal">
+        <button type="submit" class="btn btn-primario">Concluir Edição</button>
+        <button type="button" class="btn btn-secundario" onclick="fecharModal()">Cancelar</button>
+    </div>
+</form>
