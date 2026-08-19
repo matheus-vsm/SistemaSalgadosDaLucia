@@ -1,15 +1,19 @@
-<div class="exibir-salgado">
-    <input type="hidden" id="salgado-id-exibicao">
-    <div class="exibir-salgado-resumo">
-        <img src="imagens/coxinha.jpg" alt="Imagem do salgado">
-        <div>
-            <h3 id="nome-salgado-exibicao"></h3>
-            <p id="descricao-salgado-exibicao"></p>
-            <p><strong>Categoria:</strong> <span id="categoria-salgado-exibicao"></span></p>
-            <p><strong>Cento congelado:</strong> <span id="preco-congelado-salgado-exibicao"></span></p>
-            <p><strong>Cento frito/assado:</strong> <span id="preco-processado-salgado-exibicao"></span></p>
-            <p><strong>Situação:</strong> <span id="status-salgado-exibicao"></span></p>
+<div class="dados-salgado">
+    <fieldset>
+        <input type="hidden" id="salgado-id-exibicao" name="salgadoId">
+        <div class="salgado-grid">
+            <div class="salgado-coluna">
+                <p><strong>Nome:</strong> <span id="nome-salgado-exibicao"></span></p>
+                <p><strong>Descrição:</strong> <span id="descricao-salgado-exibicao"></span></p>
+                <p><strong>Categoria:</strong> <span id="categoria-salgado-exibicao"></span></p>
+                <p><strong>Preço do cento congelado:</strong> <span id="preco-congelado-salgado-exibicao"></span></p>
+                <p><strong>Preço do cento frito/assado:</strong> <span id="preco-processado-salgado-exibicao"></span></p>
+            </div>
+
+            <div class="salgado-coluna imagem-coluna">
+                <img class="imagem-salgado" src="imagens/coxinha.jpg" alt="Imagem do salgado">
+            </div>
         </div>
-    </div>
+    </fieldset>
     <button type="button" class="btn btn-primario" onclick="editarSalgadoPelaExibicao()">Editar</button>
 </div>
