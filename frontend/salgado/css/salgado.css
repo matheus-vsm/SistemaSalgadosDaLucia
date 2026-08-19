@@ -169,6 +169,53 @@
     align-items: flex-start;
 }
 
+.campo-selecao-imagem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 160px;
+    height: 120px;
+    margin-bottom: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background-color: var(--surface);
+    cursor: pointer;
+    text-align: center;
+}
+
+.campo-selecao-imagem:hover {
+    border-color: var(--primary);
+}
+
+.campo-selecao-imagem span {
+    padding: 8px;
+    color: var(--muted);
+}
+
+.nome-arquivo-imagem {
+    width: 160px;
+    margin-top: -8px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.input-imagem {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .imagem-salgado {
     width: 160px;
     height: 120px;

@@ -144,7 +144,10 @@ async function cadastrarSalgado() {
         if (response.ok) {
             alert('Salgado cadastrado com sucesso!');
             document.getElementById('form-salgado').reset();
-            document.getElementById('imagem-preview-salgado').src = 'imagens/coxinha.jpg';
+            document.getElementById('imagem-preview-salgado').removeAttribute('src');
+            document.getElementById('imagem-preview-salgado').classList.add('hidden');
+            document.getElementById('texto-selecao-imagem').classList.remove('hidden');
+            document.getElementById('nome-arquivo-imagem').textContent = '';
             carregarCategoriasSalgado('categoria-salgado');
             listarSalgados();
         } else {
@@ -338,7 +341,14 @@ function exibirPreviewImagemSalgado(event) {
     const idPreview = event.target.id === 'imagem-salgado-edicao'
         ? 'imagem-preview-salgado-edicao'
         : 'imagem-preview-salgado';
-    document.getElementById(idPreview).src = URL.createObjectURL(arquivo);
+    const preview = document.getElementById(idPreview);
+    preview.src = URL.createObjectURL(arquivo);
+    preview.classList.remove('hidden');
+
+    if (event.target.id === 'imagem-salgado') {
+        document.getElementById('texto-selecao-imagem').classList.add('hidden');
+        document.getElementById('nome-arquivo-imagem').textContent = arquivo.name;
+    }
 }
 
 const conteudoDinamicoSalgados = document.getElementById('conteudo-dinamico');

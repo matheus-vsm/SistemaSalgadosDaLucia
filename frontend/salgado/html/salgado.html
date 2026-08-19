@@ -53,8 +53,12 @@
 
                 <div class="salgado-coluna imagem-coluna">
                     <label for="imagem-salgado">Imagem:</label>
-                    <img id="imagem-preview-salgado" class="imagem-salgado" src="imagens/coxinha.jpg" alt="Imagem do salgado">
-                    <input type="file" id="imagem-salgado" name="imagem" accept="image/*">
+                    <label for="imagem-salgado" class="campo-selecao-imagem">
+                        <img id="imagem-preview-salgado" class="imagem-salgado hidden" alt="Prévia da imagem selecionada">
+                        <span id="texto-selecao-imagem">Selecione a Imagem</span>
+                    </label>
+                    <span id="nome-arquivo-imagem" class="nome-arquivo-imagem"></span>
+                    <input type="file" id="imagem-salgado" class="input-imagem" name="imagem" accept="image/*">
                 </div>
             </div>
         </fieldset>
