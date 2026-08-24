@@ -85,8 +85,8 @@ public class PedidoService {
         LocalDateTime fimEntrega = null;
 
         if (filtro.dataEntrega() != null) {
-            inicioEntrega = filtro.dataEntrega().toLocalDate().atStartOfDay();
-            fimEntrega = filtro.dataEntrega().toLocalDate().atTime(23, 59, 59);
+            inicioEntrega = filtro.dataEntrega().toLocalDate().atStartOfDay(); // retira a hora e depois coloca no inicio do dia
+            fimEntrega = filtro.dataEntrega().toLocalDate().atTime(23, 59, 59); // retira a hora e depois coloca no fim do dia
         }
 
         return pedidoRepository.findWithFiltros(filtro.statusPedido(), filtro.clienteId(), filtro.nomeCliente(),
