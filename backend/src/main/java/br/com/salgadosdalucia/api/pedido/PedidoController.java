@@ -57,7 +57,7 @@ public class PedidoController {
     @Operation(summary = "Listar pedidos com filtros", description = "Permite filtrar por status, cliente, datas, entrega, pagamento e responsável.")
     @ApiResponse(responseCode = "200", description = "Pedidos listados com sucesso.")
     public ResponseEntity<Page<PedidoListagemDto>> listar(
-            PedidoFiltroDto filtro,
+            @ModelAttribute PedidoFiltroDto filtro,
             @PageableDefault(size = 10, sort = {"dataEntrega"},
                     direction = Sort.Direction.ASC) Pageable paginacao) {
         var page = service.listarComFiltro(filtro, paginacao);

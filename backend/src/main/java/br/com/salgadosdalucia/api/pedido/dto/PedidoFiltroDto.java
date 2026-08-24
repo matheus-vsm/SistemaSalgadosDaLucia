@@ -3,6 +3,8 @@ package br.com.salgadosdalucia.api.pedido.dto;
 import br.com.salgadosdalucia.api.pedido.enums.FormaPagamento;
 import br.com.salgadosdalucia.api.pedido.enums.StatusPedido;
 import br.com.salgadosdalucia.api.pedido.enums.TipoEntrega;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,7 +14,10 @@ public record PedidoFiltroDto(
         Long clienteId,
         String nomeCliente,
         LocalDate dataPedido,
-        LocalDateTime dataEntrega,
+        @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+        LocalDateTime dataInicioEntrega,
+        @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+        LocalDateTime dataFimEntrega,
         TipoEntrega tipoEntrega,
         FormaPagamento formaPagamento,
         Long usuarioResponsavelId,
