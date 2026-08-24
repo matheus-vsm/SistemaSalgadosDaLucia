@@ -84,9 +84,13 @@ public class PedidoService {
         LocalDateTime inicioEntrega = null;
         LocalDateTime fimEntrega = null;
 
-        if (filtro.dataEntrega() != null) {
-            inicioEntrega = filtro.dataEntrega().toLocalDate().atStartOfDay(); // retira a hora e depois coloca no inicio do dia
-            fimEntrega = filtro.dataEntrega().toLocalDate().atTime(23, 59, 59); // retira a hora e depois coloca no fim do dia
+        if (filtro.dataInicioEntrega() != null) {
+            inicioEntrega = filtro.dataInicioEntrega().toLocalDate().atStartOfDay(); // retira a hora e depois coloca no inicio do dia
+            if (filtro.dataFimEntrega() != null) {
+                fimEntrega = filtro.dataFimEntrega().toLocalDate().atTime(23, 59, 59);
+            } else {
+                fimEntrega = filtro.dataInicioEntrega().toLocalDate().atTime(23, 59, 59); // retira a hora e depois coloca no fim do dia
+            }
         }
 
         return pedidoRepository.findWithFiltros(filtro.statusPedido(), filtro.clienteId(), filtro.nomeCliente(),

@@ -15,7 +15,9 @@ public record PedidoFiltroDto(
         String nomeCliente,
         LocalDate dataPedido,
         @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss")
-        LocalDateTime dataEntrega,
+        LocalDateTime dataInicioEntrega,
+        @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+        LocalDateTime dataFimEntrega,
         TipoEntrega tipoEntrega,
         FormaPagamento formaPagamento,
         Long usuarioResponsavelId,
