@@ -134,6 +134,10 @@ function alternarEnderecoPedido(tipo) {
         if (campo.id !== 'complemento-pedido') campo.required = entrega;
     });
     if (!entrega) bloco.querySelectorAll('input').forEach(campo => campo.value = '');
+    if (entrega) {
+        const clienteId = document.getElementById('cliente-pedido').value;
+        if (clienteId) preencherEnderecoClientePedido(clienteId);
+    }
     atualizarTotalPedido();
 }
 
