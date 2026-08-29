@@ -309,6 +309,43 @@ body.edicao-pedido-ativa .sidebar nav {
     margin-top: 18px
 }
 
+.paginacao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin: 20px 0
+}
+
+.paginacao button {
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background-color: var(--surface);
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color .15s, border-color .15s
+}
+
+.paginacao button:hover:not(:disabled) {
+    background-color: var(--background);
+    border-color: var(--muted)
+}
+
+.paginacao button:disabled {
+    opacity: .45;
+    cursor: not-allowed
+}
+
+.paginacao span {
+    min-width: 96px;
+    color: var(--muted);
+    font-size: .9rem;
+    font-weight: 600;
+    text-align: center
+}
+
 @media (max-width: 1000px) {
     .pedido-form-grid {
         grid-template-columns:1fr
