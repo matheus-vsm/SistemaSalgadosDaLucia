@@ -341,7 +341,7 @@ conteudoDinamico.addEventListener('click', (event) => {
 })
 
 document.addEventListener('focusout', (event) => {
-    if (!event.target.id.includes('cep')) return;
+    if (event.target.id !== 'cep' && event.target.id !== 'cep-edicao') return;
     preencherEndereco(event);
 });
 

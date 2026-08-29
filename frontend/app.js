@@ -9,7 +9,9 @@ document.addEventListener('DOMContentLoaded', function () {
             html: 'inicio/html/inicio.html'
         },
         pedido: {
-            html: 'pedidos/html/pedidos.html'
+            html: 'pedidos/html/pedidos.html',
+            css: 'pedidos/css/pedidos.css',
+            js: 'pedidos/js/pedidos.js'
         },
         salgado: {
             html: 'salgado/html/salgado.html',
