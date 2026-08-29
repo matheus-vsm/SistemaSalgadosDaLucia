@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const html = await response.text();
             conteudoDinamico.innerHTML = html;
+            window.scrollTo({top: 0, left: 0, behavior: 'auto'});
 
             if (modulo.js) {
                 await carregarScript(modulo.js);
