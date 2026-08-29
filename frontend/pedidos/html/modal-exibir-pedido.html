@@ -1,0 +1,23 @@
+<div class="detalhes-pedido">
+    <input type="hidden" id="pedido-id-exibicao">
+    <fieldset>
+        <p><strong>Cliente:</strong> <span id="pedido-cliente-exibicao"></span></p>
+        <p><strong>Status:</strong> <span id="pedido-status-exibicao"></span></p>
+        <p><strong>Entrega/retirada:</strong> <span id="pedido-data-exibicao"></span></p>
+        <p><strong>Tipo:</strong> <span id="pedido-tipo-entrega-exibicao"></span></p>
+        <p><strong>Forma de pagamento:</strong> <span id="pedido-pagamento-exibicao"></span></p>
+    </fieldset>
+    <fieldset>
+        <legend>Itens</legend>
+        <ul id="pedido-itens-exibicao"></ul>
+    </fieldset>
+    <fieldset id="pedido-endereco-bloco-exibicao">
+        <legend>Endereço de entrega</legend>
+        <p id="pedido-endereco-exibicao"></p>
+    </fieldset>
+    <p><strong>Frete:</strong> <span id="pedido-frete-exibicao"></span></p>
+    <p><strong>Valor total:</strong> <span id="pedido-total-exibicao"></span></p>
+    <div class="modal-acoes">
+        <button type="button" class="btn btn-primario" onclick="editarPedidoPelaExibicao()">Editar</button>
+    </div>
+</div>

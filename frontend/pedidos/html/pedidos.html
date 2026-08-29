@@ -1,1 +1,102 @@
 <h1>Área de Pedidos</h1>
+<hr>
+<section class="historico-pedidos">
+    <div class="pedidos-cabecalho"><h2>Histórico de Pedidos</h2>
+        <div id="filtro-status-pedido" class="filtro-status-pedido" role="group"
+             aria-label="Filtrar pedidos por status"></div>
+    </div>
+    <form id="form-filtro-pedidos" class="filtro-data-pedidos"><label for="data-inicio-pedido">Data
+        inicial:</label><input type="date" id="data-inicio-pedido" required><label class="usar-data-final"
+                                                                                   for="usar-data-final-pedido"><input
+            type="checkbox" id="usar-data-final-pedido"> Usar data final</label><label for="data-fim-pedido">Data
+        final:</label><input type="date" id="data-fim-pedido" disabled>
+        <button type="submit" class="btn btn-primario">Filtrar</button>
+        <button type="button" id="buscar-todos-pedidos" class="btn btn-secundario">Buscar todos</button>
+    </form>
+    <div id="lista-pedidos" class="lista-pedidos">
+        <div class="estado">Carregando pedidos...</div>
+    </div>
+    <div id="paginacao-pedidos" class="paginacao">
+        <button type="button" id="pedido-anterior">Anterior</button>
+        <span id="pedido-pagina-atual"></span>
+        <button type="button" id="pedido-proximo">Próximo</button>
+    </div>
+    <hr>
+</section>
+<section><h2 id="titulo-form-pedido">Cadastro de Pedido</h2>
+    <form id="form-pedido">
+        <div class="pedido-form-grid">
+            <div class="pedido-formulario">
+                <div class="campos-duplos">
+                    <div><label for="cliente-pedido">Cliente:</label><select id="cliente-pedido" required>
+                        <option value="">Selecione</option>
+                    </select></div>
+                    <div><label for="tipo-entrega-pedido">Tipo de entrega:</label><select id="tipo-entrega-pedido"
+                                                                                          required>
+                        <option value="">Selecione</option>
+                    </select></div>
+                </div>
+                <fieldset id="endereco-pedido" class="hidden">
+                    <legend>Endereço de entrega</legend>
+                    <div class="endereco-grid">
+                        <div class="endereco-coluna"><label for="cep-pedido">CEP:</label><input type="text"
+                                                                                                id="cep-pedido"
+                                                                                                maxlength="8"
+                                                                                                required><label
+                                for="logradouro-pedido">Logradouro:</label><input type="text" id="logradouro-pedido"
+                                                                                  required><label for="numero-pedido">Número:</label><input
+                                type="text" id="numero-pedido" required><label
+                                for="complemento-pedido">Complemento:</label><input type="text" id="complemento-pedido">
+                        </div>
+                        <div class="endereco-coluna"><label for="bairro-pedido">Bairro:</label><input type="text"
+                                                                                                      id="bairro-pedido"
+                                                                                                      required><label
+                                for="cidade-pedido">Cidade:</label><input type="text" id="cidade-pedido" required><label
+                                for="uf-pedido">UF:</label><input type="text" id="uf-pedido" maxlength="2"
+                                                                  required><label
+                                for="frete-pedido">Frete:</label><input type="number" id="frete-pedido" min="0.01"
+                                                                        step="0.01" required></div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Adicionar salgado</legend>
+                    <div class="produto-grid">
+                        <div><label for="salgado-pedido">Salgado:</label><select id="salgado-pedido">
+                            <option value="">Selecione</option>
+                        </select><label for="tipo-preco-pedido">Tipo:</label><select id="tipo-preco-pedido">
+                            <option value="">Selecione</option>
+                        </select></div>
+                        <div><label for="quantidade-pedido">Quantidade:</label><input type="number"
+                                                                                      id="quantidade-pedido" min="1"
+                                                                                      step="1">
+                            <button type="button" id="adicionar-item-pedido" class="btn btn-secundario">Adicionar
+                                salgado
+                            </button>
+                        </div>
+                        <div class="preview-pedido"><img src="imagens/coxinha.jpg" alt="Imagem do salgado"></div>
+                    </div>
+                </fieldset>
+                <div class="agendamento-grid">
+                    <div><label for="data-entrega-pedido">Data da entrega/retirada:</label><input type="date"
+                                                                                                  id="data-entrega-pedido"
+                                                                                                  required></div>
+                    <div><label for="hora-entrega-pedido">Horário:</label><input type="time" id="hora-entrega-pedido"
+                                                                                 required></div>
+                    <div><label for="forma-pagamento-pedido">Forma de pagamento:</label><select
+                            id="forma-pagamento-pedido" required>
+                        <option value="">Selecione</option>
+                    </select></div>
+                </div>
+                <button type="submit" class="btn btn-primario">Cadastrar Pedido</button>
+                <button type="button" id="cancelar-edicao-pedido" class="btn btn-secundario hidden">Cancelar edição
+                </button>
+            </div>
+            <aside class="carrinho-pedido"><h2>Itens</h2>
+                <div id="itens-pedido" class="itens-pedido">
+                    <div class="estado">Nenhum salgado adicionado</div>
+                </div>
+                <div class="total-pedido">Valor Total: <strong id="valor-total-pedido">R$ 0,00</strong></div>
+            </aside>
+        </div>
+    </form>
+</section>
