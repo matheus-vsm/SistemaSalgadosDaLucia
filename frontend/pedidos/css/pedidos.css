@@ -80,9 +80,17 @@
     color: #fff
 }
 
-.card-pedido-corpo .status-em-andamento { color: #1565c0 }
-.card-pedido-corpo .status-concluido { color: #2e7d32 }
-.card-pedido-corpo .status-cancelado { color: #c62828 }
+.card-pedido-corpo .status-em-andamento {
+    color: #1565c0
+}
+
+.card-pedido-corpo .status-concluido {
+    color: #2e7d32
+}
+
+.card-pedido-corpo .status-cancelado {
+    color: #c62828
+}
 
 body.edicao-pedido-ativa .historico-pedidos,
 body.edicao-pedido-ativa .sidebar nav {
