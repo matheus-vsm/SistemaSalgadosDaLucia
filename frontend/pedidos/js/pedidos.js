@@ -6,6 +6,7 @@ let salgadosPedido = [];
 let itensNovoPedido = [];
 let pedidoEmEdicao = null;
 let filtrarPedidosPorData = false;
+let templateCardPedido = '';
 
 const moedaPedido = valor => Number(valor || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
 const textoEnumPedido = (grupo, valor) => enumsPedido[grupo]?.find(item => item.valor === valor)?.descricao || valor || '';
@@ -37,13 +38,17 @@ async function carregarDadosIniciaisPedido() {
         pedidoEmEdicao = null;
         itensNovoPedido = [];
         filtrarPedidosPorData = false;
-        const [resEnums, resClientes, resSalgados] = await Promise.all([
-            apiJson('/enums/pedido'), apiJson('/clientes?ativo=true&page=0&size=100'), apiJson('/salgados?ativo=true&page=0&size=100')
+        const [resEnums, resClientes, resSalgados, respostaCard] = await Promise.all([
+            apiJson('/enums/pedido'),
+            apiJson('/clientes?ativo=true&page=0&size=100'),
+            apiJson('/salgados?ativo=true&page=0&size=100'),
+            fetch('pedidos/html/card-pedido.html')
         ]);
-        if (!resEnums.response.ok || !resClientes.response.ok || !resSalgados.response.ok) throw new Error('Erro ao carregar dados do cadastro');
+        if (!resEnums.response.ok || !resClientes.response.ok || !resSalgados.response.ok || !respostaCard.ok) throw new Error('Erro ao carregar dados do cadastro');
         enumsPedido = resEnums.data;
         clientesPedido = resClientes.data.content || [];
         salgadosPedido = resSalgados.data.content || [];
+        templateCardPedido = await respostaCard.text();
         montarFiltrosStatusPedido();
         preencherSelectPedido('tipo-entrega-pedido', enumsPedido.tiposEntrega);
         preencherSelectPedido('tipo-preco-pedido', enumsPedido.tiposPrecos);
@@ -97,13 +102,28 @@ async function listarPedidos(pagina = 0) {
 
 function criarCardPedido(pedido) {
     const endereco = pedido.enderecoEntrega;
-    return `<article class="card-pedido ${classeStatusPedido(pedido.status)}"><div class="card-pedido-corpo">
-        <h3>Pedido n° ${pedido.id}</h3><p class="${classeStatusPedido(pedido.status)}"><strong>${escaparPedido(textoEnumPedido('statusPedido', pedido.status))}</strong></p><p><strong>Cliente:</strong> ${escaparPedido(pedido.cliente?.nome)}</p>
-        <ul class="card-pedido-itens">${(pedido.itens || []).map(i => `<li>${i.quantidade} ${escaparPedido(i.nomeSalgado)} — ${escaparPedido(textoEnumPedido('tiposPrecos', i.tipoPreco))}</li>`).join('')}</ul>
-        <p><strong>Valor total:</strong> ${moedaPedido(pedido.valorTotal)}</p><p><strong>Pagamento:</strong> ${escaparPedido(textoEnumPedido('formasPagamento', pedido.formaPagamento))}</p>
-        <p><strong>${pedido.tipoEntrega === 'ENTREGA' ? 'Entrega' : 'Retirada'}:</strong> ${endereco ? escaparPedido(`${endereco.logradouro}, ${endereco.numero} - ${endereco.bairro}`) : 'No local'}</p>
-        <p class="card-pedido-data">DATA: ${formatarDataPedido(pedido.dataEntrega)}</p></div><div class="card-pedido-acoes">
-        <button type="button" class="btn btn-secundario" onclick="editarPedido(${pedido.id})">Editar</button><button type="button" class="btn btn-secundario" onclick="exibirPedido(${pedido.id})">Exibir</button><button type="button" class="btn btn-secundario" onclick="abrirStatusPedido(${pedido.id})">Alterar status</button></div></article>`;
+    const template = document.createElement('template');
+    template.innerHTML = templateCardPedido.trim();
+    const card = template.content.firstElementChild;
+    card.classList.add(classeStatusPedido(pedido.status));
+    card.dataset.pedidoId = pedido.id;
+    card.querySelector('.pedido-numero-card').textContent = `Pedido n° ${pedido.id}`;
+    const status = card.querySelector('.pedido-status-card');
+    status.classList.add(classeStatusPedido(pedido.status));
+    status.querySelector('strong').textContent = textoEnumPedido('statusPedido', pedido.status);
+    card.querySelector('.pedido-cliente-card').textContent = pedido.cliente?.nome || '';
+    card.querySelector('.pedido-total-card').textContent = moedaPedido(pedido.valorTotal);
+    card.querySelector('.pedido-pagamento-card').textContent = textoEnumPedido('formasPagamento', pedido.formaPagamento);
+    card.querySelector('.pedido-entrega-rotulo-card').textContent = `${pedido.tipoEntrega === 'ENTREGA' ? 'Entrega' : 'Retirada'}:`;
+    card.querySelector('.pedido-entrega-card').textContent = endereco ? `${endereco.logradouro}, ${endereco.numero} - ${endereco.bairro}` : 'No local';
+    card.querySelector('.card-pedido-data').textContent = `DATA: ${formatarDataPedido(pedido.dataEntrega)}`;
+    const listaItens = card.querySelector('.card-pedido-itens');
+    (pedido.itens || []).forEach(item => {
+        const linha = document.createElement('li');
+        linha.textContent = `${item.quantidade} ${item.nomeSalgado} — ${textoEnumPedido('tiposPrecos', item.tipoPreco)}`;
+        listaItens.appendChild(linha);
+    });
+    return card.outerHTML;
 }
 
 function alternarEnderecoPedido(tipo) {
@@ -249,27 +269,82 @@ async function obterPedido(id) {
 
 async function exibirPedido(id) {
     try {
-        const p = await obterPedido(id);
+        const [respostaTemplate, p] = await Promise.all([
+            fetch('pedidos/html/modal-exibir-pedido.html'),
+            obterPedido(id)
+        ]);
+        if (!respostaTemplate.ok) throw new Error('Erro ao carregar modal de exibição');
+        const htmlModal = await respostaTemplate.text();
         abrirModal({
             titulo: `Pedido n° ${p.id}`,
-            conteudoHtml: `<div class="detalhes-pedido"><p><strong>Cliente:</strong> ${escaparPedido(p.cliente?.nome)}</p><p><strong>Status:</strong> ${escaparPedido(textoEnumPedido('statusPedido', p.status))}</p><p><strong>Entrega/retirada:</strong> ${formatarDataPedido(p.dataEntrega)}</p><p><strong>Tipo:</strong> ${escaparPedido(textoEnumPedido('tiposEntrega', p.tipoEntrega))}</p><p><strong>Pagamento:</strong> ${escaparPedido(textoEnumPedido('formasPagamento', p.formaPagamento))}</p><ul>${p.itens.map(i => `<li>${i.quantidade} ${escaparPedido(i.nomeSalgado)} (${escaparPedido(textoEnumPedido('tiposPrecos', i.tipoPreco))}) — ${moedaPedido(i.subTotal)}</li>`).join('')}</ul><p><strong>Frete:</strong> ${moedaPedido(p.frete)}</p><p><strong>Total:</strong> ${moedaPedido(p.valorTotal)}</p><div class="modal-acoes"><button class="btn btn-primario" onclick="fecharModal();editarPedido(${p.id})">Editar</button></div></div>`
+            conteudoHtml: htmlModal
         });
+        preencherModalExibicaoPedido(p);
     } catch (e) {
         alert(e.message);
     }
 }
 
+function preencherModalExibicaoPedido(pedido) {
+    document.getElementById('pedido-id-exibicao').value = pedido.id;
+    document.getElementById('pedido-cliente-exibicao').textContent = pedido.cliente?.nome || '';
+    document.getElementById('pedido-status-exibicao').textContent = textoEnumPedido('statusPedido', pedido.status);
+    document.getElementById('pedido-data-exibicao').textContent = formatarDataPedido(pedido.dataEntrega);
+    document.getElementById('pedido-tipo-entrega-exibicao').textContent = textoEnumPedido('tiposEntrega', pedido.tipoEntrega);
+    document.getElementById('pedido-pagamento-exibicao').textContent = textoEnumPedido('formasPagamento', pedido.formaPagamento);
+    document.getElementById('pedido-frete-exibicao').textContent = moedaPedido(pedido.frete);
+    document.getElementById('pedido-total-exibicao').textContent = moedaPedido(pedido.valorTotal);
+
+    const lista = document.getElementById('pedido-itens-exibicao');
+    (pedido.itens || []).forEach(item => {
+        const linha = document.createElement('li');
+        linha.textContent = `${item.quantidade} ${item.nomeSalgado} (${textoEnumPedido('tiposPrecos', item.tipoPreco)}) — ${moedaPedido(item.subTotal)}`;
+        lista.appendChild(linha);
+    });
+
+    const blocoEndereco = document.getElementById('pedido-endereco-bloco-exibicao');
+    if (pedido.tipoEntrega !== 'ENTREGA' || !pedido.enderecoEntrega) {
+        blocoEndereco.classList.add('hidden');
+        return;
+    }
+    const endereco = pedido.enderecoEntrega;
+    document.getElementById('pedido-endereco-exibicao').textContent = `${endereco.logradouro}, ${endereco.numero}${endereco.complemento ? `, ${endereco.complemento}` : ''} - ${endereco.bairro}, ${endereco.cidade} - ${endereco.uf}, CEP ${endereco.cep}`;
+}
+
+async function editarPedidoPelaExibicao() {
+    const id = Number(document.getElementById('pedido-id-exibicao').value);
+    fecharModal();
+    await editarPedido(id);
+}
+
 async function abrirStatusPedido(id) {
     try {
-        const p = await obterPedido(id);
-        const opcoes = enumsPedido.statusPedido.filter(s => s.valor !== p.status);
+        const [respostaTemplate, p] = await Promise.all([
+            fetch('pedidos/html/modal-alterar-status-pedido.html'),
+            obterPedido(id)
+        ]);
+        if (!respostaTemplate.ok) throw new Error('Erro ao carregar modal de alteração de status');
+        const htmlModal = await respostaTemplate.text();
         abrirModal({
             titulo: 'Alterar status do pedido',
-            conteudoHtml: `<p>Selecione o novo status do Pedido n° ${p.id}:</p><div class="status-modal-grid">${opcoes.map(s => `<button type="button" class="btn btn-secundario ${classeStatusPedido(s.valor)}" onclick="alterarStatusPedido(${p.id},'${s.valor}')">${escaparPedido(s.descricao)}</button>`).join('')}</div>`
+            conteudoHtml: htmlModal
         });
+        configurarModalStatusPedido(p);
     } catch (e) {
         alert(e.message);
     }
+}
+
+function configurarModalStatusPedido(pedido) {
+    document.getElementById('pedido-id-status').value = pedido.id;
+    document.querySelector('.mensagem-alterar-status-pedido').textContent = `Selecione o novo status do Pedido n° ${pedido.id}. Status atual: ${textoEnumPedido('statusPedido', pedido.status)}.`;
+    const opcoes = enumsPedido.statusPedido.filter(status => status.valor !== pedido.status);
+    preencherSelectPedido('novo-status-pedido', opcoes);
+    document.querySelector('.btn-confirmar-status-pedido').onclick = () => {
+        const status = document.getElementById('novo-status-pedido').value;
+        if (!status) return alert('Selecione o novo status do pedido.');
+        alterarStatusPedido(pedido.id, status);
+    };
 }
 
 async function alterarStatusPedido(id, status) {
@@ -316,7 +391,15 @@ const areaPedido = document.getElementById('conteudo-dinamico');
 areaPedido.addEventListener('pagina:carregada', e => {
     if (e.detail.modulo === 'pedido') carregarDadosIniciaisPedido();
 });
+
 areaPedido.addEventListener('click', e => {
+    const botaoAcaoPedido = e.target.closest('[data-acao-pedido]');
+    if (botaoAcaoPedido) {
+        const id = Number(botaoAcaoPedido.closest('.card-pedido').dataset.pedidoId);
+        if (botaoAcaoPedido.dataset.acaoPedido === 'editar') editarPedido(id);
+        if (botaoAcaoPedido.dataset.acaoPedido === 'exibir') exibirPedido(id);
+        if (botaoAcaoPedido.dataset.acaoPedido === 'status') abrirStatusPedido(id);
+    }
     const status = e.target.dataset.statusPedido;
     if (status) {
         statusPedidoSelecionado = status;
@@ -344,6 +427,7 @@ areaPedido.addEventListener('click', e => {
     if (e.target.id === 'pedido-anterior') listarPedidos(paginaPedidos - 1);
     if (e.target.id === 'pedido-proximo') listarPedidos(paginaPedidos + 1);
 });
+
 areaPedido.addEventListener('change', e => {
     if (e.target.id === 'usar-data-final-pedido') {
         document.getElementById('data-fim-pedido').disabled = !e.target.checked;
@@ -353,9 +437,11 @@ areaPedido.addEventListener('change', e => {
     if (e.target.id === 'cliente-pedido') preencherEnderecoClientePedido(e.target.value);
     if (e.target.id === 'frete-pedido') atualizarTotalPedido();
 });
+
 areaPedido.addEventListener('focusout', e => {
     if (e.target.id === 'cep-pedido') preencherEnderecoPedidoPorCep(e.target.value);
 });
+
 areaPedido.addEventListener('submit', e => {
     if (e.target.id === 'form-filtro-pedidos') {
         e.preventDefault();

@@ -302,12 +302,6 @@ body.edicao-pedido-ativa .sidebar nav {
     padding-left: 20px
 }
 
-.status-modal-grid {
-    display: grid;
-    gap: 8px;
-    margin: 14px 0
-}
-
 .modal-acoes {
     display: flex;
     justify-content: flex-end;
