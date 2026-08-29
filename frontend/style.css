@@ -77,6 +77,7 @@ body.modal-aberto {
 header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 16px 24px;
     background: var(--surface);
     border-bottom: 1px solid var(--line);
@@ -99,6 +100,35 @@ header {
     width: 40px;
     height: 40px;
     border-radius: 50%;
+    object-fit: cover;
+}
+
+.social-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.social-links a {
+    display: flex;
+    border-radius: 8px;
+    transition: transform 0.15s, opacity 0.15s;
+}
+
+.social-links a:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+.social-links a:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+}
+
+.social-links img {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     object-fit: cover;
 }
 
