@@ -57,7 +57,7 @@ public class CompraController {
     @Operation(summary = "Listar compras com filtros", description = "Permite filtrar por data, período, nome do item ou observação.")
     @ApiResponse(responseCode = "200", description = "Compras listadas com sucesso.")
     public ResponseEntity<Page<CompraResponse>> listar(
-            CompraFiltroDto filtro,
+            @ModelAttribute CompraFiltroDto filtro,
             @PageableDefault(sort = "dataCompra") Pageable paginacao) {
         var page = service.listarComFiltro(filtro, paginacao);
         return ResponseEntity.ok(page);

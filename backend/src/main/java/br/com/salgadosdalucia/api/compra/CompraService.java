@@ -65,8 +65,13 @@ public class CompraService {
     }
 
     public Page<CompraResponse> listarComFiltro(CompraFiltroDto filtro, Pageable paginacao) {
-        return compraRepository.findAllWithFiltros(filtro.dataCompra(), filtro.dataInicioCompra(),
-                        filtro.dataFimCompra(), filtro.nomeItem(), filtro.observacao(), paginacao)
+        var fimCompra = filtro.dataFimCompra();
+        if (filtro.dataInicioCompra() != null && fimCompra == null) {
+            fimCompra = filtro.dataInicioCompra();
+        }
+
+        return compraRepository.findAllWithFiltros(filtro.dataInicioCompra(),
+                        fimCompra, filtro.nomeItem(), filtro.observacao(), paginacao)
                 .map(CompraMapper::mapToResponse);
     }
 
