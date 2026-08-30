@@ -12,7 +12,7 @@ public class ItemCompraMapper {
                         item.getId(),
                         item.getNome(),
                         item.getQuantidade(),
-                        item.getPrecoUnitario(),
+                        item.getValorUnitario(),
                         item.getSubTotal()
                 )).toList();
     }

@@ -34,7 +34,7 @@ public class CompraService {
             item.setCompra(compra);
             item.setNome(itemRequest.nome());
             item.setQuantidade(itemRequest.quantidade());
-            item.setPrecoUnitario(itemRequest.precoUnitario());
+            item.setValorUnitario(itemRequest.valorUnitario());
             calcularSubTotal(item);
 
             itens.add(item);
@@ -61,7 +61,7 @@ public class CompraService {
     }
 
     private void calcularSubTotal(ItemCompra item) {
-        item.setSubTotal(item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade())));
+        item.setSubTotal(item.getValorUnitario().multiply(BigDecimal.valueOf(item.getQuantidade())));
     }
 
     public Page<CompraResponse> listarComFiltro(CompraFiltroDto filtro, Pageable paginacao) {

@@ -10,7 +10,7 @@ public record ItemCompraRequest(
         String nome,
         @NotNull(message = "A quantidade do item é obrigatória!")
         Integer quantidade,
-        @NotNull(message = "O preço unitário do item é obrigatório!")
-        BigDecimal precoUnitario
+        @NotNull(message = "O valor unitário do item é obrigatório!")
+        BigDecimal valorUnitario
 ) {
 }
