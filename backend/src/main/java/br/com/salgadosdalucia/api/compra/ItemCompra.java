@@ -22,7 +22,7 @@ public class ItemCompra {
     private Compra compra;
     private String nome;
     private Integer quantidade;
-    private BigDecimal precoUnitario;
+    private BigDecimal valorUnitario;
     private BigDecimal subTotal;
 
 }

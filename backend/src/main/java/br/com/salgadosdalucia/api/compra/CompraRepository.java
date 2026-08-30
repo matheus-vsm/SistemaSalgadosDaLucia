@@ -15,15 +15,11 @@ public interface CompraRepository extends JpaRepository<Compra, Long> {
             SELECT DISTINCT c FROM Compra c
             JOIN ItemCompra ic
             ON c.id = ic.compra.id 
-            WHERE (:dataCompra IS NULL OR c.dataCompra = :dataCompra)
-            AND (
-                (:dataInicioCompra IS NULL OR :dataFimCompra IS NULL)
-                OR c.dataCompra BETWEEN :dataInicioCompra AND :dataFimCompra
-            )
+            WHERE (:dataInicioCompra IS NULL OR c.dataCompra BETWEEN :dataInicioCompra AND :dataFimCompra)
             AND (:nomeItem IS NULL OR UPPER(ic.nome) LIKE UPPER(CONCAT('%', :nomeItem, '%')))
             AND (:observacao IS NULL OR UPPER(c.observacao) LIKE UPPER(CONCAT('%', :observacao, '%')))
             """)
-    Page<Compra> findAllWithFiltros(LocalDate dataCompra, LocalDate dataInicioCompra, LocalDate dataFimCompra,
+    Page<Compra> findAllWithFiltros(LocalDate dataInicioCompra, LocalDate dataFimCompra,
                                     String nomeItem, String observacao, Pageable paginacao);
 
 }
