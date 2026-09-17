@@ -52,13 +52,21 @@ public class CompraController {
         return ResponseEntity.created(uri).body(compra);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('FUNCIONARIO')")
+    @Operation(summary = "Editar compra", description = "Atualiza os itens, a data e a observação, recalculando o total.")
+    //@ApiResponses({})
+    public ResponseEntity<CompraResponse> editar(@PathVariable Long id, @RequestBody @Valid CriacaoCompraRequest request) throws NotFoundException {
+        CompraResponse compra = service.editarCompra(id, request);
+        return ResponseEntity.ok(compra);
+    }
+
     @GetMapping
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Listar compras com filtros", description = "Permite filtrar por data, período, nome do item ou observação.")
     @ApiResponse(responseCode = "200", description = "Compras listadas com sucesso.")
-    public ResponseEntity<Page<CompraResponse>> listar(
-            @ModelAttribute CompraFiltroDto filtro,
-            @PageableDefault(sort = "dataCompra") Pageable paginacao) {
+    public ResponseEntity<Page<CompraResponse>> listar(@ModelAttribute CompraFiltroDto filtro,
+                                                       @PageableDefault(sort = "dataCompra") Pageable paginacao) {
         var page = service.listarComFiltro(filtro, paginacao);
         return ResponseEntity.ok(page);
     }
