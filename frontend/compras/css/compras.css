@@ -135,6 +135,10 @@
     align-items: start;
 }
 
+.compra-formulario {
+    min-width: 0;
+}
+
 .adicionar-compra {
     margin: 0;
     min-width: 0;
@@ -239,6 +243,10 @@
     flex-wrap: wrap;
     justify-content: flex-end;
     margin-top: 18px;
+}
+
+.compra-acoes-form {
+    justify-content: flex-start;
 }
 
 body.edicao-compra-ativa .historico-compras, body.edicao-compra-ativa .sidebar nav {
