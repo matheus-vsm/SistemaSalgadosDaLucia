@@ -170,7 +170,12 @@ body.edicao-pedido-ativa .sidebar nav {
 .pedido-form-grid {
     display: grid;
     grid-template-columns:minmax(0, 2fr) minmax(300px, 1fr);
-    gap: 22px
+    gap: 24px;
+    padding: 22px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    align-items: start
 }
 
 .pedido-formulario fieldset {
@@ -383,6 +388,11 @@ body.edicao-pedido-ativa .sidebar nav {
 }
 
 @media (max-width: 650px) {
+    .pedido-form-grid {
+        padding: 14px;
+        gap: 16px
+    }
+
     .lista-pedidos, .produto-grid {
         grid-template-columns:1fr
     }
