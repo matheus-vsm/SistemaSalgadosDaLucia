@@ -4,9 +4,9 @@ let compraEmEdicao = null;
 let filtroCompras = null;
 let consultaCompras = 0;
 let salvandoCompra = false;
+let templateCardCompra = '';
+let templateItemCompra = '';
 
-const areaCompra = document.getElementById('conteudo-dinamico');
-const campoCompra = id => document.getElementById(id);
 const moedaCompra = valor => Number(valor || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
 const escaparCompra = valor => String(valor ?? '').replace(/[&<>"']/g, c => ({
     '&': '&amp;',
@@ -15,9 +15,41 @@ const escaparCompra = valor => String(valor ?? '').replace(/[&<>"']/g, c => ({
     '"': '&quot;',
     "'": '&#39;'
 }[c]));
-const formatarDataCompra = data => data ? data.slice(0, 10).split('-').reverse().join('/') : '';
-const dataFiltroCompra = data => data.split('-').reverse().join('-');
-const subtotalCompra = item => Math.round(Number(item.valorUnitario) * 100) * item.quantidade / 100;
+
+function formatarDataCompra(data) {
+    return data ? data.slice(0, 10).split('-').reverse().join('/') : '';
+}
+
+function dataFiltroCompra(data) {
+    return data.split('-').reverse().join('-');
+}
+
+function subtotalCompra(item) {
+    return Math.round(Number(item.valorUnitario) * 100) * item.quantidade / 100;
+}
+
+async function carregarDadosIniciaisCompra() {
+    const form = document.getElementById('form-compra');
+    paginaCompras = 0;
+    filtroCompras = null;
+    form.inert = true;
+    try {
+        const [respostaCard, respostaItem] = await Promise.all([
+            fetch('compras/html/card-compra.html'),
+            fetch('compras/html/item-compra.html')
+        ]);
+        if (!respostaCard.ok || !respostaItem.ok) throw new Error('Erro ao carregar templates de compras');
+        templateCardCompra = await respostaCard.text();
+        templateItemCompra = await respostaItem.text();
+        if (!form.isConnected) return;
+        limparFormularioCompra();
+        form.inert = false;
+        listarCompras(0);
+    } catch (erro) {
+        console.error('Erro ao iniciar compras:', erro);
+        if (form.isConnected) document.getElementById('lista-compras').innerHTML = '<div class="estado">Erro ao carregar a tela de compras</div>';
+    }
+}
 
 function definirModoEdicaoCompra(ativo) {
     document.body.classList.toggle('edicao-compra-ativa', ativo);
@@ -28,26 +60,26 @@ function definirModoEdicaoCompra(ativo) {
 }
 
 function limparFormularioCompra() {
-    campoCompra('form-compra').reset();
+    document.getElementById('form-compra').reset();
     compraEmEdicao = null;
     itensNovaCompra = [];
     const hoje = new Date();
-    campoCompra('data-compra').value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
-    campoCompra('titulo-form-compra').textContent = 'Cadastro de Compra';
+    document.getElementById('data-compra').value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+    document.getElementById('titulo-form-compra').textContent = 'Cadastro de Compra';
     document.querySelector('#form-compra button[type=submit]').textContent = 'Cadastrar Compra';
-    campoCompra('cancelar-edicao-compra').classList.add('hidden');
+    document.getElementById('cancelar-edicao-compra').classList.add('hidden');
     definirModoEdicaoCompra(false);
     renderizarItensCompra();
 }
 
 async function listarCompras(pagina = 0) {
-    const lista = campoCompra('lista-compras');
+    const lista = document.getElementById('lista-compras');
     if (!lista) return;
     const consulta = ++consultaCompras;
     lista.innerHTML = '<div class="estado">Carregando compras...</div>';
-    campoCompra('compra-anterior').disabled = true;
-    campoCompra('compra-proximo').disabled = true;
-    campoCompra('compra-pagina-atual').textContent = '';
+    document.getElementById('compra-anterior').disabled = true;
+    document.getElementById('compra-proximo').disabled = true;
+    document.getElementById('compra-pagina-atual').textContent = '';
     const params = new URLSearchParams({page: Math.max(0, pagina), size: 4, sort: 'dataCompra,desc'});
     if (filtroCompras) {
         params.set('dataInicioCompra', dataFiltroCompra(filtroCompras.inicio));
@@ -60,9 +92,9 @@ async function listarCompras(pagina = 0) {
         lista.innerHTML = data.content?.length ? data.content.map(criarCardCompra).join('') : '<div class="estado">Nenhuma compra encontrada</div>';
         paginaCompras = data.page?.number ?? data.number ?? 0;
         const total = data.page?.totalPages ?? data.totalPages ?? 0;
-        campoCompra('compra-pagina-atual').textContent = total ? `Página ${paginaCompras + 1} de ${total}` : 'Página 0 de 0';
-        campoCompra('compra-anterior').disabled = paginaCompras === 0;
-        campoCompra('compra-proximo').disabled = paginaCompras + 1 >= total;
+        document.getElementById('compra-pagina-atual').textContent = total ? `Página ${paginaCompras + 1} de ${total}` : 'Página 0 de 0';
+        document.getElementById('compra-anterior').disabled = paginaCompras === 0;
+        document.getElementById('compra-proximo').disabled = paginaCompras + 1 >= total;
     } catch (erro) {
         if (consulta !== consultaCompras || !lista.isConnected) return;
         lista.innerHTML = `<div class="estado">${escaparCompra(erro.message)} <button type="button" class="btn btn-secundario" id="tentar-compras">Tentar novamente</button></div>`;
@@ -70,17 +102,29 @@ async function listarCompras(pagina = 0) {
 }
 
 function criarCardCompra(compra) {
-    return `<article class="card-compra" data-compra-id="${escaparCompra(compra.id)}" aria-label="Compra ${escaparCompra(compra.id)}">
-        <div class="card-compra-corpo"><h3>Itens</h3><ul class="card-compra-itens">${(compra.itens || []).map(item => `<li><strong>${escaparCompra(item.quantidade)} ${escaparCompra(item.nome)}</strong><small>${moedaCompra(item.valorUnitario)} por unidade</small></li>`).join('')}</ul>
-        <p class="card-compra-data">Data da compra: ${formatarDataCompra(compra.dataCompra)}</p></div>
-        <div class="card-compra-total"><span>Valor Total:</span><strong>${moedaCompra(compra.valorTotal)}</strong></div>
-        <div class="card-compra-acoes"><button type="button" class="btn btn-secundario" data-acao-compra="editar">Editar</button><button type="button" class="btn btn-secundario" data-acao-compra="exibir">Exibir</button></div></article>`;
+    const template = document.createElement('template');
+    template.innerHTML = templateCardCompra.trim();
+    const card = template.content.firstElementChild;
+    card.dataset.compraId = compra.id;
+    card.setAttribute('aria-label', `Compra ${compra.id}`);
+    card.querySelector('.card-compra-data').textContent = `Data da compra: ${formatarDataCompra(compra.dataCompra)}`;
+    card.querySelector('.card-compra-total strong').textContent = moedaCompra(compra.valorTotal);
+    const lista = card.querySelector('.card-compra-itens');
+    const modeloItem = lista.querySelector('li');
+    modeloItem.remove();
+    (compra.itens || []).forEach(item => {
+        const linha = modeloItem.cloneNode(true);
+        linha.querySelector('strong').textContent = `${item.quantidade} ${item.nome}`;
+        linha.querySelector('small').textContent = `${moedaCompra(item.valorUnitario)} por unidade`;
+        lista.appendChild(linha);
+    });
+    return card.outerHTML;
 }
 
 function adicionarItemCompra() {
-    const nome = campoCompra('nome-produto-compra');
-    const quantidade = campoCompra('quantidade-compra');
-    const valor = campoCompra('valor-unitario-compra');
+    const nome = document.getElementById('nome-produto-compra');
+    const quantidade = document.getElementById('quantidade-compra');
+    const valor = document.getElementById('valor-unitario-compra');
     if (!nome.value.trim() || !quantidade.value || !valor.value) {
         alert('Informe o nome do produto, a quantidade e o valor unitário.');
         (!nome.value.trim() ? nome : !quantidade.value ? quantidade : valor).focus();
@@ -98,26 +142,51 @@ function adicionarItemCompra() {
 }
 
 function renderizarItensCompra() {
-    campoCompra('itens-compra').innerHTML = itensNovaCompra.length ? itensNovaCompra.map((item, indice) => `<div class="item-compra"><div><h4>${escaparCompra(item.nome)}</h4><p>Quantidade: ${item.quantidade} · Unitário: ${moedaCompra(item.valorUnitario)}</p><p><strong>Total: ${moedaCompra(subtotalCompra(item))}</strong></p></div><button type="button" class="remover-item-compra" data-remover-compra="${indice}" aria-label="Remover ${escaparCompra(item.nome)}">&times;</button></div>`).join('') : '<div class="estado">Nenhum item adicionado</div>';
-    campoCompra('valor-total-compra').textContent = moedaCompra(itensNovaCompra.reduce((soma, item) => soma + Math.round(subtotalCompra(item) * 100), 0) / 100);
+    const template = document.createElement('template');
+    template.innerHTML = templateItemCompra.trim();
+    const modeloItem = template.content.querySelector('.item-compra');
+    const lista = document.getElementById('itens-compra');
+    lista.replaceChildren();
+    if (!itensNovaCompra.length) lista.appendChild(template.content.querySelector('.estado'));
+    itensNovaCompra.forEach((item, indice) => {
+        const linha = modeloItem.cloneNode(true);
+        linha.querySelector('h4').textContent = item.nome;
+        linha.querySelector('.item-compra-quantidade').textContent = `Quantidade: ${item.quantidade} · Unitário: ${moedaCompra(item.valorUnitario)}`;
+        linha.querySelector('.item-compra-total').textContent = `Total: ${moedaCompra(subtotalCompra(item))}`;
+        const botao = linha.querySelector('.remover-item-compra');
+        botao.dataset.removerCompra = indice;
+        botao.setAttribute('aria-label', `Remover ${item.nome}`);
+        lista.appendChild(linha);
+    });
+    atualizarTotalCompra();
+}
+
+function atualizarTotalCompra() {
+    document.getElementById('valor-total-compra').textContent = moedaCompra(itensNovaCompra.reduce((soma, item) => soma + Math.round(subtotalCompra(item) * 100), 0) / 100);
+}
+
+function dadosFormularioCompra() {
+    return {
+        itens: itensNovaCompra.map(({nome, quantidade, valorUnitario}) => ({
+            nome,
+            quantidade,
+            valorUnitario
+        })),
+        dataCompra: document.getElementById('data-compra').value,
+        observacao: document.getElementById('observacao-compra').value.trim()
+    };
 }
 
 async function salvarCompra() {
     if (salvandoCompra) return;
     if (!itensNovaCompra.length) return alert('Adicione pelo menos um item à compra.');
-    if (['nome-produto-compra', 'quantidade-compra', 'valor-unitario-compra'].some(id => campoCompra(id).value)) {
+    if (['nome-produto-compra', 'quantidade-compra', 'valor-unitario-compra'].some(id => document.getElementById(id).value)) {
         alert('Há um item em preenchimento. Adicione-o ao carrinho ou limpe os campos antes de salvar.');
         return;
     }
     const id = compraEmEdicao;
-    const form = campoCompra('form-compra');
-    const dados = {
-        itens: itensNovaCompra.map(({nome, quantidade, valorUnitario}) => ({
-            nome,
-            quantidade,
-            valorUnitario
-        })), dataCompra: campoCompra('data-compra').value, observacao: campoCompra('observacao-compra').value.trim()
-    };
+    const form = document.getElementById('form-compra');
+    const dados = dadosFormularioCompra();
     salvandoCompra = true;
     form.inert = true;
     form.setAttribute('aria-busy', 'true');
@@ -152,7 +221,7 @@ async function obterCompra(id) {
 }
 
 async function editarCompra(id) {
-    const form = campoCompra('form-compra');
+    const form = document.getElementById('form-compra');
     try {
         const compra = await obterCompra(id);
         if (!form?.isConnected || salvandoCompra || compraEmEdicao !== null) return;
@@ -163,52 +232,73 @@ async function editarCompra(id) {
             quantidade,
             valorUnitario: Number(valorUnitario)
         }));
-        campoCompra('data-compra').value = compra.dataCompra;
-        campoCompra('observacao-compra').value = compra.observacao || '';
-        campoCompra('titulo-form-compra').textContent = `Edição da Compra n° ${compra.id}`;
+        document.getElementById('data-compra').value = compra.dataCompra;
+        document.getElementById('observacao-compra').value = compra.observacao || '';
+        document.getElementById('titulo-form-compra').textContent = `Edição da Compra n° ${compra.id}`;
         form.querySelector('button[type=submit]').textContent = 'Salvar alterações';
-        campoCompra('cancelar-edicao-compra').classList.remove('hidden');
+        document.getElementById('cancelar-edicao-compra').classList.remove('hidden');
         renderizarItensCompra();
         definirModoEdicaoCompra(true);
         document.querySelector('.cadastro-compra').scrollIntoView({behavior: 'smooth'});
-        campoCompra('nome-produto-compra').focus({preventScroll: true});
+        document.getElementById('nome-produto-compra').focus({preventScroll: true});
     } catch (erro) {
         alert(erro.message);
     }
 }
 
 async function exibirCompra(id) {
-    const form = campoCompra('form-compra');
+    const form = document.getElementById('form-compra');
     try {
-        const compra = await obterCompra(id);
+        const [respostaTemplate, compra] = await Promise.all([
+            fetch('compras/html/modal-exibir-compra.html'),
+            obterCompra(id)
+        ]);
+        if (!respostaTemplate.ok) throw new Error('Erro ao carregar modal de exibição');
+        const htmlModal = await respostaTemplate.text();
         if (!form?.isConnected || compraEmEdicao !== null) return;
         abrirModal({
             titulo: `Compra n° ${compra.id}`,
-            conteudoHtml: `<div class="detalhes-compra"><p><strong>Data da compra:</strong> ${formatarDataCompra(compra.dataCompra)}</p>
-            <div class="compra-tabela-container"><table class="compra-tabela"><thead><tr><th scope="col">Produto</th><th scope="col">Quantidade</th><th scope="col">Unitário</th><th scope="col">Total</th></tr></thead><tbody>${compra.itens.map(item => `<tr><td>${escaparCompra(item.nome)}</td><td>${escaparCompra(item.quantidade)}</td><td>${moedaCompra(item.valorUnitario)}</td><td>${moedaCompra(item.subTotal)}</td></tr>`).join('')}</tbody></table></div>
-            <p class="total-compra">Valor Total: <strong>${moedaCompra(compra.valorTotal)}</strong></p><p><strong>Observação:</strong></p><p class="observacao">${escaparCompra(compra.observacao || 'Nenhuma observação informada.')}</p>
-            <div class="compra-modal-acoes"><button type="button" class="btn btn-secundario" id="fechar-exibicao-compra">Fechar</button><button type="button" class="btn btn-primario" id="editar-exibicao-compra">Editar compra</button></div></div>`
+            conteudoHtml: htmlModal
         });
-        campoCompra('fechar-exibicao-compra').onclick = fecharModal;
-        campoCompra('editar-exibicao-compra').onclick = () => {
-            fecharModal();
-            editarCompra(compra.id);
-        };
+        preencherModalExibicaoCompra(compra);
     } catch (erro) {
         alert(erro.message);
     }
 }
 
+function preencherModalExibicaoCompra(compra) {
+    document.getElementById('compra-data-exibicao').textContent = formatarDataCompra(compra.dataCompra);
+    document.getElementById('compra-total-exibicao').textContent = moedaCompra(compra.valorTotal);
+    document.getElementById('compra-observacao-exibicao').textContent = compra.observacao || 'Nenhuma observação informada.';
+
+    const lista = document.getElementById('compra-itens-exibicao');
+    compra.itens.forEach(item => {
+        const linha = document.createElement('tr');
+        [item.nome, item.quantidade, moedaCompra(item.valorUnitario), moedaCompra(item.subTotal)].forEach(valor => {
+            const coluna = document.createElement('td');
+            coluna.textContent = valor ?? '';
+            linha.appendChild(coluna);
+        });
+        lista.appendChild(linha);
+    });
+
+    document.getElementById('fechar-exibicao-compra').onclick = fecharModal;
+    document.getElementById('editar-exibicao-compra').onclick = () => editarCompraPelaExibicao(compra.id);
+}
+
+function editarCompraPelaExibicao(id) {
+    fecharModal();
+    editarCompra(id);
+}
+
+const areaCompra = document.getElementById('conteudo-dinamico');
 areaCompra.addEventListener('pagina:carregada', e => {
     ++consultaCompras;
     if (e.detail.modulo !== 'compra') {
         definirModoEdicaoCompra(false);
         return;
     }
-    paginaCompras = 0;
-    filtroCompras = null;
-    limparFormularioCompra();
-    listarCompras(0);
+    carregarDadosIniciaisCompra();
 });
 
 areaCompra.addEventListener('click', e => {
@@ -230,17 +320,17 @@ areaCompra.addEventListener('click', e => {
     if (botao.id === 'tentar-compras') listarCompras(paginaCompras);
     if (botao.id === 'buscar-todos-compras') {
         filtroCompras = null;
-        campoCompra('form-filtro-compras').reset();
-        campoCompra('data-fim-compra').disabled = true;
-        campoCompra('data-fim-compra').required = false;
+        document.getElementById('form-filtro-compras').reset();
+        document.getElementById('data-fim-compra').disabled = true;
+        document.getElementById('data-fim-compra').required = false;
         listarCompras(0);
     }
 });
 
 areaCompra.addEventListener('change', e => {
     if (e.target.id === 'usar-data-final-compra') {
-        campoCompra('data-fim-compra').disabled = !e.target.checked;
-        campoCompra('data-fim-compra').required = e.target.checked;
+        document.getElementById('data-fim-compra').disabled = !e.target.checked;
+        document.getElementById('data-fim-compra').required = e.target.checked;
     }
 });
 
@@ -258,8 +348,8 @@ areaCompra.addEventListener('submit', e => {
     }
     if (e.target.id === 'form-filtro-compras') {
         e.preventDefault();
-        const inicio = campoCompra('data-inicio-compra').value;
-        const fim = campoCompra('usar-data-final-compra').checked ? campoCompra('data-fim-compra').value : inicio;
+        const inicio = document.getElementById('data-inicio-compra').value;
+        const fim = document.getElementById('usar-data-final-compra').checked ? document.getElementById('data-fim-compra').value : inicio;
         if (fim < inicio) return alert('A data final deve ser igual ou posterior à data inicial.');
         filtroCompras = {inicio, fim};
         listarCompras(0);
