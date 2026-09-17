@@ -7,6 +7,7 @@ let itensNovoPedido = [];
 let pedidoEmEdicao = null;
 let filtrarPedidosPorData = false;
 let templateCardPedido = '';
+let templateItemPedido = '';
 
 const moedaPedido = valor => Number(valor || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
 const textoEnumPedido = (grupo, valor) => enumsPedido[grupo]?.find(item => item.valor === valor)?.descricao || valor || '';
@@ -38,17 +39,19 @@ async function carregarDadosIniciaisPedido() {
         pedidoEmEdicao = null;
         itensNovoPedido = [];
         filtrarPedidosPorData = false;
-        const [resEnums, resClientes, resSalgados, respostaCard] = await Promise.all([
+        const [resEnums, resClientes, resSalgados, respostaCard, respostaItem] = await Promise.all([
             apiJson('/enums/pedido'),
             apiJson('/clientes?ativo=true&page=0&size=100'),
             apiJson('/salgados?ativo=true&page=0&size=100'),
-            fetch('pedidos/html/card-pedido.html')
+            fetch('pedidos/html/card-pedido.html'),
+            fetch('pedidos/html/item-pedido.html')
         ]);
-        if (!resEnums.response.ok || !resClientes.response.ok || !resSalgados.response.ok || !respostaCard.ok) throw new Error('Erro ao carregar dados do cadastro');
+        if (!resEnums.response.ok || !resClientes.response.ok || !resSalgados.response.ok || !respostaCard.ok || !respostaItem.ok) throw new Error('Erro ao carregar dados do cadastro');
         enumsPedido = resEnums.data;
         clientesPedido = resClientes.data.content || [];
         salgadosPedido = resSalgados.data.content || [];
         templateCardPedido = await respostaCard.text();
+        templateItemPedido = await respostaItem.text();
         montarFiltrosStatusPedido();
         preencherSelectPedido('tipo-entrega-pedido', enumsPedido.tiposEntrega);
         preencherSelectPedido('tipo-preco-pedido', enumsPedido.tiposPrecos);
@@ -193,8 +196,21 @@ function adicionarItemPedido() {
 }
 
 function renderizarItensPedido() {
+    const template = document.createElement('template');
+    template.innerHTML = templateItemPedido.trim();
+    const modeloItem = template.content.querySelector('.item-pedido');
     const lista = document.getElementById('itens-pedido');
-    lista.innerHTML = itensNovoPedido.length ? itensNovoPedido.map((item, indice) => `<div class="item-pedido"><img src="imagens/coxinha.jpg" alt=""><div><h3>${escaparPedido(item.nomeSalgado)}</h3><p>${escaparPedido(item.descricao)}</p><p>Quantidade: ${item.quantidade} | ${escaparPedido(textoEnumPedido('tiposPrecos', item.tipoPreco))}</p><p><strong>Subtotal: ${moedaPedido(item.precoUnitario * item.quantidade)}</strong></p></div><button type="button" class="remover-item-pedido" data-remover-item="${indice}" aria-label="Remover item">🗑</button></div>`).join('') : '<div class="estado">Nenhum salgado adicionado</div>';
+    lista.replaceChildren();
+    if (!itensNovoPedido.length) lista.appendChild(template.content.querySelector('.estado'));
+    itensNovoPedido.forEach((item, indice) => {
+        const linha = modeloItem.cloneNode(true);
+        linha.querySelector('h3').textContent = item.nomeSalgado;
+        linha.querySelector('.item-pedido-descricao').textContent = item.descricao;
+        linha.querySelector('.item-pedido-quantidade').textContent = `Quantidade: ${item.quantidade} | ${textoEnumPedido('tiposPrecos', item.tipoPreco)}`;
+        linha.querySelector('.item-pedido-subtotal').textContent = `Subtotal: ${moedaPedido(item.precoUnitario * item.quantidade)}`;
+        linha.querySelector('.remover-item-pedido').dataset.removerItem = indice;
+        lista.appendChild(linha);
+    });
     atualizarTotalPedido();
 }
 
