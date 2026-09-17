@@ -1,2 +1,55 @@
 <h1>Área de Compras</h1>
 <hr>
+<section class="historico-compras">
+    <h2>Histórico de Compras</h2>
+    <form id="form-filtro-compras" class="filtro-data-compras">
+        <label for="data-inicio-compra">Data inicial:</label>
+        <input type="date" id="data-inicio-compra" required>
+        <label class="usar-data-final-compra" for="usar-data-final-compra"><input type="checkbox" id="usar-data-final-compra"> Usar data final</label>
+        <label for="data-fim-compra">Data final:</label>
+        <input type="date" id="data-fim-compra" disabled>
+        <button type="submit" class="btn btn-primario">Filtrar</button>
+        <button type="button" id="buscar-todos-compras" class="btn btn-secundario">Buscar todos</button>
+    </form>
+    <div id="lista-compras" class="lista-compras" aria-live="polite"></div>
+    <div class="paginacao paginacao-compras">
+        <button type="button" id="compra-anterior" class="btn btn-secundario" disabled>Anterior</button>
+        <span id="compra-pagina-atual"></span>
+        <button type="button" id="compra-proximo" class="btn btn-secundario" disabled>Próximo</button>
+    </div>
+    <hr>
+</section>
+<section class="cadastro-compra">
+    <h2 id="titulo-form-compra">Cadastro de Compra</h2>
+    <form id="form-compra">
+        <div class="compra-form-grid">
+            <fieldset class="adicionar-compra">
+                <legend>Adicionar itens</legend>
+                <label for="nome-produto-compra">Nome do produto:</label>
+                <input type="text" id="nome-produto-compra" placeholder="Ex.: Queijo mussarela" maxlength="100">
+                <div class="compra-campos-duplos">
+                    <div><label for="quantidade-compra">Quantidade:</label><input type="number" id="quantidade-compra" min="1" max="2147483647" step="1" placeholder="0"></div>
+                    <div><label for="valor-unitario-compra">Valor unitário (R$):</label><input type="number" id="valor-unitario-compra" min="0.01" max="99999999.99" step="0.01" placeholder="0,00"></div>
+                </div>
+                <button type="button" id="adicionar-item-compra" class="btn btn-secundario">Adicionar item</button>
+            </fieldset>
+            <div class="compra-informacoes">
+                <label for="observacao-compra">Observação da compra:</label>
+                <textarea id="observacao-compra" rows="4" maxlength="255" placeholder="Observação (opcional)"></textarea>
+                <label for="data-compra">Data da compra:</label>
+                <input type="date" id="data-compra" required>
+            </div>
+            <div class="compra-resumo">
+                <aside class="carrinho-compra" aria-label="Itens da compra">
+                    <h3>Itens</h3>
+                    <div id="itens-compra" aria-live="polite"></div>
+                    <div class="total-compra">Valor Total: <strong id="valor-total-compra">R$ 0,00</strong></div>
+                </aside>
+                <div class="compra-acoes-form">
+                    <button type="submit" class="btn btn-primario">Cadastrar Compra</button>
+                    <button type="button" id="cancelar-edicao-compra" class="btn btn-secundario hidden">Cancelar edição</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</section>
