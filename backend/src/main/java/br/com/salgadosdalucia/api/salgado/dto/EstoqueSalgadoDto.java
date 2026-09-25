@@ -1,4 +1,7 @@
 package br.com.salgadosdalucia.api.salgado.dto;
 
-public record EstoqueSalgadoDto() {
+public record EstoqueSalgadoDto(
+        Long id,
+        Integer quantidade
+) {
 }

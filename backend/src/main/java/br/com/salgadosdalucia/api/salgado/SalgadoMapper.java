@@ -1,5 +1,7 @@
 package br.com.salgadosdalucia.api.salgado;
 
+import br.com.salgadosdalucia.api.estoque.Estoque;
+import br.com.salgadosdalucia.api.salgado.dto.EstoqueSalgadoDto;
 import br.com.salgadosdalucia.api.salgado.dto.SalgadoRequest;
 import br.com.salgadosdalucia.api.salgado.dto.SalgadoResponse;
 
@@ -10,9 +12,13 @@ public class SalgadoMapper {
                 salgado.getPrecoCentoCongelado(), salgado.getPrecoCentoProcessado());
     }
 
-    public static SalgadoResponse mapToResponse(Salgado salgado) {
+    public static SalgadoResponse mapToResponse(Salgado salgado, Estoque estoque) {
+        EstoqueSalgadoDto estoqueDto = estoque == null
+                ? null
+                : new EstoqueSalgadoDto(estoque.getId(), estoque.getQuantidade());
+
         return new SalgadoResponse(salgado.getId(), salgado.getNome(), salgado.getDescricao(), salgado.getCategoria(),
-                salgado.getPrecoCentoCongelado(), salgado.getPrecoCentoProcessado(), salgado.isAtivo());
+                salgado.getPrecoCentoCongelado(), salgado.getPrecoCentoProcessado(), salgado.isAtivo(), estoqueDto);
     }
 
     public static Salgado mapToEntity(SalgadoRequest dto) {
