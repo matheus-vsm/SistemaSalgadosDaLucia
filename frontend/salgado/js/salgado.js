@@ -81,11 +81,15 @@ function criarCardSalgadoHTML(salgado) {
         </div>
         <div class="card-controles-salgado">
           <div class="card-indicadores-salgado">
-            <span class="status ${statusClasse}">${statusTexto}</span>
-            <span class="estoque-card" title="Quantidade em estoque">
-              <strong>${salgado.estoque?.quantidade ?? 0}</strong>
-              <small>estoque</small>
-            </span>
+            <div class="indicador-linha">
+              <span class="status ${statusClasse}">${statusTexto}</span>
+            </div>
+            <div class="indicador-linha">
+              <span class="estoque-card" title="Quantidade em estoque">
+                <strong>${salgado.estoque?.quantidade ?? 0}</strong>
+                <small>estoque</small>
+              </span>
+            </div>
           </div>
           <div class="card-acoes-salgado">
             <button type="button" class="btn btn-secundario btn-alterarStatus" onclick="abrirModalAlterarStatusSalgado(${salgado.id})">${statusBotao}</button>
