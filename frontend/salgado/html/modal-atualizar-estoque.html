@@ -1,0 +1,18 @@
+<form id="form-atualizar-estoque" onsubmit="event.preventDefault(); atualizarEstoqueSalgado();">
+    <input type="hidden" id="salgado-id-estoque">
+
+    <fieldset>
+        <p><strong>Salgado:</strong> <span id="nome-salgado-estoque"></span></p>
+        <p><strong>Quantidade atual:</strong> <span id="quantidade-atual-estoque"></span></p>
+
+        <label for="ajuste-estoque">Quantidade a adicionar ou remover:</label>
+        <input type="number" id="ajuste-estoque" name="quantidade" step="1" required>
+        <small class="ajuda-estoque">Use um valor positivo para adicionar e um valor negativo para remover.</small>
+    </fieldset>
+    <br>
+
+    <div class="acoes-alterar-status">
+        <button type="submit" class="btn btn-primario">Atualizar Estoque</button>
+        <button type="button" class="btn btn-secundario" onclick="fecharModal()">Cancelar</button>
+    </div>
+</form>

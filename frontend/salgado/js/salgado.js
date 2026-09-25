@@ -79,10 +79,21 @@ function criarCardSalgadoHTML(salgado) {
           <p>Cento Congelado: ${formatarPrecoSalgado(salgado.precoCentoCongelado)}</p>
           <p>Cento ${tipoTexto}: ${formatarPrecoSalgado(salgado.precoCentoProcessado)}</p>
         </div>
-        <span class="status ${statusClasse}">${statusTexto}</span>
-        <button type="button" class="btn btn-secundario btn-editar" onclick="abrirModalEdicaoSalgado(${salgado.id})">Editar</button>
-        <button type="button" class="btn btn-secundario btn-exibir" onclick="abrirModalExibicaoSalgado(${salgado.id})">Exibir</button>
-        <button type="button" class="btn btn-secundario btn-alterarStatus" onclick="abrirModalAlterarStatusSalgado(${salgado.id})">${statusBotao}</button>
+        <div class="card-controles-salgado">
+          <div class="card-indicadores-salgado">
+            <span class="status ${statusClasse}">${statusTexto}</span>
+            <span class="estoque-card" title="Quantidade em estoque">
+              <strong>${salgado.estoque?.quantidade ?? 0}</strong>
+              <small>estoque</small>
+            </span>
+          </div>
+          <div class="card-acoes-salgado">
+            <button type="button" class="btn btn-secundario btn-alterarStatus" onclick="abrirModalAlterarStatusSalgado(${salgado.id})">${statusBotao}</button>
+            <button type="button" class="btn btn-secundario btn-exibir" onclick="abrirModalExibicaoSalgado(${salgado.id})">Exibir</button>
+            <button type="button" class="btn btn-secundario btn-estoque" onclick="abrirModalAtualizarEstoque(${salgado.id})">Atualizar Estoque</button>
+            <button type="button" class="btn btn-secundario btn-editar" onclick="abrirModalEdicaoSalgado(${salgado.id})">Editar</button>
+          </div>
+        </div>
       </div>
     `;
 }
@@ -197,6 +208,33 @@ async function abrirModalExibicaoSalgado(id) {
     }
 }
 
+async function abrirModalAtualizarEstoque(id) {
+    try {
+        const response = await fetch('salgado/html/modal-atualizar-estoque.html');
+
+        if (!response.ok) throw new Error('Erro ao carregar modal de estoque');
+
+        const htmlModal = await response.text();
+        const {response: respostaSalgado, data: salgado} = await apiJson(`/salgados/${id}`);
+
+        if (!respostaSalgado.ok) {
+            throw new Error('Erro ao carregar dados do salgado');
+        }
+
+        abrirModal({
+            titulo: 'Atualizar Estoque',
+            conteudoHtml: htmlModal
+        });
+
+        document.getElementById('salgado-id-estoque').value = salgado.id;
+        document.getElementById('nome-salgado-estoque').textContent = salgado.nome;
+        document.getElementById('quantidade-atual-estoque').textContent = salgado.estoque?.quantidade ?? 0;
+    } catch (erro) {
+        console.error('Erro ao abrir modal de estoque:', erro);
+        alert('Erro ao abrir modal de atualização de estoque.');
+    }
+}
+
 async function abrirModalAlterarStatusSalgado(id) {
     try {
         const response = await fetch('salgado/html/modal-alterar-status-salgado.html');
@@ -275,6 +313,7 @@ async function preencherDadosSalgado(salgado, tipo) {
     } else {
         const categoria = categoriasSalgados.find(item => item.valor === salgado.categoria);
         preencherCampoSalgado('categoria-salgado-exibicao', categoria?.descricao ?? salgado.categoria);
+        preencherCampoSalgado('quantidade-estoque-exibicao', salgado.estoque?.quantidade ?? 0);
     }
 }
 
@@ -330,6 +369,34 @@ async function alterarStatusSalgado(id, estado) {
         }
     } catch (erro) {
         console.error('Erro na requisição:', erro);
+        alert(erro.message || 'Erro ao conectar com o servidor.');
+    }
+}
+
+async function atualizarEstoqueSalgado() {
+    const id = document.getElementById('salgado-id-estoque').value;
+    const quantidade = Number(document.getElementById('ajuste-estoque').value);
+
+    if (!Number.isInteger(quantidade) || quantidade === 0) {
+        alert('Informe um número inteiro diferente de zero. Use um valor negativo para remover do estoque.');
+        return;
+    }
+
+    try {
+        const {response, data: resultado} = await apiJson(`/estoque/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({quantidade})
+        });
+
+        if (response.ok) {
+            alert('Estoque atualizado com sucesso!');
+            fecharModal();
+            listarSalgados(paginaAtualSalgados, salgadosAtivos, termoBuscaSalgados);
+        } else {
+            alert(resultado?.message || 'Erro ao atualizar estoque');
+        }
+    } catch (erro) {
+        console.error('Erro ao atualizar estoque:', erro);
         alert(erro.message || 'Erro ao conectar com o servidor.');
     }
 }

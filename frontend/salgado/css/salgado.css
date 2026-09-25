@@ -155,6 +155,58 @@
     margin-bottom: 0;
 }
 
+.card-controles-salgado {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.card-indicadores-salgado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.estoque-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 64px;
+    padding: 5px 8px;
+    border: 2px solid var(--text);
+    border-radius: var(--radius);
+    background-color: var(--surface);
+    line-height: 1;
+}
+
+.estoque-card strong {
+    font-size: 1.35rem;
+}
+
+.estoque-card small {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 0.72rem;
+}
+
+.card-acoes-salgado {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(92px, 1fr));
+    gap: 8px;
+}
+
+.card-acoes-salgado .btn {
+    padding: 9px 12px;
+}
+
+.ajuda-estoque {
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
+}
+
 #lista-salgados .estado {
     grid-column: 1 / -1;
 }
@@ -254,5 +306,20 @@
 @media (max-width: 1200px) {
     #lista-salgados {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+    #lista-salgados .card {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .card-controles-salgado {
+        width: 100%;
+    }
+
+    .card-acoes-salgado {
+        flex: 1;
     }
 }
