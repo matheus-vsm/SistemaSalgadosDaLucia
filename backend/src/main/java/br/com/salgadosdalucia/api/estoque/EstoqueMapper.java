@@ -7,6 +7,7 @@ public class EstoqueMapper {
     public static EstoqueListagemDto mapToDto(Estoque estoque) {
         return new EstoqueListagemDto(
                 estoque.getId(),
+                estoque.getSalgado().getId(),
                 estoque.getSalgado().getNome(),
                 estoque.getQuantidade()
         );

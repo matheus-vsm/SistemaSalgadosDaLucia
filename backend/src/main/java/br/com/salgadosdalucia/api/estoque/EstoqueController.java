@@ -34,7 +34,7 @@ public class EstoqueController {
 
     private final EstoqueService service;
 
-    @PatchMapping(value = "/{id}")
+    @PatchMapping(value = "/{salgadoId}")
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Ajustar quantidade em estoque", description = "Aplica uma variação positiva ou negativa sem permitir saldo negativo.")
     @ApiResponses({
@@ -42,8 +42,8 @@ public class EstoqueController {
             @ApiResponse(responseCode = "400", description = "Ajuste inválido ou estoque insuficiente."),
             @ApiResponse(responseCode = "404", description = "Estoque não encontrado.")
     })
-    public ResponseEntity<Void> atualizarQuantidade(@PathVariable Long id, @RequestBody @Valid AtualizarQuantidadeRequest request) throws NotFoundException {
-        service.atualizarQuantidade(id, request);
+    public ResponseEntity<Void> atualizarQuantidade(@PathVariable Long salgadoId, @RequestBody @Valid AtualizarQuantidadeRequest request) throws NotFoundException {
+        service.atualizarQuantidade(salgadoId, request);
         return ResponseEntity.noContent().build();
     }
 
