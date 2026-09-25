@@ -64,7 +64,7 @@ public class EstoqueController {
             @ApiResponse(responseCode = "404", description = "Estoque ou salgado ativo não encontrado.")
     })
     public ResponseEntity<EstoqueListagemDto> buscarPorSalgadoId(@PathVariable Long salgadoId) throws NotFoundException {
-        var estoque = service.buscarPorId(salgadoId);
+        var estoque = service.buscarPorSalgadoId(salgadoId);
         return ResponseEntity.ok(estoque);
     }
 

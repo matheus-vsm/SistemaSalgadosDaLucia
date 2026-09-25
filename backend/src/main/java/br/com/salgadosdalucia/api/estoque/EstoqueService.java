@@ -30,7 +30,7 @@ public class EstoqueService {
         return estoqueRepository.findAllSalgadosAtivos(paginacao).map(EstoqueMapper::mapToDto);
     }
 
-    public EstoqueListagemDto buscarPorId(Long salgadoId) throws NotFoundException {
+    public EstoqueListagemDto buscarPorSalgadoId(Long salgadoId) throws NotFoundException {
         Estoque estoque = estoqueRepository.findBySalgadoId(salgadoId)
                 .orElseThrow(() -> new NotFoundException("Estoque não encontrado para o salgado com id: " + salgadoId));
         if (!estoque.getSalgado().isAtivo()) {
