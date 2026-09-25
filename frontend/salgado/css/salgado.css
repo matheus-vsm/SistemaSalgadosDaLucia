@@ -145,6 +145,20 @@
     color: #fff;
 }
 
+#lista-salgados {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+#lista-salgados .card {
+    margin-bottom: 0;
+}
+
+#lista-salgados .estado {
+    grid-column: 1 / -1;
+}
+
 .salgado-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -233,6 +247,12 @@
 
 @media (max-width: 768px) {
     .salgado-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1200px) {
+    #lista-salgados {
         grid-template-columns: 1fr;
     }
 }

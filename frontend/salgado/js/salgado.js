@@ -13,8 +13,8 @@ async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBu
     try {
         const endpoint = termoBuscaSalgados ? '/salgados/nome' : '/salgados';
         const parametros = termoBuscaSalgados
-            ? `nome=${encodeURIComponent(termoBuscaSalgados)}&page=${pagina}&size=2`
-            : `page=${pagina}&size=2&ativo=${tipo}`;
+            ? `nome=${encodeURIComponent(termoBuscaSalgados)}&page=${pagina}&size=4`
+            : `page=${pagina}&size=4&ativo=${tipo}`;
         const {
             response,
             data: salgadosPage
