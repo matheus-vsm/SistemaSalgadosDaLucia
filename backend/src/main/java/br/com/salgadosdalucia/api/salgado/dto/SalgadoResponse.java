@@ -11,6 +11,7 @@ public record SalgadoResponse(
         Categoria categoria,
         BigDecimal precoCentoCongelado,
         BigDecimal precoCentoProcessado,
-        boolean ativo
+        boolean ativo,
+        EstoqueSalgadoDto estoque
 ) {
 }
