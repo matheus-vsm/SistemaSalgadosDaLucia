@@ -24,7 +24,9 @@ document.addEventListener('DOMContentLoaded', function () {
             js: 'cliente/js/cliente.js'
         },
         compra: {
-            html: 'compras/html/compras.html'
+            html: 'compras/html/compras.html',
+            css: 'compras/css/compras.css',
+            js: 'compras/js/compras.js'
         },
         estoque: {
             html: 'estoque/html/estoque.html'

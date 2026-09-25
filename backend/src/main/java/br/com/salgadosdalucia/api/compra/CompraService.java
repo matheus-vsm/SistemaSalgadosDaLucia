@@ -5,6 +5,7 @@ import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraRequest;
 import br.com.salgadosdalucia.api.compra.dto.CompraResponse;
 import br.com.salgadosdalucia.api.compra.dto.ItemCompraRequest;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
+import br.com.salgadosdalucia.api.shared.helper.ValidacaoEntidadeHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +47,28 @@ public class CompraService {
         compraRepository.save(compra);
 
         return CompraMapper.mapToResponse(compra);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public CompraResponse editarCompra(Long id, CriacaoCompraRequest request) throws NotFoundException {
+        Compra compra = ValidacaoEntidadeHelper.buscarEntidadePorId(compraRepository, id, "Compra");
+
+        compra.setDataCompra(request.dataCompra() != null ? request.dataCompra() : compra.getDataCompra());
+        compra.setObservacao(request.observacao());
+        compra.getItens().clear();
+
+        for (ItemCompraRequest dados : request.itens()) {
+            ItemCompra item = new ItemCompra();
+            item.setCompra(compra);
+            item.setNome(dados.nome());
+            item.setQuantidade(dados.quantidade());
+            item.setValorUnitario(dados.valorUnitario());
+            calcularSubTotal(item);
+            compra.getItens().add(item);
+        }
+        calcularValorTotal(compra);
+
+        return CompraMapper.mapToResponse(compraRepository.save(compra));
     }
 
     private void calcularValorTotal(Compra compra) {
