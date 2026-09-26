@@ -4,10 +4,12 @@ let perfisUsuario = [];
 let usuariosListados = [];
 let requisicaoUsuarios = 0;
 let templateCardUsuario = '';
+let termoBuscaUsuarios = '';
 
 async function carregarDadosIniciaisUsuario() {
     usuariosListados = [];
     perfisUsuario = [];
+    termoBuscaUsuarios = '';
     filtrarUsuarios(true);
     await carregarPerfisUsuario();
 }
@@ -77,7 +79,10 @@ async function listarUsuarios(numero = 0) {
 
             templateCardUsuario = await respostaCard.text();
         }
-        const {response, data} = await apiJson(`/usuarios?ativo=${usuariosAtivos}&page=${numero}&size=4`);
+        const endpoint = termoBuscaUsuarios ? '/usuarios/nome' : '/usuarios';
+        const parametros = new URLSearchParams({ativo: usuariosAtivos, page: numero, size: 4});
+        if (termoBuscaUsuarios) parametros.set('nome', termoBuscaUsuarios);
+        const {response, data} = await apiJson(`${endpoint}?${parametros}`);
         if (!response.ok) throw new Error(data?.mensagem || 'Erro ao carregar usuários.');
 
         if (chamada !== requisicaoUsuarios || !lista.isConnected) return;
@@ -301,6 +306,11 @@ areaUsuario.addEventListener('click', event => {
 });
 
 areaUsuario.addEventListener('submit', event => {
+    if (event.target.id === 'form-busca-usuarios') {
+        event.preventDefault();
+        termoBuscaUsuarios = document.getElementById('busca-usuarios').value.trim();
+        listarUsuarios(0);
+    }
     if (event.target.id === 'form-usuario') {
         event.preventDefault();
         cadastrarUsuario();
