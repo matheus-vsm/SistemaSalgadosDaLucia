@@ -1,6 +1,7 @@
 # Sistema Salgados da Lúcia
 
-> Sistema de gestão comercial da **Salgados da Lúcia Kojima**, com interface web e API REST para clientes, catálogo, estoque, pedidos, compras e usuários.
+> Sistema de gestão comercial da **Salgados da Lúcia Kojima**, com interface web e API REST para clientes, catálogo,
+> estoque, pedidos, compras e usuários.
 
 [![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.15-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
@@ -9,24 +10,30 @@
 
 ## Contexto
 
-A salgadaria recebe pedidos por canais como WhatsApp e realiza entregas na região de São Paulo e ABC Paulista. O sistema centraliza o cadastro de clientes, o catálogo, a agenda de entregas, o acompanhamento de pedidos, as compras de insumos e o estoque de salgados.
+A salgadaria recebe pedidos por canais como WhatsApp e realiza entregas na região de São Paulo e ABC Paulista. O sistema
+centraliza o cadastro de clientes, o catálogo, a agenda de entregas, o acompanhamento de pedidos, as compras de insumos
+e o estoque de salgados.
 
-O repositório reúne o **backend em Java/Spring Boot** e o **frontend em HTML, CSS e JavaScript puro**, integrado à API. As telas operacionais já estão implementadas; a página inicial ainda é uma estrutura básica, sem indicadores ou relatórios.
+O repositório reúne o **backend em Java/Spring Boot** e o **frontend em HTML, CSS e JavaScript puro**, integrado à API.
+As telas operacionais já estão implementadas; a página inicial ainda é uma estrutura básica, sem indicadores ou
+relatórios.
 
 ## Funcionalidades
 
 ### Interface web
 
-| Tela | Recursos implementados |
-| --- | --- |
-| Login | Autenticação por usuário e senha, armazenamento dos tokens e abertura do painel após o login. |
-| Clientes | Cadastro com endereço, preenchimento por CEP via ViaCEP, listagem paginada, busca por nome, consulta de ativos/inativos, detalhes, edição e ativação/desativação por modal. |
-| Salgados e estoque | Cadastro de nome, descrição, categoria e preços por cento para congelados/processados; busca por nome, paginação, ativos/inativos, detalhes, edição, alteração de status e ajuste de estoque. |
-| Pedidos | Cadastro e edição, seleção de cliente e salgados, inclusão/remoção de itens, quantidades, tipo de preço, prévia de subtotais e total, frete, data/hora de entrega, entrega ou retirada e forma de pagamento. Histórico paginado, filtros por status e período de entrega, detalhes e alteração de status. |
-| Compras | Cadastro e edição de compras de insumos, inclusão/remoção de itens com quantidade e valor unitário, prévia do total, data e observação. Histórico paginado, filtro por período e detalhes em modal. |
-| Usuários | Cadastro com perfil de acesso, listagem paginada, busca por nome, consulta de ativos/inativos, desativação e alteração da própria senha com confirmação. |
+| Tela               | Recursos implementados                                                                                                                                                                                                                                                                                    |
+|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Login              | Autenticação por usuário e senha, armazenamento dos tokens e abertura do painel após o login.                                                                                                                                                                                                             |
+| Clientes           | Cadastro com endereço, preenchimento por CEP via ViaCEP, listagem paginada, busca por nome, consulta de ativos/inativos, detalhes, edição e ativação/desativação por modal.                                                                                                                               |
+| Salgados e estoque | Cadastro de nome, descrição, categoria e preços por cento para congelados/processados; busca por nome, paginação, ativos/inativos, detalhes, edição, alteração de status e ajuste de estoque.                                                                                                             |
+| Pedidos            | Cadastro e edição, seleção de cliente e salgados, inclusão/remoção de itens, quantidades, tipo de preço, prévia de subtotais e total, frete, data/hora de entrega, entrega ou retirada e forma de pagamento. Histórico paginado, filtros por status e período de entrega, detalhes e alteração de status. |
+| Compras            | Cadastro e edição de compras de insumos, inclusão/remoção de itens com quantidade e valor unitário, prévia do total, data e observação. Histórico paginado, filtro por período e detalhes em modal.                                                                                                       |
+| Usuários           | Cadastro com perfil de acesso, listagem paginada, busca por nome, consulta de ativos/inativos, desativação e alteração da própria senha com confirmação.                                                                                                                                                  |
 
-A navegação lateral carrega as telas sem recarregar a página inteira. Cards, formulários e modais têm templates próprios; o modal compartilhado pode ser fechado pelo botão, pelo fundo ou pela tecla `Esc`. A interface utiliza formatação monetária brasileira e estilos com ajustes para telas menores.
+A navegação lateral carrega as telas sem recarregar a página inteira. Cards, formulários e modais têm templates
+próprios; o modal compartilhado pode ser fechado pelo botão, pelo fundo ou pela tecla `Esc`. A interface utiliza
+formatação monetária brasileira e estilos com ajustes para telas menores.
 
 ### API e regras de negócio
 
@@ -44,38 +51,42 @@ A navegação lateral carrega as telas sem recarregar a página inteira. Cards, 
 
 ## Tecnologias
 
-| Camada | Tecnologias |
-| --- | --- |
-| Frontend | HTML5, CSS3, JavaScript puro, Fetch API, Local Storage |
-| Consulta de CEP | ViaCEP |
-| Backend | Java 21, Spring Boot 3.5.15, Spring Web, Bean Validation, Lombok |
-| Segurança | Spring Security, BCrypt, JWT com Auth0 Java JWT |
-| Persistência | Spring Data JPA, Hibernate, MySQL, Flyway |
-| Documentação da API | Springdoc OpenAPI e Swagger UI |
+| Camada                  | Tecnologias                                                             |
+|-------------------------|-------------------------------------------------------------------------|
+| Frontend                | HTML5, CSS3, JavaScript puro, Fetch API, Local Storage                  |
+| Consulta de CEP         | ViaCEP                                                                  |
+| Backend                 | Java 21, Spring Boot 3.5.15, Spring Web, Bean Validation, Lombok        |
+| Segurança               | Spring Security, BCrypt, JWT com Auth0 Java JWT                         |
+| Persistência            | Spring Data JPA, Hibernate, MySQL, Flyway                               |
+| Documentação da API     | Springdoc OpenAPI e Swagger UI                                          |
 | Build e desenvolvimento | Maven Wrapper (Maven 3.9.12), Spring Boot DevTools, H2 no perfil `fora` |
-| Dependências de teste | Spring Boot Test e Spring Security Test |
+| Dependências de teste   | Spring Boot Test e Spring Security Test                                 |
 
-O frontend não exige framework, instalação de pacotes npm ou etapa de build. Ele deve ser servido por HTTP, pois carrega os módulos e templates com `fetch`.
+O frontend não exige framework, instalação de pacotes npm ou etapa de build. Ele deve ser servido por HTTP, pois carrega
+os módulos e templates com `fetch`.
 
 ## Arquitetura
 
-O backend segue **package by feature**: cada domínio agrupa controllers, services, repositories, entidades, mappers e DTOs. O frontend também é organizado por funcionalidade, com arquivos HTML, CSS e JavaScript separados por módulo.
+O backend segue **package by feature**: cada domínio agrupa controllers, services, repositories, entidades, mappers e
+DTOs. O frontend também é organizado por funcionalidade, com arquivos HTML, CSS e JavaScript separados por módulo.
 
 ```mermaid
 flowchart LR
-    Browser["Navegador: HTML, CSS e JavaScript"] -->|"JSON + Bearer JWT"| API["Spring MVC / Spring Security"]
+    Browser["Navegador: HTML, CSS e JavaScript"] -->|" JSON + Bearer JWT "| API["Spring MVC / Spring Security"]
     API --> Service["Services: regras de negócio"]
     Service --> Repository["Spring Data JPA / Hibernate"]
     Repository --> Database[("MySQL")]
     Flyway["Flyway migrations"] --> Database
-    Browser -->|"Consulta de CEP"| ViaCEP["ViaCEP"]
+    Browser -->|" Consulta de CEP "| ViaCEP["ViaCEP"]
 ```
 
 ### Organização do frontend
 
 - [`frontend/index.html`](frontend/index.html): tela de login, estrutura do painel, menu e modal compartilhado.
-- [`frontend/app.js`](frontend/app.js): login e carregamento dinâmico de HTML, CSS e scripts dos módulos. O evento `pagina:carregada` inicia cada tela.
-- [`frontend/js/api.js`](frontend/js/api.js): endereço base da API, envio de JSON e Bearer token, leitura de respostas e limpeza dos tokens em respostas `401`.
+- [`frontend/app.js`](frontend/app.js): login e carregamento dinâmico de HTML, CSS e scripts dos módulos. O evento
+  `pagina:carregada` inicia cada tela.
+- [`frontend/js/api.js`](frontend/js/api.js): endereço base da API, envio de JSON e Bearer token, leitura de respostas e
+  limpeza dos tokens em respostas `401`.
 - [`frontend/js/modal.js`](frontend/js/modal.js): abertura e fechamento do modal reutilizável.
 - [`frontend/js/viacep.js`](frontend/js/viacep.js): consulta de endereço por CEP.
 - Pastas dos módulos: templates de páginas, cards, itens e modais, estilos específicos e lógica de integração com a API.
@@ -84,13 +95,13 @@ flowchart LR
 
 ```mermaid
 erDiagram
-    CLIENTE ||--o{ PEDIDO : realiza
-    USUARIO ||--o{ PEDIDO : responsavel
-    PEDIDO ||--|{ ITEM_PEDIDO : contem
-    SALGADO ||--o{ ITEM_PEDIDO : compoe
-    SALGADO ||--|| ESTOQUE : possui
-    COMPRA ||--|{ ITEM_COMPRA : contem
-    USUARIO }o--o{ PERFIL : possui
+    CLIENTE ||--o{ PEDIDO: realiza
+    USUARIO ||--o{ PEDIDO: responsavel
+    PEDIDO ||--|{ ITEM_PEDIDO: contem
+    SALGADO ||--o{ ITEM_PEDIDO: compoe
+    SALGADO ||--|| ESTOQUE: possui
+    COMPRA ||--|{ ITEM_COMPRA: contem
+    USUARIO }o--o{ PERFIL: possui
 ```
 
 ## Como executar
@@ -116,9 +127,11 @@ $env:JWT_HMAC256_SECRET="substitua-por-um-segredo-local"
 $env:JWT_ISSUER_SALGADOS_DA_LUCIA="salgados-da-lucia-kojima"
 ```
 
-A configuração padrão conecta ao MySQL em `localhost:3306`. O usuário do banco precisa das permissões necessárias para criar o banco, caso ainda não exista, e aplicar as migrações.
+A configuração padrão conecta ao MySQL em `localhost:3306`. O usuário do banco precisa das permissões necessárias para
+criar o banco, caso ainda não exista, e aplicar as migrações.
 
-**Limitação atual:** `JWT_HMAC256_SECRET` é exigida pela configuração, mas o `TokenService` ainda usa uma chave fixa no algoritmo de assinatura. Alterar essa variável, sozinho, não altera a chave efetivamente usada pelo código atual.
+**Limitação atual:** `JWT_HMAC256_SECRET` é exigida pela configuração, mas o `TokenService` ainda usa uma chave fixa no
+algoritmo de assinatura. Alterar essa variável, sozinho, não altera a chave efetivamente usada pelo código atual.
 
 ### 2. Inicie a API
 
@@ -127,7 +140,8 @@ cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
-Se já houver Maven instalado, pode usar `mvn spring-boot:run` dentro de `backend`. Em Linux/macOS, o wrapper equivalente é `./mvnw`.
+Se já houver Maven instalado, pode usar `mvn spring-boot:run` dentro de `backend`. Em Linux/macOS, o wrapper equivalente
+é `./mvnw`.
 
 A URL base completa é:
 
@@ -135,13 +149,17 @@ A URL base completa é:
 http://localhost:8080/api/salgados-da-lucia-kojima
 ```
 
-O Flyway aplica as migrações de [`backend/src/main/resources/db/migration`](backend/src/main/resources/db/migration) na inicialização do perfil padrão.
+O Flyway aplica as migrações de [`backend/src/main/resources/db/migration`](backend/src/main/resources/db/migration) na
+inicialização do perfil padrão.
 
 ### 3. Prepare o primeiro acesso
 
-Não há usuário ou senha padrão nem criação automática de administrador no repositório. Em um banco novo, é necessário provisionar um usuário ativo na tabela `usuarios`, com senha codificada em BCrypt, e associá-lo ao perfil `ADMIN` pela tabela `usuarios_perfis`.
+Não há usuário ou senha padrão nem criação automática de administrador no repositório. Em um banco novo, é necessário
+provisionar um usuário ativo na tabela `usuarios`, com senha codificada em BCrypt, e associá-lo ao perfil `ADMIN` pela
+tabela `usuarios_perfis`.
 
-No MySQL, a migração `V14` já cadastra os perfis `ADMIN` e `FUNCIONARIO`. O cadastro de novos usuários pela API ou pela interface exige um administrador autenticado, portanto não substitui esse provisionamento inicial.
+No MySQL, a migração `V14` já cadastra os perfis `ADMIN` e `FUNCIONARIO`. O cadastro de novos usuários pela API ou pela
+interface exige um administrador autenticado, portanto não substitui esse provisionamento inicial.
 
 ### 4. Inicie o frontend
 
@@ -151,9 +169,12 @@ Em outro terminal, na raiz do repositório:
 python -m http.server 5500 --bind 127.0.0.1 --directory frontend
 ```
 
-Abra [o painel local](http://127.0.0.1:5500) e entre com um usuário previamente cadastrado. Também é possível usar um servidor estático como o Live Server, servindo a pasta `frontend`.
+Abra [o painel local](http://127.0.0.1:5500) e entre com um usuário previamente cadastrado. Também é possível usar um
+servidor estático como o Live Server, servindo a pasta `frontend`.
 
-O endereço do backend está definido em `API_BASE_URL`, no arquivo [`frontend/js/api.js`](frontend/js/api.js). Se mudar o host, a porta ou o contexto da API, atualize esse valor. Os controllers possuem `@CrossOrigin` e a configuração de segurança habilita CORS para a comunicação entre frontend e backend.
+O endereço do backend está definido em `API_BASE_URL`, no arquivo [`frontend/js/api.js`](frontend/js/api.js). Se mudar o
+host, a porta ou o contexto da API, atualize esse valor. Os controllers possuem `@CrossOrigin` e a configuração de
+segurança habilita CORS para a comunicação entre frontend e backend.
 
 Não abra `index.html` diretamente por `file://`: o carregamento dos templates depende de um servidor HTTP.
 
@@ -165,13 +186,17 @@ Dentro de `backend`, com as variáveis JWT definidas:
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=fora"
 ```
 
-O perfil `fora` usa `jdbc:h2:mem:salgados_lucia;DB_CLOSE_DELAY=-1;MODE=MySQL`, usuário `sa` e senha vazia. O Hibernate cria as tabelas e os dados são temporários; o Flyway fica desabilitado. Por isso, os perfis e o primeiro administrador também precisam ser provisionados nesse ambiente.
+O perfil `fora` usa `jdbc:h2:mem:salgados_lucia;DB_CLOSE_DELAY=-1;MODE=MySQL`, usuário `sa` e senha vazia. O Hibernate
+cria as tabelas e os dados são temporários; o Flyway fica desabilitado. Por isso, os perfis e o primeiro administrador
+também precisam ser provisionados nesse ambiente.
 
-O console H2 é habilitado em `/api/salgados-da-lucia-kojima/h2-console`, mas a configuração atual de segurança não libera essa rota nem configura os frames do console. O perfil, por si só, não garante acesso ao console pelo navegador.
+O console H2 é habilitado em `/api/salgados-da-lucia-kojima/h2-console`, mas a configuração atual de segurança não
+libera essa rota nem configura os frames do console. O perfil, por si só, não garante acesso ao console pelo navegador.
 
 ## Autenticação e permissões
 
-As rotas abaixo são relativas à URL base da API. Os endpoints de `/autenticacao/**` e a documentação Swagger/OpenAPI são públicos; os demais exigem autenticação.
+As rotas abaixo são relativas à URL base da API. Os endpoints de `/autenticacao/**` e a documentação Swagger/OpenAPI são
+públicos; os demais exigem autenticação.
 
 ```http
 POST /api/salgados-da-lucia-kojima/autenticacao/login
@@ -189,40 +214,49 @@ Authorization: Bearer <token_de_acesso>
 A renovação está disponível por `POST /autenticacao/atualizar-token`, com o corpo:
 
 ```json
-{ "refreshToken": "seu_refresh_token" }
+{
+  "refreshToken": "seu_refresh_token"
+}
 ```
 
-| Perfil | Permissões na API |
-| --- | --- |
-| `FUNCIONARIO` | Gerenciar clientes, pedidos, compras e ajustes de estoque; consultar salgados e usuários; alterar a própria senha. |
-| `ADMIN` | Todas as permissões de funcionário, além de cadastrar/editar/ativar/desativar salgados e cadastrar/desativar usuários. |
+| Perfil        | Permissões na API                                                                                                      |
+|---------------|------------------------------------------------------------------------------------------------------------------------|
+| `FUNCIONARIO` | Gerenciar clientes, pedidos, compras e ajustes de estoque; consultar salgados e usuários; alterar a própria senha.     |
+| `ADMIN`       | Todas as permissões de funcionário, além de cadastrar/editar/ativar/desativar salgados e cadastrar/desativar usuários. |
 
-A autorização é aplicada pelo backend. O menu do frontend é compartilhado entre os perfis e não oculta todas as ações restritas ao administrador.
+A autorização é aplicada pelo backend. O menu do frontend é compartilhado entre os perfis e não oculta todas as ações
+restritas ao administrador.
 
-No navegador, os tokens ficam no `localStorage`. A renovação automática ainda não está integrada: ao receber `401`, o cliente HTTP limpa os tokens e informa que é necessário entrar novamente. Também não há botão de logout nem restauração automática do painel ao recarregar a página.
+No navegador, os tokens ficam no `localStorage`. A renovação automática ainda não está integrada: ao receber `401`, o
+cliente HTTP limpa os tokens e informa que é necessário entrar novamente. Também não há botão de logout nem restauração
+automática do painel ao recarregar a página.
 
 ## Rotas da API
 
 Prefixo de todas as rotas: `/api/salgados-da-lucia-kojima`.
 
-| Recurso | Operações |
-| --- | --- |
-| Autenticação | `POST /autenticacao/login`, `POST /autenticacao/atualizar-token` |
-| Clientes | `POST /clientes`, `GET /clientes`, `GET /clientes/{id}`, `GET /clientes/nome?nome=`, `PUT /clientes/{id}`, `PATCH /clientes/{id}` |
-| Salgados | `POST /salgados`, `GET /salgados`, `GET /salgados/{id}`, `GET /salgados/nome?nome=`, `PUT /salgados/{id}`, `PATCH /salgados/{id}` |
-| Estoque | `GET /estoque`, `GET /estoque/{salgadoId}`, `PATCH /estoque/{salgadoId}` |
-| Pedidos | `POST /pedidos`, `GET /pedidos`, `GET /pedidos/{id}`, `PUT /pedidos/{id}`, `PATCH /pedidos/{id}` |
-| Compras | `POST /compras`, `GET /compras`, `GET /compras/{id}`, `PUT /compras/{id}` |
-| Usuários | `POST /usuarios/cadastrar`, `GET /usuarios`, `GET /usuarios/nome?nome=`, `GET /usuarios/{id}`, `PATCH /usuarios` (própria senha), `PATCH /usuarios/{id}` (desativação) |
-| Enums | `GET /enums/pedido`, `GET /enums/salgado`, `GET /enums/usuario` |
+| Recurso      | Operações                                                                                                                                                              |
+|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Autenticação | `POST /autenticacao/login`, `POST /autenticacao/atualizar-token`                                                                                                       |
+| Clientes     | `POST /clientes`, `GET /clientes`, `GET /clientes/{id}`, `GET /clientes/nome?nome=`, `PUT /clientes/{id}`, `PATCH /clientes/{id}`                                      |
+| Salgados     | `POST /salgados`, `GET /salgados`, `GET /salgados/{id}`, `GET /salgados/nome?nome=`, `PUT /salgados/{id}`, `PATCH /salgados/{id}`                                      |
+| Estoque      | `GET /estoque`, `GET /estoque/{salgadoId}`, `PATCH /estoque/{salgadoId}`                                                                                               |
+| Pedidos      | `POST /pedidos`, `GET /pedidos`, `GET /pedidos/{id}`, `PUT /pedidos/{id}`, `PATCH /pedidos/{id}`                                                                       |
+| Compras      | `POST /compras`, `GET /compras`, `GET /compras/{id}`, `PUT /compras/{id}`                                                                                              |
+| Usuários     | `POST /usuarios/cadastrar`, `GET /usuarios`, `GET /usuarios/nome?nome=`, `GET /usuarios/{id}`, `PATCH /usuarios` (própria senha), `PATCH /usuarios/{id}` (desativação) |
+| Enums        | `GET /enums/pedido`, `GET /enums/salgado`, `GET /enums/usuario`                                                                                                        |
 
 ### Paginação e filtros
 
-As listagens paginadas aceitam `page`, `size` e `sort`, com páginas começando em zero. As listagens gerais de clientes, salgados e usuários exigem `ativo=true` ou `ativo=false`.
+As listagens paginadas aceitam `page`, `size` e `sort`, com páginas começando em zero. As listagens gerais de clientes,
+salgados e usuários exigem `ativo=true` ou `ativo=false`.
 
-- **Pedidos:** `statusPedido`, `clienteId`, `nomeCliente`, `dataPedido`, `dataInicioEntrega`, `dataFimEntrega`, `tipoEntrega`, `formaPagamento`, `usuarioResponsavelId` e `nomeUsuarioResponsavel`. Os limites do período de entrega usam `dd-MM-yyyy HH:mm:ss` na query string.
+- **Pedidos:** `statusPedido`, `clienteId`, `nomeCliente`, `dataPedido`, `dataInicioEntrega`, `dataFimEntrega`,
+  `tipoEntrega`, `formaPagamento`, `usuarioResponsavelId` e `nomeUsuarioResponsavel`. Os limites do período de entrega
+  usam `dd-MM-yyyy HH:mm:ss` na query string.
 - **Compras:** `dataInicioCompra`, `dataFimCompra`, `nomeItem` e `observacao`. As datas dos filtros usam `dd-MM-yyyy`.
-- Quando apenas o início de um período é informado, a API consulta aquele dia. As telas convertem as datas dos formulários para os formatos esperados.
+- Quando apenas o início de um período é informado, a API consulta aquele dia. As telas convertem as datas dos
+  formulários para os formatos esperados.
 
 ### Exemplo: criar pedido
 
@@ -232,7 +266,11 @@ Envie para `POST /pedidos`, com IDs de registros ativos e uma data de entrega fu
 {
   "clienteId": 1,
   "itens": [
-    { "salgadoId": 1, "quantidade": 100, "tipoPreco": "CONGELADO" }
+    {
+      "salgadoId": 1,
+      "quantidade": 100,
+      "tipoPreco": "CONGELADO"
+    }
   ],
   "dataPedido": "2026-09-26",
   "dataEntrega": "2026-12-20T14:00:00",
@@ -243,7 +281,9 @@ Envie para `POST /pedidos`, com IDs de registros ativos e uma data de entrega fu
 }
 ```
 
-Ajuste as datas ao executar o exemplo. Valores aceitos: categorias `FRITO`/`ASSADO`; preços `CONGELADO`/`PROCESSADO`; entregas `ENTREGA`/`RETIRADA`; pagamentos `DEBITO`, `CREDITO`, `PIX`, `DINHEIRO` e `TRANSFERENCIA`; status `EM_ANDAMENTO`, `CONCLUIDO` e `CANCELADO`.
+Ajuste as datas ao executar o exemplo. Valores aceitos: categorias `FRITO`/`ASSADO`; preços `CONGELADO`/`PROCESSADO`;
+entregas `ENTREGA`/`RETIRADA`; pagamentos `DEBITO`, `CREDITO`, `PIX`, `DINHEIRO` e `TRANSFERENCIA`; status
+`EM_ANDAMENTO`, `CONCLUIDO` e `CANCELADO`.
 
 ### Swagger / OpenAPI
 
@@ -296,15 +336,19 @@ Para executar a fase de testes do Maven, dentro de `backend`:
 .\mvnw.cmd test
 ```
 
-Os arquivos `ClienteControllerTest` e `ClienteServiceTest` estão comentados no estado atual do repositório; esse comando não representa uma suíte ativa de cobertura funcional. O frontend também não possui suíte automatizada configurada.
+Os arquivos `ClienteControllerTest` e `ClienteServiceTest` estão comentados no estado atual do repositório; esse comando
+não representa uma suíte ativa de cobertura funcional. O frontend também não possui suíte automatizada configurada.
 
 Além das telas operacionais implementadas, permanecem os seguintes pontos:
 
 - A página **Início** ainda não apresenta dashboard, indicadores ou relatórios.
 - Exportações para Excel/PDF ainda não estão implementadas.
-- A seleção de imagem no cadastro/edição de salgados gera apenas uma prévia local; não há upload ou persistência da imagem na API.
-- Pedidos e compras não movimentam automaticamente o estoque de salgados; os ajustes são realizados pelo módulo de estoque.
-- O primeiro administrador precisa ser provisionado, e a sessão no frontend ainda requer as melhorias descritas na seção de autenticação.
+- A seleção de imagem no cadastro/edição de salgados gera apenas uma prévia local; não há upload ou persistência da
+  imagem na API.
+- Pedidos e compras não movimentam automaticamente o estoque de salgados; os ajustes são realizados pelo módulo de
+  estoque.
+- O primeiro administrador precisa ser provisionado, e a sessão no frontend ainda requer as melhorias descritas na seção
+  de autenticação.
 
 ## Documentação complementar
 
