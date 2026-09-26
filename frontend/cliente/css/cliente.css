@@ -12,15 +12,45 @@
 }
 
 #lista .card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "info acoes";
     margin-bottom: 0;
-    flex-wrap: wrap;
-    gap: 12px;
+    gap: 8px 16px;
+}
+
+.card-acoes-cliente .status {
+    justify-self: center;
+    align-self: center;
 }
 
 #lista .card-info {
-    flex-basis: calc(100% - 90px);
+    grid-area: info;
     min-width: 0;
     overflow-wrap: anywhere;
+}
+
+.card-acoes-cliente {
+    grid-area: acoes;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(92px, 1fr));
+    gap: 8px;
+}
+
+.card-acoes-cliente .btn {
+    min-height: 40px;
+    padding: 9px 12px;
+}
+
+.card-acoes-cliente .btn-editar {
+    grid-column: 2;
+}
+
+@media (max-width: 650px) {
+    #lista .card {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "info" "acoes";
+    }
 }
 
 #lista .estado {
