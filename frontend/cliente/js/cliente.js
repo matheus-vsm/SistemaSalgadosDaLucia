@@ -1,3 +1,4 @@
+let templateCardCliente = '';
 let paginaAtual = 0;
 let clientesAtivos = true;
 let termoBusca = '';
@@ -10,6 +11,12 @@ async function listarClientes(pagina = 0, tipo = clientesAtivos, busca = termoBu
     termoBusca = busca.trim();
     atualizarFiltroClientes();
     try {
+        if (!templateCardCliente) {
+            const respostaCard = await fetch('cliente/html/card-cliente.html');
+            if (!respostaCard.ok) throw new Error('Erro ao carregar o card de cliente.');
+            templateCardCliente = await respostaCard.text();
+        }
+
         const endpoint = termoBusca ? '/clientes/nome' : '/clientes';
         const parametros = termoBusca
             ? `nome=${encodeURIComponent(termoBusca)}&ativo=${tipo}&page=${pagina}&size=2`
@@ -63,24 +70,23 @@ function atualizarFiltroClientes() {
 }
 
 function criarCardHTML(cliente) {
-    const ativo = cliente.ativo === true;
-    const statusClasse = ativo ? 'ativo' : 'inativo';
-    const statusTexto = ativo ? 'Ativo' : 'Inativo';
-    const statusBotao = ativo ? 'Inativar' : 'Ativar';
+    const template = document.createElement('template');
+    template.innerHTML = templateCardCliente.trim();
 
-    return `
-      <div class="card">
-        <div class="card-info">
-          <h2>${cliente.nome}</h2>
-          <p>${cliente.telefone ?? ''}</p>
-          <p>${cliente.endereco?.logradouro ?? ''} - ${cliente.endereco?.cidade ?? ''}</p>
-        </div>
-        <span class="status ${statusClasse}">${statusTexto}</span>
-        <button type="button" class="btn btn-secundario btn-editar" onclick="abrirModalEdicao(${cliente.id})">Editar</button>
-        <button type="button" class="btn btn-secundario btn-exibir" onclick="abrirModalExibicao(${cliente.id})">Exibir</button>
-        <button type="button" class="btn btn-secundario btn-alterarStatus" onclick="abrirModalAlterarStatus(${cliente.id})">${statusBotao}</button>
-      </div>
-    `;
+    const card = template.content.firstElementChild;
+    card.dataset.clienteId = cliente.id;
+    card.querySelector('.cliente-nome-card').textContent = cliente.nome;
+    card.querySelector('.cliente-telefone-card').textContent = cliente.telefone ?? '';
+    card.querySelector('.cliente-endereco-card').textContent = `${cliente.endereco?.logradouro ?? ''} - ${cliente.endereco?.cidade ?? ''}`;
+
+    const ativo = cliente.ativo === true;
+    const status = card.querySelector('.status');
+    status.classList.add(ativo ? 'ativo' : 'inativo');
+    status.textContent = ativo ? 'Ativo' : 'Inativo';
+
+    card.querySelector('[data-acao-cliente="status"]').textContent = ativo ? 'Inativar' : 'Ativar';
+
+    return card.outerHTML;
 }
 
 async function preencherEndereco(event) {
@@ -359,4 +365,13 @@ conteudoDinamico.addEventListener('submit', async (event) => {
     } else {
         return;
     }
+});
+
+document.getElementById('conteudo-dinamico').addEventListener('click', event => {
+    const botao = event.target.closest('[data-acao-cliente]');
+    if (!botao) return;
+    const id = Number(botao.closest('[data-cliente-id]').dataset.clienteId);
+    if (botao.dataset.acaoCliente === 'editar') abrirModalEdicao(id);
+    if (botao.dataset.acaoCliente === 'exibir') abrirModalExibicao(id);
+    if (botao.dataset.acaoCliente === 'status') abrirModalAlterarStatus(id);
 });

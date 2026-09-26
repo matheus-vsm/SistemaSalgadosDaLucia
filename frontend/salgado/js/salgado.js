@@ -1,3 +1,4 @@
+let templateCardSalgado = '';
 let paginaAtualSalgados = 0;
 let salgadosAtivos = true;
 let termoBuscaSalgados = '';
@@ -11,6 +12,12 @@ async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBu
     termoBuscaSalgados = busca.trim();
     atualizarFiltroSalgados();
     try {
+        if (!templateCardSalgado) {
+            const respostaCard = await fetch('salgado/html/card-salgado.html');
+            if (!respostaCard.ok) throw new Error('Erro ao carregar o card de salgado.');
+            templateCardSalgado = await respostaCard.text();
+        }
+
         const endpoint = termoBuscaSalgados ? '/salgados/nome' : '/salgados';
         const parametros = termoBuscaSalgados
             ? `nome=${encodeURIComponent(termoBuscaSalgados)}&page=${pagina}&size=4`
@@ -63,43 +70,25 @@ function atualizarFiltroSalgados() {
 }
 
 function criarCardSalgadoHTML(salgado) {
-    const ativo = salgado.ativo === true;
-    const statusClasse = ativo ? 'ativo' : 'inativo';
-    const statusTexto = ativo ? 'Ativo' : 'Inativo';
-    const statusBotao = ativo ? 'Inativar' : 'Ativar';
-    const tipo = salgado.categoria === "FRITO";
-    const tipoTexto = tipo ? 'Frito' : 'Assado';
+    const template = document.createElement('template');
+    template.innerHTML = templateCardSalgado.trim();
 
-    return `
-      <div class="card">
-        <img class="imagem-salgado" src="imagens/coxinha.jpg" alt="Imagem do salgado">
-        <div class="card-info">
-          <h2>${salgado.nome}</h2>
-          <p>${salgado.descricao ?? ''}</p>
-          <p>Cento Congelado: ${formatarPrecoSalgado(salgado.precoCentoCongelado)}</p>
-          <p>Cento ${tipoTexto}: ${formatarPrecoSalgado(salgado.precoCentoProcessado)}</p>
-        </div>
-        <div class="card-controles-salgado">
-          <div class="card-indicadores-salgado">
-            <div class="indicador-linha">
-              <span class="status ${statusClasse}">${statusTexto}</span>
-            </div>
-            <div class="indicador-linha">
-              <span class="estoque-card" title="Quantidade em estoque">
-                <strong>${salgado.estoque?.quantidade ?? 0}</strong>
-                <small>estoque</small>
-              </span>
-            </div>
-          </div>
-          <div class="card-acoes-salgado">
-            <button type="button" class="btn btn-secundario btn-alterarStatus" onclick="abrirModalAlterarStatusSalgado(${salgado.id})">${statusBotao}</button>
-            <button type="button" class="btn btn-secundario btn-exibir" onclick="abrirModalExibicaoSalgado(${salgado.id})">Exibir</button>
-            <button type="button" class="btn btn-secundario btn-estoque" onclick="abrirModalAtualizarEstoque(${salgado.id})">Atualizar Estoque</button>
-            <button type="button" class="btn btn-secundario btn-editar" onclick="abrirModalEdicaoSalgado(${salgado.id})">Editar</button>
-          </div>
-        </div>
-      </div>
-    `;
+    const card = template.content.firstElementChild;
+    card.dataset.salgadoId = salgado.id;
+    card.querySelector('.salgado-nome-card').textContent = salgado.nome;
+    card.querySelector('.salgado-descricao-card').textContent = salgado.descricao ?? '';
+    card.querySelector('.salgado-congelado-card').textContent = `Cento Congelado: ${formatarPrecoSalgado(salgado.precoCentoCongelado)}`;
+    card.querySelector('.salgado-processado-card').textContent = `Cento ${salgado.categoria === 'FRITO' ? 'Frito' : 'Assado'}: ${formatarPrecoSalgado(salgado.precoCentoProcessado)}`;
+    card.querySelector('.estoque-card strong').textContent = salgado.estoque?.quantidade ?? 0;
+
+    const ativo = salgado.ativo === true;
+    const status = card.querySelector('.status');
+    status.classList.add(ativo ? 'ativo' : 'inativo');
+    status.textContent = ativo ? 'Ativo' : 'Inativo';
+
+    card.querySelector('[data-acao-salgado="status"]').textContent = ativo ? 'Inativar' : 'Ativar';
+
+    return card.outerHTML;
 }
 
 function formatarPrecoSalgado(preco) {
@@ -461,4 +450,14 @@ conteudoDinamicoSalgados.addEventListener('submit', async (event) => {
     } else {
         return;
     }
+});
+
+document.getElementById('conteudo-dinamico').addEventListener('click', event => {
+    const botao = event.target.closest('[data-acao-salgado]');
+    if (!botao) return;
+    const id = Number(botao.closest('[data-salgado-id]').dataset.salgadoId);
+    if (botao.dataset.acaoSalgado === 'status') abrirModalAlterarStatusSalgado(id);
+    if (botao.dataset.acaoSalgado === 'exibir') abrirModalExibicaoSalgado(id);
+    if (botao.dataset.acaoSalgado === 'estoque') abrirModalAtualizarEstoque(id);
+    if (botao.dataset.acaoSalgado === 'editar') abrirModalEdicaoSalgado(id);
 });
