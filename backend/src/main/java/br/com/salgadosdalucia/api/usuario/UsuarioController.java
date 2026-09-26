@@ -78,7 +78,7 @@ public class UsuarioController {
     }
 
     @PatchMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Alterar senha do usuário autenticado")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Senha alterada com sucesso."),
