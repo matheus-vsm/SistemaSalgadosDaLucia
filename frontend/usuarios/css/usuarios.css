@@ -1,0 +1,135 @@
+.usuarios-cabecalho,
+.filtro-usuarios {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.usuarios-cabecalho {
+    margin-bottom: 16px;
+}
+
+.usuarios-cabecalho h2 {
+    margin: 0;
+}
+
+.filtro-usuarios {
+    gap: 8px;
+}
+
+#btn-usuarios-ativos {
+    background: #c8e6c9;
+}
+
+#btn-usuarios-inativos {
+    background: #ffcdd2;
+}
+
+#btn-usuarios-ativos.ativo-selecionado {
+    background: var(--success);
+    color: white;
+}
+
+#btn-usuarios-inativos.inativo-selecionado {
+    background: var(--danger);
+    color: white;
+}
+
+.filtro-usuarios [aria-pressed="true"] {
+    outline: 1px solid var(--text);
+}
+
+.paginacao-usuarios {
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.paginacao-usuarios span {
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.campos-usuario {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, auto);
+    grid-auto-flow: column;
+    gap: 20px 24px;
+}
+
+.campos-usuario input, .campos-usuario select {
+    max-width: 100%;
+}
+
+#lista-usuarios {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+#lista-usuarios .card {
+    margin-bottom: 0;
+    padding: 12px 16px;
+}
+
+#lista-usuarios .estado {
+    grid-column: 1 / -1;
+}
+
+.acoes-usuario {
+    display: grid;
+    gap: 8px;
+}
+
+.acoes-usuario .btn {
+    padding: 7px 12px;
+}
+
+.campos-senha-usuario {
+    display: grid;
+    gap: 16px;
+}
+
+.campos-senha-usuario input {
+    max-width: 100%;
+}
+
+.acoes-modal-usuario {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#lista-usuarios .card-info {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#usuarios-erro-perfis {
+    color: var(--danger);
+}
+
+@media (max-width: 1000px) {
+    #lista-usuarios {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+    .campos-usuario {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+        grid-auto-flow: row;
+    }
+
+    #lista-usuarios .card {
+        flex-wrap: wrap;
+    }
+
+    .acoes-usuario {
+        width: 100%;
+    }
+}

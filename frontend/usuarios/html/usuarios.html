@@ -1,2 +1,43 @@
 <h1>Área de Usuários</h1>
 <hr>
+<section id="area-usuarios">
+    <div class="usuarios-cabecalho">
+        <h2>Usuários Cadastrados</h2>
+        <div class="filtro-usuarios" role="group" aria-label="Filtrar usuários por situação">
+            <button type="button" id="btn-usuarios-ativos" class="btn ativo-selecionado" aria-pressed="true">Ativos</button>
+            <button type="button" id="btn-usuarios-inativos" class="btn" aria-pressed="false">Inativos</button>
+        </div>
+    </div>
+    <div id="lista-usuarios" aria-live="polite"><div class="estado">Carregando usuários...</div></div>
+    <div class="paginacao paginacao-usuarios">
+        <button type="button" id="usuarios-anterior" class="btn btn-secundario" disabled>Anterior</button>
+        <span id="usuarios-pagina" aria-live="polite"></span>
+        <button type="button" id="usuarios-proximo" class="btn btn-secundario" disabled>Próximo</button>
+    </div>
+    <hr>
+    <h2>Cadastro de Usuário</h2>
+    <form id="form-usuario">
+        <fieldset class="campos-usuario">
+            <div>
+                <label for="usuario-nome">Nome completo:</label>
+                <input type="text" id="usuario-nome" name="nome" autocomplete="name" required>
+            </div>
+            <div>
+                <label for="usuario-username">Username:</label>
+                <input type="text" id="usuario-username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+            </div>
+            <div>
+                <label for="usuario-senha">Senha:</label>
+                <input type="password" id="usuario-senha" name="senha" autocomplete="new-password" required>
+            </div>
+            <div>
+                <label for="usuario-perfil">Perfil:</label>
+                <select id="usuario-perfil" name="perfilUsuarioNome" required disabled>
+                    <option value="">Carregando perfis...</option>
+                </select>
+                <p id="usuarios-erro-perfis" role="status" hidden></p>
+            </div>
+        </fieldset>
+        <button type="submit" id="usuario-cadastrar" class="btn btn-primario" disabled>Cadastrar Usuário</button>
+    </form>
+</section>

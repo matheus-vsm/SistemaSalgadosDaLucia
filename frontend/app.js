@@ -29,7 +29,9 @@ document.addEventListener('DOMContentLoaded', function () {
             js: 'compras/js/compras.js'
         },
         usuario: {
-            html: 'usuarios/html/usuarios.html'
+            html: 'usuarios/html/usuarios.html',
+            css: 'usuarios/css/usuarios.css',
+            js: 'usuarios/js/usuarios.js'
         }
     };
 
