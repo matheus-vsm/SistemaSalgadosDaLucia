@@ -45,6 +45,11 @@ public class UsuarioService implements UserDetailsService {
         return usuarioRepository.findAllByAtivo(paginacao, ativo).map(UsuarioMapper::mapToUsuarioResponse);
     }
 
+    public Page<UsuarioResponse> buscarPorNome(Pageable paginacao, String nome) {
+        return usuarioRepository.findByNomeContainingIgnoreCase(paginacao, nome.trim())
+                .map(UsuarioMapper::mapToUsuarioResponse);
+    }
+
     public UsuarioResponse buscarPorId(Long id) throws NotFoundException {
         Usuario usuario = ValidacaoEntidadeHelper.buscarEntidadePorId(usuarioRepository, id, "Usuario");
         return UsuarioMapper.mapToUsuarioResponse(usuario);

@@ -14,6 +14,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Page<Usuario> findAllByAtivo(Pageable paginacao, Boolean ativo);
 
+    Page<Usuario> findByNomeContainingIgnoreCase(Pageable paginacao, String nome);
+
     Optional<Usuario> findByUsernameIgnoreCase(String username);
 
     @Modifying

@@ -59,9 +59,19 @@ public class UsuarioController {
     @Operation(summary = "Listar usuários", description = "Retorna os usuários ativos/inativos de forma paginada.")
     @ApiResponse(responseCode = "200", description = "Usuários listados com sucesso.")
     public ResponseEntity<Page<UsuarioResponse>> listar(@PageableDefault(sort = {"nome"},
-            direction = Sort.Direction.ASC, size = 10) Pageable paginacao,
+                                                                direction = Sort.Direction.ASC, size = 10) Pageable paginacao,
                                                         @RequestParam Boolean ativo) {
         var page = usuarioService.listar(paginacao, ativo);
+        return ResponseEntity.ok(page);
+    }
+
+    @GetMapping(value = "/nome")
+    @PreAuthorize("hasRole('FUNCIONARIO')")
+    @Operation(summary = "Buscar usuários por nome", description = "Busca parcial por nome, sem diferenciar maiúsculas e minúsculas, com filtro de situação e paginação.")
+    @ApiResponse(responseCode = "200", description = "Busca realizada com sucesso.")
+    public ResponseEntity<Page<UsuarioResponse>> buscarPorNome(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao,
+            @RequestParam String nome) {
+        var page = usuarioService.buscarPorNome(paginacao, nome);
         return ResponseEntity.ok(page);
     }
 
@@ -78,7 +88,7 @@ public class UsuarioController {
     }
 
     @PatchMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Alterar senha do usuário autenticado")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Senha alterada com sucesso."),
