@@ -19,8 +19,8 @@ async function listarClientes(pagina = 0, tipo = clientesAtivos, busca = termoBu
 
         const endpoint = termoBusca ? '/clientes/nome' : '/clientes';
         const parametros = termoBusca
-            ? `nome=${encodeURIComponent(termoBusca)}&ativo=${tipo}&page=${pagina}&size=2`
-            : `page=${pagina}&size=2&ativo=${tipo}`;
+            ? `nome=${encodeURIComponent(termoBusca)}&ativo=${tipo}&page=${pagina}&size=4`
+            : `page=${pagina}&size=4&ativo=${tipo}`;
         const {
             response, // info da requisição (status, headers, etc.) - salva na variavel response
             data: clientesPage // os dados retornados (clientes) - salva na variavel clientesPage
