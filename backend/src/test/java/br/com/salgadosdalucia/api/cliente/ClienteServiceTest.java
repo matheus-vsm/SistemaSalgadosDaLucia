@@ -76,6 +76,19 @@ class ClienteServiceTest {
             assertThat(resposta.endereco()).isEqualTo(dto.endereco());
             verifyNoMoreInteractions(clienteRepository);
         }
+
+        @Test
+        @DisplayName("Deve devolver o erro do banco no cadastro")
+        void deveRetornarErroQuandoBancoFalhar() {
+            DataAccessResourceFailureException erroDoBanco =
+                    new DataAccessResourceFailureException("Banco indisponível");
+            when(clienteRepository.save(any(Cliente.class))).thenThrow(erroDoBanco);
+
+            assertThatThrownBy(() -> clienteService.cadastrar(dto)).isSameAs(erroDoBanco);
+
+            verify(clienteRepository).save(any(Cliente.class));
+            verifyNoMoreInteractions(clienteRepository);
+        }
     }
 
     @Nested
