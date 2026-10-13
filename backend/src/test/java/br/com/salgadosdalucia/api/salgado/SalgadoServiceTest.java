@@ -460,9 +460,9 @@ class SalgadoServiceTest {
         @Test
         @DisplayName("Deve atualizar salgado inativo sem ativá-lo")
         void deveAtualizarSalgadoInativo() {
+            salgado.setAtivo(false);
             SalgadoRequest novosDados = new SalgadoRequest("Esfiha", "Esfiha de carne", Categoria.ASSADO,
                     new BigDecimal("65.00"), new BigDecimal("85.00"));
-            salgado.setAtivo(false);
 
             when(salgadoRepository.findById(ID)).thenReturn(Optional.of(salgado));
             when(estoqueRepository.findBySalgadoId(ID)).thenReturn(Optional.of(estoque));
