@@ -41,9 +41,9 @@ public class PedidoService {
     @Transactional(rollbackFor = Exception.class)
     public CriacaoPedidoResponse registrar(CriacaoPedidoRequest request) throws NotFoundException {
         Cliente cliente = ValidacaoEntidadeHelper.buscarEntidadePorId(clienteRepository, request.clienteId(), "Cliente");
-        ValidacaoEntidadeHelper.validarStatusAtivo(cliente.isAtivo(), cliente.getId(), "Cliente", "não pode realizar pedidos.");
+        ValidacaoEntidadeHelper.validarStatusAtivo(cliente.isAtivo(), cliente.getId(), "Cliente", "não pode realizar pedidos");
         Usuario usuario = ValidacaoEntidadeHelper.buscarEntidadePorId(usuarioRepository, request.usuarioResponsavelId(), "Usuario");
-        ValidacaoEntidadeHelper.validarStatusAtivo(usuario.isAtivo(), usuario.getId(), "Usuario", "não pode ser responsável por pedidos.");
+        ValidacaoEntidadeHelper.validarStatusAtivo(usuario.isAtivo(), usuario.getId(), "Usuario", "não pode ser responsável por pedidos");
 
         List<ItemPedido> itens = new ArrayList<>();
         Pedido pedido = Pedido.builder()
@@ -59,7 +59,7 @@ public class PedidoService {
 
         for (ItemPedidoDto item : request.itens()) {
             Salgado salgado = ValidacaoEntidadeHelper.buscarEntidadePorId(salgadoRepository, item.salgadoId(), "Salgado");
-            ValidacaoEntidadeHelper.validarStatusAtivo(salgado.isAtivo(), salgado.getId(), "Salgado", "não pode ser adicionado ao pedido.");
+            ValidacaoEntidadeHelper.validarStatusAtivo(salgado.isAtivo(), salgado.getId(), "Salgado", "não pode ser adicionado ao pedido");
 
             ItemPedido itemPedido = new ItemPedido();
             itemPedido.setSalgado(salgado);
@@ -112,9 +112,9 @@ public class PedidoService {
         }
 
         Cliente cliente = ValidacaoEntidadeHelper.buscarEntidadePorId(clienteRepository, request.clienteId(), "Cliente");
-        ValidacaoEntidadeHelper.validarStatusAtivo(cliente.isAtivo(), cliente.getId(), "Cliente", "não pode realizar pedidos.");
+        ValidacaoEntidadeHelper.validarStatusAtivo(cliente.isAtivo(), cliente.getId(), "Cliente", "não pode realizar pedidos");
         Usuario usuario = ValidacaoEntidadeHelper.buscarEntidadePorId(usuarioRepository, request.usuarioResponsavelId(), "Usuario");
-        ValidacaoEntidadeHelper.validarStatusAtivo(usuario.isAtivo(), usuario.getId(), "Usuario", "não pode ser responsável por pedidos.");
+        ValidacaoEntidadeHelper.validarStatusAtivo(usuario.isAtivo(), usuario.getId(), "Usuario", "não pode ser responsável por pedidos");
         
         pedido.setCliente(cliente);
         pedido.setDataEntrega(request.dataEntrega());
@@ -191,7 +191,7 @@ public class PedidoService {
 
         for (ItemPedidoDto item : itensDto) {
             Salgado salgado = ValidacaoEntidadeHelper.buscarEntidadePorId(salgadoRepository, item.salgadoId(), "Salgado");
-            ValidacaoEntidadeHelper.validarStatusAtivo(salgado.isAtivo(), salgado.getId(), "Salgado", "não pode ser adicionado ao pedido.");
+            ValidacaoEntidadeHelper.validarStatusAtivo(salgado.isAtivo(), salgado.getId(), "Salgado", "não pode ser adicionado ao pedido");
             
             ItemPedido itemPedido = new ItemPedido();
             itemPedido.setPedido(pedido);
