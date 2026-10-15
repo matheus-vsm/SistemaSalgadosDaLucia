@@ -526,7 +526,7 @@ class PedidoServiceTest {
         @DisplayName("Deve rejeitar atualização de pedido CONCLUIDO")
         void deveRejeitarPedidoCONCLUIDO() throws NotFoundException {
             pedido.setStatus(StatusPedido.CONCLUIDO);
-            PedidoListagemDto anterior = criarResposta(pedido);
+            PedidoListagemDto anterior = criarResponse(pedido);
 
             when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
 
@@ -534,7 +534,7 @@ class PedidoServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .hasMessage("Somente pedidos com status EM_ANDAMENTO podem ser atualizados. Pedido ID %d tem status %s", pedido.getId(), pedido.getStatus());
 
-            assertThat(criarResposta(pedido)).isEqualTo(anterior);
+            assertThat(criarResponse(pedido)).isEqualTo(anterior);
             verify(pedidoRepository).findById(PEDIDO_ID);
             verifyNoMoreInteractions(pedidoRepository);
             verifyNoInteractions(clienteRepository, usuarioRepository, salgadoRepository);
@@ -544,7 +544,7 @@ class PedidoServiceTest {
         @DisplayName("Deve rejeitar atualização de pedido CANCELADO")
         void deveRejeitarPedidoCANCELADO() throws NotFoundException {
             pedido.setStatus(StatusPedido.CANCELADO);
-            PedidoListagemDto anterior = criarResposta(pedido);
+            PedidoListagemDto anterior = criarResponse(pedido);
 
             when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
 
@@ -552,7 +552,7 @@ class PedidoServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .hasMessage("Somente pedidos com status EM_ANDAMENTO podem ser atualizados. Pedido ID %d tem status %s", pedido.getId(), pedido.getStatus());
 
-            assertThat(criarResposta(pedido)).isEqualTo(anterior);
+            assertThat(criarResponse(pedido)).isEqualTo(anterior);
             verify(pedidoRepository).findById(PEDIDO_ID);
             verifyNoMoreInteractions(pedidoRepository);
             verifyNoInteractions(clienteRepository, usuarioRepository, salgadoRepository);
@@ -686,7 +686,7 @@ class PedidoServiceTest {
 
             Page<PedidoListagemDto> resposta = pedidoService.listarComFiltro(filtro, paginacao);
 
-            assertThat(resposta.getContent()).containsExactly(criarResposta(pedido), criarResposta(segundoPedido));
+            assertThat(resposta.getContent()).containsExactly(criarResponse(pedido), criarResponse(segundoPedido));
             assertThat(resposta.getPageable()).isEqualTo(paginacao);
             assertThat(resposta.getTotalElements()).isEqualTo(5);
             assertThat(resposta.getTotalPages()).isEqualTo(3);
@@ -794,7 +794,7 @@ class PedidoServiceTest {
 
             PedidoListagemDto resposta = pedidoService.buscarPorId(PEDIDO_ID);
 
-            assertThat(resposta).isEqualTo(criarResposta(pedido));
+            assertThat(resposta).isEqualTo(criarResponse(pedido));
             assertThat(resposta.id()).isEqualTo(PEDIDO_ID);
             verify(pedidoRepository).findById(PEDIDO_ID);
             verifyNoMoreInteractions(pedidoRepository);
@@ -814,7 +814,7 @@ class PedidoServiceTest {
 
             assertThat(resposta.status()).isEqualTo(StatusPedido.CANCELADO);
             assertThat(resposta.enderecoEntrega()).isNull();
-            assertThat(resposta).isEqualTo(criarResposta(pedido));
+            assertThat(resposta).isEqualTo(criarResponse(pedido));
             verify(pedidoRepository).findById(PEDIDO_ID);
             verifyNoMoreInteractions(pedidoRepository);
             verifyNoInteractions(clienteRepository, usuarioRepository, salgadoRepository);
@@ -872,7 +872,7 @@ class PedidoServiceTest {
         @DisplayName("Deve concluir pedido preservando os demais dados")
         void deveConcluirPedido() throws NotFoundException {
             pedido.setStatus(StatusPedido.EM_ANDAMENTO);
-            PedidoListagemDto anterior = criarResposta(pedido);
+            PedidoListagemDto anterior = criarResponse(pedido);
 
             when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
 
@@ -883,7 +883,7 @@ class PedidoServiceTest {
             assertThat(pedido.getDataEntrega()).isEqualTo(anterior.dataEntrega());
             assertThat(pedido.getCliente()).isSameAs(cliente);
             assertThat(pedido.getUsuarioResponsavel()).isSameAs(usuario);
-            assertThat(criarResposta(pedido).itens()).isEqualTo(anterior.itens());
+            assertThat(criarResponse(pedido).itens()).isEqualTo(anterior.itens());
             verify(pedidoRepository).findById(PEDIDO_ID);
             verify(pedidoRepository, never()).save(any(Pedido.class));
             verifyNoMoreInteractions(pedidoRepository);
@@ -894,7 +894,7 @@ class PedidoServiceTest {
         @DisplayName("Deve cancelar pedido preservando os demais dados")
         void deveCancelarPedido() throws NotFoundException {
             pedido.setStatus(StatusPedido.EM_ANDAMENTO);
-            PedidoListagemDto anterior = criarResposta(pedido);
+            PedidoListagemDto anterior = criarResponse(pedido);
 
             when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
 
@@ -905,7 +905,7 @@ class PedidoServiceTest {
             assertThat(pedido.getDataEntrega()).isEqualTo(anterior.dataEntrega());
             assertThat(pedido.getCliente()).isSameAs(cliente);
             assertThat(pedido.getUsuarioResponsavel()).isSameAs(usuario);
-            assertThat(criarResposta(pedido).itens()).isEqualTo(anterior.itens());
+            assertThat(criarResponse(pedido).itens()).isEqualTo(anterior.itens());
             verify(pedidoRepository).findById(PEDIDO_ID);
             verify(pedidoRepository, never()).save(any(Pedido.class));
             verifyNoMoreInteractions(pedidoRepository);
@@ -916,7 +916,7 @@ class PedidoServiceTest {
         @DisplayName("Deve reabrir pedido preservando os demais dados")
         void deveReabrirPedido() throws NotFoundException {
             pedido.setStatus(StatusPedido.CONCLUIDO);
-            PedidoListagemDto anterior = criarResposta(pedido);
+            PedidoListagemDto anterior = criarResponse(pedido);
 
             when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
 
@@ -927,7 +927,7 @@ class PedidoServiceTest {
             assertThat(pedido.getDataEntrega()).isEqualTo(anterior.dataEntrega());
             assertThat(pedido.getCliente()).isSameAs(cliente);
             assertThat(pedido.getUsuarioResponsavel()).isSameAs(usuario);
-            assertThat(criarResposta(pedido).itens()).isEqualTo(anterior.itens());
+            assertThat(criarResponse(pedido).itens()).isEqualTo(anterior.itens());
             verify(pedidoRepository).findById(PEDIDO_ID);
             verify(pedidoRepository, never()).save(any(Pedido.class));
             verifyNoMoreInteractions(pedidoRepository);
@@ -938,7 +938,7 @@ class PedidoServiceTest {
         @DisplayName("Deve rejeitar status repetido EM_ANDAMENTO")
         void deveRejeitarStatusRepetidoEM_ANDAMENTO() throws NotFoundException {
             pedido.setStatus(StatusPedido.EM_ANDAMENTO);
-            PedidoListagemDto anterior = criarResposta(pedido);
+            PedidoListagemDto anterior = criarResponse(pedido);
 
             when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
 
@@ -946,7 +946,7 @@ class PedidoServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .hasMessage("O pedido já está com o status EM_ANDAMENTO");
 
-            assertThat(criarResposta(pedido)).isEqualTo(anterior);
+            assertThat(criarResponse(pedido)).isEqualTo(anterior);
             verify(pedidoRepository).findById(PEDIDO_ID);
             verifyNoMoreInteractions(pedidoRepository);
             verifyNoInteractions(clienteRepository, usuarioRepository, salgadoRepository);
@@ -956,7 +956,7 @@ class PedidoServiceTest {
         @DisplayName("Deve rejeitar status repetido CONCLUIDO")
         void deveRejeitarStatusRepetidoCONCLUIDO() throws NotFoundException {
             pedido.setStatus(StatusPedido.CONCLUIDO);
-            PedidoListagemDto anterior = criarResposta(pedido);
+            PedidoListagemDto anterior = criarResponse(pedido);
 
             when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
 
@@ -964,7 +964,7 @@ class PedidoServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .hasMessage("O pedido já está com o status CONCLUIDO");
 
-            assertThat(criarResposta(pedido)).isEqualTo(anterior);
+            assertThat(criarResponse(pedido)).isEqualTo(anterior);
             verify(pedidoRepository).findById(PEDIDO_ID);
             verifyNoMoreInteractions(pedidoRepository);
             verifyNoInteractions(clienteRepository, usuarioRepository, salgadoRepository);
@@ -974,7 +974,7 @@ class PedidoServiceTest {
         @DisplayName("Deve rejeitar status repetido CANCELADO")
         void deveRejeitarStatusRepetidoCANCELADO() throws NotFoundException {
             pedido.setStatus(StatusPedido.CANCELADO);
-            PedidoListagemDto anterior = criarResposta(pedido);
+            PedidoListagemDto anterior = criarResponse(pedido);
 
             when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
 
@@ -982,7 +982,7 @@ class PedidoServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .hasMessage("O pedido já está com o status CANCELADO");
 
-            assertThat(criarResposta(pedido)).isEqualTo(anterior);
+            assertThat(criarResponse(pedido)).isEqualTo(anterior);
             verify(pedidoRepository).findById(PEDIDO_ID);
             verifyNoMoreInteractions(pedidoRepository);
             verifyNoInteractions(clienteRepository, usuarioRepository, salgadoRepository);
@@ -1035,7 +1035,7 @@ class PedidoServiceTest {
                 inicio, fim, TipoEntrega.ENTREGA, FormaPagamento.PIX, USUARIO_ID, "Lucia");
     }
 
-    private PedidoListagemDto criarResposta(Pedido entidade) {
+    private PedidoListagemDto criarResponse(Pedido entidade) {
         List<ItemPedidoResponse> itens = entidade.getItens().stream().map(item -> new ItemPedidoResponse(
                 item.getId(), entidade.getId(), item.getSalgado().getNome(), item.getQuantidade(),
                 item.getTipoPreco(), item.getPrecoUnitario(), item.getSubTotal())).toList();
