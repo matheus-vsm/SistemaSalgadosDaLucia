@@ -336,8 +336,11 @@ Para executar a fase de testes do Maven, dentro de `backend`:
 .\mvnw.cmd test
 ```
 
-Os arquivos `ClienteControllerTest` e `ClienteServiceTest` estão comentados no estado atual do repositório; esse comando
-não representa uma suíte ativa de cobertura funcional. O frontend também não possui suíte automatizada configurada.
+Há seis classes ativas de testes unitários de serviços: `ClienteServiceTest`, `SalgadoServiceTest`,
+`EstoqueServiceTest`, `PedidoServiceTest`, `CompraServiceTest` e `UsuarioServiceTest`, com JUnit Jupiter e Mockito.
+Na revisão de 04/11/2026, foram executados **167 testes, sem falhas, erros ou testes ignorados**. Os testes usam mocks;
+esse resultado não comprova integração HTTP, segurança, migrações ou consultas em banco real. O frontend não possui
+suíte automatizada configurada. Veja os [cenários e limites na wiki](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/9-%E2%80%90-Testes-e-Rastreabilidade).
 
 Além das telas operacionais implementadas, permanecem os seguintes pontos:
 
@@ -349,6 +352,14 @@ Além das telas operacionais implementadas, permanecem os seguintes pontos:
   estoque.
 - O primeiro administrador precisa ser provisionado, e a sessão no frontend ainda requer as melhorias descritas na seção
   de autenticação.
+
+## Planejamento e acompanhamento das tarefas
+
+As tarefas começaram a ser planejadas no **Jira**. Posteriormente, todo o trabalho que já havia sido realizado foi
+migrado para o **GitHub Projects**, que passou a centralizar o acompanhamento do projeto. O quadro público facilita
+a consulta do histórico e da evolução do sistema, inclusive por recrutadores.
+
+- [Acessar o quadro no GitHub Projects](https://github.com/users/matheus-vsm/projects/3)
 
 ## Documentação complementar
 
