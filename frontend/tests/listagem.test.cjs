@@ -67,6 +67,19 @@ function pagina(id, numero = 1) {
 }
 
 for (const modulo of modulos) {
+    test(`${modulo[0]}: atualização após cadastro permite aumentar a altura`, async () => {
+        const a = ambiente(modulo);
+        const propriedade = a.lista.dataset.alturaCards ? '--altura-card' : 'height';
+        for (const [indice, altura] of [210, 480].entries()) {
+            a.lista.alturaNatural = altura;
+            a.lista.alturasCards = [altura - 20, altura];
+            const requisicao = a.listar(0);
+            a.consultas[indice].resolve(pagina(indice + 1, 0));
+            await requisicao;
+            assert.equal(a.lista.style[propriedade], `${altura}px`);
+        }
+    });
+
     test(`${modulo[0]}: altura segue os cards da tela e se adapta à largura`, async () => {
         const a = ambiente(modulo);
         const altura = 180 + modulos.indexOf(modulo) * 30;

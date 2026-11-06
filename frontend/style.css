@@ -305,7 +305,6 @@ legend {
 /* --- Cards --- */
 
 .lista-paginada {
-    max-height: 65vh;
     overflow: auto;
     overflow-anchor: none;
     scrollbar-gutter: stable;

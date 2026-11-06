@@ -102,7 +102,7 @@ function criarCardHTML(cliente) {
     status.classList.add(ativo ? 'ativo' : 'inativo');
     status.textContent = ativo ? 'Ativo' : 'Inativo';
 
-    card.querySelector('[data-acao-cliente="status"]').textContent = ativo ? 'Inativar' : 'Ativar';
+    card.querySelector('[data-acao-cliente="status"]').textContent = ativo ? 'Desativar' : 'Ativar';
 
     return card.outerHTML;
 }
@@ -274,7 +274,7 @@ async function abrirModalAlterarStatus(id) {
         }
 
         const ativar = cliente.ativo !== true;
-        const estado = ativar ? 'ativar' : 'inativar';
+        const estado = ativar ? 'ativar' : 'desativar';
 
         abrirModal({
             titulo: `${estado[0].toUpperCase()}${estado.slice(1)} Cliente`,
@@ -367,7 +367,7 @@ async function alterarStatusCliente(id, estado) {
             fecharModal();
             listarClientes();
         } else {
-            alert(resultado?.mensagem || `Erro ao ${estado ? 'ativar' : 'inativar'} cliente`);
+            alert(resultado?.mensagem || `Erro ao ${estado ? 'ativar' : 'desativar'} cliente`);
         }
     } catch (erro) {
         console.error('Erro na requisição:', erro);

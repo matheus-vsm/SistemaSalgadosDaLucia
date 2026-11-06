@@ -102,7 +102,7 @@ function criarCardSalgadoHTML(salgado) {
     status.classList.add(ativo ? 'ativo' : 'inativo');
     status.textContent = ativo ? 'Ativo' : 'Inativo';
 
-    card.querySelector('[data-acao-salgado="status"]').textContent = ativo ? 'Inativar' : 'Ativar';
+    card.querySelector('[data-acao-salgado="status"]').textContent = ativo ? 'Desativar' : 'Ativar';
 
     return card.outerHTML;
 }
@@ -301,7 +301,7 @@ async function abrirModalAlterarStatusSalgado(id) {
         }
 
         const ativar = salgado.ativo !== true;
-        const estado = ativar ? 'ativar' : 'inativar';
+        const estado = ativar ? 'ativar' : 'desativar';
         abrirModal({
             titulo: `${estado[0].toUpperCase()}${estado.slice(1)} Salgado`,
             conteudoHtml: htmlModal
@@ -383,7 +383,7 @@ async function alterarStatusSalgado(id, estado) {
             fecharModal();
             listarSalgados();
         } else {
-            alert(resultado?.mensagem || `Erro ao ${estado ? 'ativar' : 'inativar'} salgado`);
+            alert(resultado?.mensagem || `Erro ao ${estado ? 'ativar' : 'desativar'} salgado`);
         }
     } catch (erro) {
         console.error('Erro na requisição:', erro);

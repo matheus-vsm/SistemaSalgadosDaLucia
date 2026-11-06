@@ -79,7 +79,7 @@ async function listarUsuarios(numero = 0) {
         }
 
         const endpoint = termoBuscaUsuarios ? '/usuarios/nome' : '/usuarios';
-        const parametros = new URLSearchParams({ativo: usuariosAtivos, page: numero, size: 4});
+        const parametros = new URLSearchParams({ativo: usuariosAtivos, page: numero, size: 8});
 
         if (termoBuscaUsuarios) parametros.set('nome', termoBuscaUsuarios);
 

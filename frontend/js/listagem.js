@@ -20,9 +20,12 @@ function ajustarAlturaListagem(lista) {
         lista.dataset.maiorAlturaCard = String(maiorAltura);
         lista.style.setProperty('--altura-card', `${maiorAltura}px`);
     } else {
-        // Keep the compact sizing already used by Clients and Users.
-        if (lista.style.height) return;
-        lista.style.height = `${Math.ceil(lista.getBoundingClientRect().height)}px`;
+        // Re-measure after every refresh, including registration and edits.
+        // Preserve the previous space on shorter pages, but always allow growth.
+        const alturaAnterior = parseFloat(lista.style.height) || 0;
+        lista.style.height = '';
+        const alturaAtual = lista.getBoundingClientRect().height;
+        lista.style.height = `${Math.ceil(Math.max(alturaAnterior, alturaAtual))}px`;
     }
 
     if (lista.dataset.observandoLargura || typeof ResizeObserver === 'undefined') return;
