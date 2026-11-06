@@ -202,3 +202,40 @@
     border-color: #000;
     color: #fff;
 }
+
+body.edicao-cliente-ativa .listagem-clientes,
+body.edicao-cliente-ativa .sidebar nav {
+    opacity: .4;
+    pointer-events: none;
+    user-select: none;
+}
+
+#form-cliente .cliente-dados-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+#form-cliente input {
+    max-width: none;
+    min-width: 0;
+}
+
+#form-cliente .endereco-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: none;
+}
+
+#form-cliente fieldset,
+#form-cliente .cliente-dados-grid > div,
+#form-cliente .endereco-coluna {
+    min-width: 0;
+}
+
+@media (max-width: 768px) {
+    #form-cliente .cliente-dados-grid,
+    #form-cliente .endereco-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

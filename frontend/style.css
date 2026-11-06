@@ -259,6 +259,20 @@ fieldset {
     margin-bottom: 16px;
 }
 
+#form-salgado > fieldset,
+#form-cliente > fieldset,
+#form-usuario > fieldset {
+    background: var(--surface);
+    margin-bottom: 0;
+}
+
+form > .acoes-cadastro {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
 legend {
     font-weight: 600;
     padding: 0 8px;
@@ -289,6 +303,30 @@ legend {
 }
 
 /* --- Cards --- */
+
+.lista-paginada {
+    overflow: auto;
+    overflow-anchor: none;
+    scrollbar-gutter: stable;
+    align-content: start;
+    padding: 2px 4px 2px 2px;
+}
+
+.lista-paginada[aria-busy="true"] {
+    opacity: .65;
+    cursor: progress;
+}
+
+.lista-paginada[data-altura-cards="uniforme"] {
+    max-height: none;
+    overflow: visible;
+    scrollbar-gutter: auto;
+    align-items: start;
+}
+
+.lista-paginada[data-altura-cards="uniforme"] > :is(.card, .card-pedido, .card-compra) {
+    min-height: var(--altura-card, 0px);
+}
 
 .card {
     display: flex;

@@ -1,7 +1,7 @@
 <h1>Área de Compras</h1>
 <hr>
 <section class="historico-compras">
-    <h2>Histórico de Compras</h2>
+    <h2>Histórico</h2>
     <form id="form-filtro-compras" class="filtro-data-compras">
         <label for="data-inicio-compra">Data inicial:</label>
         <input type="date" id="data-inicio-compra" required>
@@ -11,7 +11,7 @@
         <button type="submit" class="btn btn-primario">Filtrar</button>
         <button type="button" id="buscar-todos-compras" class="btn btn-secundario">Buscar todos</button>
     </form>
-    <div id="lista-compras" class="lista-compras" aria-live="polite"></div>
+    <div id="lista-compras" data-altura-cards="uniforme" class="lista-paginada lista-compras" aria-live="polite"></div>
     <div class="paginacao paginacao-compras">
         <button type="button" id="compra-anterior" class="btn btn-secundario" disabled>Anterior</button>
         <span id="compra-pagina-atual"></span>
@@ -20,7 +20,7 @@
     <hr>
 </section>
 <section class="cadastro-compra">
-    <h2 id="titulo-form-compra">Cadastro de Compra</h2>
+    <h2 id="titulo-form-compra">Cadastro</h2>
     <form id="form-compra">
         <div class="compra-form-grid">
             <div class="compra-formulario">
@@ -34,10 +34,6 @@
                 </div>
                 <button type="button" id="adicionar-item-compra" class="btn btn-secundario">Adicionar item</button>
                 </fieldset>
-                <div class="compra-acoes-form">
-                    <button type="submit" class="btn btn-primario">Cadastrar Compra</button>
-                    <button type="button" id="cancelar-edicao-compra" class="btn btn-secundario hidden">Cancelar edição</button>
-                </div>
             </div>
             <div class="compra-informacoes">
                 <label for="observacao-compra">Observação da compra:</label>
@@ -52,6 +48,10 @@
                     <div class="total-compra">Valor Total: <strong id="valor-total-compra">R$ 0,00</strong></div>
                 </aside>
             </div>
+        </div>
+        <div class="compra-acoes-form acoes-cadastro">
+            <button type="submit" class="btn btn-primario">Cadastrar Compra</button>
+            <button type="button" id="cancelar-edicao-compra" class="btn btn-secundario hidden">Cancelar edição</button>
         </div>
     </form>
 </section>

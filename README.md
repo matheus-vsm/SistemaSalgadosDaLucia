@@ -25,8 +25,8 @@ relatórios.
 | Tela               | Recursos implementados                                                                                                                                                                                                                                                                                    |
 |--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Login              | Autenticação por usuário e senha, armazenamento dos tokens e abertura do painel após o login.                                                                                                                                                                                                             |
-| Clientes           | Cadastro com endereço, preenchimento por CEP via ViaCEP, listagem paginada, busca por nome, consulta de ativos/inativos, detalhes, edição e ativação/desativação por modal.                                                                                                                               |
-| Salgados e estoque | Cadastro de nome, descrição, categoria e preços por cento para congelados/processados; busca por nome, paginação, ativos/inativos, detalhes, edição, alteração de status e ajuste de estoque.                                                                                                             |
+| Clientes           | Cadastro com endereço, preenchimento por CEP via ViaCEP, listagem paginada, busca por nome, consulta de ativos/inativos, detalhes em modal, edição no formulário de cadastro e ativação/desativação por modal.                                                                                                                               |
+| Salgados e Estoque | Cadastro de nome, descrição, categoria e preços por cento para congelados/processados; busca por nome, paginação, ativos/inativos, detalhes em modal, edição no formulário de cadastro, alteração de status e ajuste de estoque.                                                                                                             |
 | Pedidos            | Cadastro e edição, seleção de cliente e salgados, inclusão/remoção de itens, quantidades, tipo de preço, prévia de subtotais e total, frete, data/hora de entrega, entrega ou retirada e forma de pagamento. Histórico paginado, filtros por status e período de entrega, detalhes e alteração de status. |
 | Compras            | Cadastro e edição de compras de insumos, inclusão/remoção de itens com quantidade e valor unitário, prévia do total, data e observação. Histórico paginado, filtro por período e detalhes em modal.                                                                                                       |
 | Usuários           | Cadastro com perfil de acesso, listagem paginada, busca por nome, consulta de ativos/inativos, desativação e alteração da própria senha com confirmação.                                                                                                                                                  |
@@ -339,8 +339,16 @@ Para executar a fase de testes do Maven, dentro de `backend`:
 Há seis classes ativas de testes unitários de serviços: `ClienteServiceTest`, `SalgadoServiceTest`,
 `EstoqueServiceTest`, `PedidoServiceTest`, `CompraServiceTest` e `UsuarioServiceTest`, com JUnit Jupiter e Mockito.
 Na revisão de 04/11/2026, foram executados **167 testes, sem falhas, erros ou testes ignorados**. Os testes usam mocks;
-esse resultado não comprova integração HTTP, segurança, migrações ou consultas em banco real. O frontend não possui
-suíte automatizada configurada. Veja os [cenários e limites na wiki](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/9-%E2%80%90-Testes-e-Rastreabilidade).
+esse resultado não comprova integração HTTP, segurança, migrações ou consultas em banco real.
+
+O frontend possui 33 testes de comportamento das listagens, executáveis com Node.js, sem instalar dependências:
+
+```powershell
+node --test frontend/tests/listagem.test.cjs
+```
+
+Os testes simulam a API e os elementos usados pelas funções de listagem para verificar carregamento, falhas e respostas
+atrasadas nas cinco telas. Não validam o layout ou a navegação em um navegador real. Veja os [cenários e limites na wiki](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/9-%E2%80%90-Testes-e-Rastreabilidade).
 
 Além das telas operacionais implementadas, permanecem os seguintes pontos:
 

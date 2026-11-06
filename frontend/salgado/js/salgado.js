@@ -1,12 +1,18 @@
 let templateCardSalgado = '';
+let salgadoEmEdicao = null;
+let salvandoSalgado = false;
+let carregandoEdicaoSalgado = false;
+let versaoFormularioSalgado = 0;
 let paginaAtualSalgados = 0;
 let salgadosAtivos = true;
 let termoBuscaSalgados = '';
 let categoriasSalgados = [];
+let urlPreviewImagemSalgado = null;
 
 async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBuscaSalgados) {
     const lista = document.getElementById('lista-salgados');
     if (!lista) return;
+    const carregamento = iniciarCarregamentoListagem(lista);
 
     salgadosAtivos = tipo;
     termoBuscaSalgados = busca.trim();
@@ -27,6 +33,8 @@ async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBu
             data: salgadosPage
         } = await apiJson(`${endpoint}?${parametros}`);
 
+        if (!carregamento.atual()) return;
+
         if (!response.ok) {
             lista.innerHTML = '<div class="estado">Erro ao carregar salgados</div>';
             return;
@@ -36,7 +44,12 @@ async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBu
             ? salgadosPage.content.filter(salgado => salgado.ativo === tipo)
             : salgadosPage.content;
 
+        paginaAtualSalgados = salgadosPage.page.number;
         if (!salgados || salgados.length === 0) {
+            if (pagina > 0) return listarSalgados(pagina - 1, tipo, busca);
+            document.getElementById('pagina-atual-salgados').textContent = 'Página 1 de 1';
+            document.getElementById('btn-anterior-salgados').disabled = true;
+            document.getElementById('btn-proximo-salgados').disabled = true;
             lista.innerHTML = '<div class="estado">Nenhum salgado cadastrado</div>';
             return;
         }
@@ -52,8 +65,11 @@ async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBu
         document.getElementById('btn-anterior-salgados').onclick = () => listarSalgados(paginaAtualSalgados - 1, salgadosAtivos, termoBuscaSalgados);
         document.getElementById('btn-proximo-salgados').onclick = () => listarSalgados(paginaAtualSalgados + 1, salgadosAtivos, termoBuscaSalgados);
     } catch (erro) {
+        if (!carregamento.atual()) return;
         console.error('Erro ao listar salgados:', erro);
         lista.innerHTML = '<div class="estado">Erro ao conectar com o servidor</div>';
+    } finally {
+        carregamento.finalizar();
     }
 }
 
@@ -86,7 +102,7 @@ function criarCardSalgadoHTML(salgado) {
     status.classList.add(ativo ? 'ativo' : 'inativo');
     status.textContent = ativo ? 'Ativo' : 'Inativo';
 
-    card.querySelector('[data-acao-salgado="status"]').textContent = ativo ? 'Inativar' : 'Ativar';
+    card.querySelector('[data-acao-salgado="status"]').textContent = ativo ? 'Desativar' : 'Ativar';
 
     return card.outerHTML;
 }
@@ -98,7 +114,9 @@ function formatarPrecoSalgado(preco) {
     });
 }
 
-async function carregarCategoriasSalgado(idSelect, categoriaSelecionada = '') {
+async function carregarCategoriasSalgado(idSelect) {
+    const select = document.getElementById(idSelect);
+    if (!select) return false;
     try {
         if (categoriasSalgados.length === 0) {
             const {response, data: enums} = await apiJson('/enums/salgado');
@@ -110,8 +128,8 @@ async function carregarCategoriasSalgado(idSelect, categoriaSelecionada = '') {
             categoriasSalgados = enums.categorias;
         }
 
-        const select = document.getElementById(idSelect);
-        if (!select) return;
+        if (!select.isConnected) return false;
+        const categoriaSelecionada = select.value;
 
         select.innerHTML = '<option value="">Selecione</option>';
         categoriasSalgados.forEach(categoria => {
@@ -121,13 +139,19 @@ async function carregarCategoriasSalgado(idSelect, categoriaSelecionada = '') {
             select.appendChild(option);
         });
         select.value = categoriaSelecionada;
+        return true;
     } catch (erro) {
         console.error('Erro ao carregar categorias:', erro);
-        alert('Erro ao carregar categorias de salgado.');
+        if (select.isConnected) alert('Erro ao carregar categorias de salgado.');
+        return false;
     }
 }
 
-async function cadastrarSalgado() {
+async function salvarSalgado() {
+    const form = document.getElementById('form-salgado');
+    if (!form || salvandoSalgado || carregandoEdicaoSalgado) return;
+    const id = salgadoEmEdicao;
+    const versao = versaoFormularioSalgado;
     const dados = {
         nome: document.getElementById('nome-salgado').value,
         descricao: document.getElementById('descricao-salgado').value,
@@ -135,50 +159,85 @@ async function cadastrarSalgado() {
         precoCentoCongelado: document.getElementById('preco-congelado-salgado').value,
         precoCentoProcessado: document.getElementById('preco-processado-salgado').value
     };
-
+    salvandoSalgado = true;
+    form.querySelectorAll('button').forEach(botao => botao.disabled = true);
+    form.querySelector('fieldset').disabled = true;
     try {
-        const {
-            response,
-            data: resultado
-        } = await apiJson('/salgados', {
-            method: 'POST',
+        const {response, data: resultado} = await apiJson(id ? `/salgados/${id}` : '/salgados', {
+            method: id ? 'PUT' : 'POST',
             body: JSON.stringify(dados)
         });
-
-        if (response.ok) {
-            alert('Salgado cadastrado com sucesso!');
-            document.getElementById('form-salgado').reset();
-            document.getElementById('imagem-preview-salgado').removeAttribute('src');
-            document.getElementById('imagem-preview-salgado').classList.add('hidden');
-            document.getElementById('texto-selecao-imagem').classList.remove('hidden');
-            document.getElementById('nome-arquivo-imagem').textContent = '';
-            carregarCategoriasSalgado('categoria-salgado');
-            listarSalgados();
-        } else {
-            alert(resultado?.mensagem || 'Erro ao cadastrar salgado');
-        }
+        if (!form.isConnected || versao !== versaoFormularioSalgado) return;
+        if (!response.ok) throw new Error(resultado?.mensagem || 'Erro ao salvar salgado');
+        alert(id ? 'Salgado editado com sucesso!' : 'Salgado cadastrado com sucesso!');
+        limparFormularioSalgado();
+        await listarSalgados(paginaAtualSalgados, salgadosAtivos, termoBuscaSalgados);
     } catch (erro) {
-        console.error('Erro na requisição:', erro);
-        alert(erro.message || 'Erro ao conectar com o servidor.');
+        if (form.isConnected && versao === versaoFormularioSalgado) {
+            alert(erro.message || 'Erro ao conectar com o servidor.');
+        }
+    } finally {
+        if (form.isConnected) {
+            salvandoSalgado = false;
+            form.querySelectorAll('button').forEach(botao => botao.disabled = false);
+            form.querySelector('fieldset').disabled = false;
+        }
     }
 }
 
-async function abrirModalEdicaoSalgado(id) {
+function definirModoEdicaoSalgado(ativo) {
+    document.body.classList.toggle('edicao-salgado-ativa', ativo);
+    const lista = document.querySelector('.listagem-salgados');
+    const navegacao = document.querySelector('.sidebar nav');
+    if (lista) lista.inert = ativo;
+    if (navegacao) navegacao.inert = ativo;
+}
+
+function limparFormularioSalgado() {
+    versaoFormularioSalgado++;
+    salgadoEmEdicao = null;
+    const form = document.getElementById('form-salgado');
+    if (!form) return;
+    form.reset();
+    document.getElementById('titulo-form-salgado').textContent = 'Cadastro';
+    form.querySelector('button[type=submit]').textContent = 'Cadastrar Salgado';
+    document.getElementById('cancelar-edicao-salgado').classList.add('hidden');
+    definirModoEdicaoSalgado(false);
+    limparPreviewImagemSalgado();
+}
+
+async function iniciarEdicaoSalgado(id) {
+    const form = document.getElementById('form-salgado');
+    if (!form || salvandoSalgado || carregandoEdicaoSalgado || salgadoEmEdicao !== null) return;
+    const versao = versaoFormularioSalgado;
+    carregandoEdicaoSalgado = true;
+    form.querySelector('button[type=submit]').disabled = true;
     try {
-        const response = await fetch('salgado/html/modal-editar-salgado.html');
-
-        if (!response.ok) throw new Error('Erro ao carregar modal de edição');
-
-        const htmlModal = await response.text();
-
-        abrirModal({
-            titulo: 'Editar Salgado',
-            conteudoHtml: htmlModal
-        });
-        await buscarSalgadoPorId(id, 'edicao');
+        const {response, data: salgado} = await apiJson(`/salgados/${id}`);
+        if (!form.isConnected || versao !== versaoFormularioSalgado) return;
+        if (!response.ok) throw new Error('Erro ao carregar dados do salgado');
+        if (!await carregarCategoriasSalgado('categoria-salgado')) return;
+        if (!form.isConnected || versao !== versaoFormularioSalgado) return;
+        limparFormularioSalgado();
+        document.getElementById('nome-salgado').value = salgado.nome ?? '';
+        document.getElementById('descricao-salgado').value = salgado.descricao ?? '';
+        document.getElementById('preco-congelado-salgado').value = salgado.precoCentoCongelado ?? '';
+        document.getElementById('preco-processado-salgado').value = salgado.precoCentoProcessado ?? '';
+        document.getElementById('categoria-salgado').value = salgado.categoria;
+        salgadoEmEdicao = salgado.id;
+        document.getElementById('titulo-form-salgado').textContent = `Edição do Salgado n° ${salgado.id}`;
+        form.querySelector('button[type=submit]').textContent = 'Salvar alterações';
+        document.getElementById('cancelar-edicao-salgado').classList.remove('hidden');
+        definirModoEdicaoSalgado(true);
+        form.scrollIntoView({behavior: 'smooth'});
+        document.getElementById('nome-salgado').focus({preventScroll: true});
     } catch (erro) {
-        console.error('Erro ao abrir modal de edição:', erro);
-        alert('Erro ao abrir modal de edição.');
+        if (form.isConnected && versao === versaoFormularioSalgado) alert(erro.message);
+    } finally {
+        if (form.isConnected) {
+            carregandoEdicaoSalgado = false;
+            form.querySelector('button[type=submit]').disabled = false;
+        }
     }
 }
 
@@ -242,7 +301,7 @@ async function abrirModalAlterarStatusSalgado(id) {
         }
 
         const ativar = salgado.ativo !== true;
-        const estado = ativar ? 'ativar' : 'inativar';
+        const estado = ativar ? 'ativar' : 'desativar';
         abrirModal({
             titulo: `${estado[0].toUpperCase()}${estado.slice(1)} Salgado`,
             conteudoHtml: htmlModal
@@ -298,52 +357,18 @@ async function preencherDadosSalgado(salgado, tipo) {
     preencherCampoSalgado(`salgado-id-${tipo}`, salgado.id);
     preencherCampoSalgado(`nome-salgado-${tipo}`, salgado.nome);
     preencherCampoSalgado(`descricao-salgado-${tipo}`, salgado.descricao);
-    preencherCampoSalgado(`preco-congelado-salgado-${tipo}`, tipo === 'exibicao' ? formatarPrecoSalgado(salgado.precoCentoCongelado) : salgado.precoCentoCongelado);
-    preencherCampoSalgado(`preco-processado-salgado-${tipo}`, tipo === 'exibicao' ? formatarPrecoSalgado(salgado.precoCentoProcessado) : salgado.precoCentoProcessado);
+    preencherCampoSalgado(`preco-congelado-salgado-${tipo}`, formatarPrecoSalgado(salgado.precoCentoCongelado));
+    preencherCampoSalgado(`preco-processado-salgado-${tipo}`, formatarPrecoSalgado(salgado.precoCentoProcessado));
 
-    if (tipo === 'edicao') {
-        await carregarCategoriasSalgado('categoria-salgado-edicao', salgado.categoria);
-    } else {
-        const categoria = categoriasSalgados.find(item => item.valor === salgado.categoria);
-        preencherCampoSalgado('categoria-salgado-exibicao', categoria?.descricao ?? salgado.categoria);
-        preencherCampoSalgado('quantidade-estoque-exibicao', salgado.estoque?.quantidade ?? 0);
-    }
-}
-
-async function editarSalgado() {
-    const id = document.getElementById('salgado-id-edicao').value;
-    const dados = {
-        nome: document.getElementById('nome-salgado-edicao').value,
-        descricao: document.getElementById('descricao-salgado-edicao').value,
-        categoria: document.getElementById('categoria-salgado-edicao').value,
-        precoCentoCongelado: document.getElementById('preco-congelado-salgado-edicao').value,
-        precoCentoProcessado: document.getElementById('preco-processado-salgado-edicao').value
-    };
-
-    try {
-        const {response, data: resultado} = await apiJson(`/salgados/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(dados)
-        });
-
-        if (response.ok) {
-            alert('Salgado editado com sucesso!');
-            document.getElementById('form-salgado-edicao').reset();
-            fecharModal();
-            listarSalgados();
-        } else {
-            alert(resultado?.mensagem || 'Erro ao editar salgado');
-        }
-    } catch (erro) {
-        console.error('Erro na requisição:', erro);
-        alert(erro.message || 'Erro ao conectar com o servidor.');
-    }
+    const categoria = categoriasSalgados.find(item => item.valor === salgado.categoria);
+    preencherCampoSalgado('categoria-salgado-exibicao', categoria?.descricao ?? salgado.categoria);
+    preencherCampoSalgado('quantidade-estoque-exibicao', salgado.estoque?.quantidade ?? 0);
 }
 
 async function editarSalgadoPelaExibicao() {
     const id = document.getElementById('salgado-id-exibicao').value;
     fecharModal();
-    await abrirModalEdicaoSalgado(id);
+    await iniciarEdicaoSalgado(id);
 }
 
 async function alterarStatusSalgado(id, estado) {
@@ -358,7 +383,7 @@ async function alterarStatusSalgado(id, estado) {
             fecharModal();
             listarSalgados();
         } else {
-            alert(resultado?.mensagem || `Erro ao ${estado ? 'ativar' : 'inativar'} salgado`);
+            alert(resultado?.mensagem || `Erro ao ${estado ? 'ativar' : 'desativar'} salgado`);
         }
     } catch (erro) {
         console.error('Erro na requisição:', erro);
@@ -394,33 +419,52 @@ async function atualizarEstoqueSalgado() {
     }
 }
 
+function limparPreviewImagemSalgado() {
+    if (urlPreviewImagemSalgado) URL.revokeObjectURL(urlPreviewImagemSalgado);
+    urlPreviewImagemSalgado = null;
+    const preview = document.getElementById('imagem-preview-salgado');
+    if (!preview) return;
+    preview.removeAttribute('src');
+    preview.classList.add('hidden');
+    document.getElementById('texto-selecao-imagem').classList.remove('hidden');
+    document.getElementById('nome-arquivo-imagem').textContent = '';
+}
+
 function exibirPreviewImagemSalgado(event) {
+    limparPreviewImagemSalgado();
     const arquivo = event.target.files[0];
     if (!arquivo) return;
-
-    const idPreview = event.target.id === 'imagem-salgado-edicao'
-        ? 'imagem-preview-salgado-edicao'
-        : 'imagem-preview-salgado';
-    const preview = document.getElementById(idPreview);
-    preview.src = URL.createObjectURL(arquivo);
+    const preview = document.getElementById('imagem-preview-salgado');
+    urlPreviewImagemSalgado = URL.createObjectURL(arquivo);
+    preview.src = urlPreviewImagemSalgado;
     preview.classList.remove('hidden');
-
-    if (event.target.id === 'imagem-salgado') {
-        document.getElementById('texto-selecao-imagem').classList.add('hidden');
-        document.getElementById('nome-arquivo-imagem').textContent = arquivo.name;
-    }
+    document.getElementById('texto-selecao-imagem').classList.add('hidden');
+    document.getElementById('nome-arquivo-imagem').textContent = arquivo.name;
 }
 
 const conteudoDinamicoSalgados = document.getElementById('conteudo-dinamico');
 
 conteudoDinamicoSalgados.addEventListener('pagina:carregada', (event) => {
+    limparPreviewImagemSalgado();
+    versaoFormularioSalgado++;
+    salgadoEmEdicao = null;
+    salvandoSalgado = false;
+    carregandoEdicaoSalgado = false;
+    if (document.body.classList.contains('edicao-salgado-ativa')) definirModoEdicaoSalgado(false);
     if (event.detail.modulo === 'salgado') {
+        limparFormularioSalgado();
+        termoBuscaSalgados = '';
+        paginaAtualSalgados = 0;
         carregarCategoriasSalgado('categoria-salgado');
         listarSalgados(0, true);
     }
 });
 
 conteudoDinamicoSalgados.addEventListener('click', (event) => {
+    if (event.target.id === 'cancelar-edicao-salgado' && !salvandoSalgado) {
+        limparFormularioSalgado();
+        document.getElementById('nome-salgado').focus({preventScroll: true});
+    }
     if (event.target.id === 'btn-salgados-ativos') {
         listarSalgados(0, true);
     } else if (event.target.id === 'btn-salgados-inativos') {
@@ -432,7 +476,7 @@ conteudoDinamicoSalgados.addEventListener('click', (event) => {
 });
 
 document.addEventListener('change', (event) => {
-    if (event.target.id !== 'imagem-salgado' && event.target.id !== 'imagem-salgado-edicao') return;
+    if (event.target.id !== 'imagem-salgado') return;
     exibirPreviewImagemSalgado(event);
 });
 
@@ -443,10 +487,7 @@ conteudoDinamicoSalgados.addEventListener('submit', async (event) => {
         await listarSalgados(0, true, busca);
     } else if (event.target.id === 'form-salgado') {
         event.preventDefault();
-        await cadastrarSalgado();
-    } else if (event.target.id === 'form-salgado-edicao') {
-        event.preventDefault();
-        await editarSalgado();
+        await salvarSalgado();
     } else {
         return;
     }
@@ -459,5 +500,5 @@ document.getElementById('conteudo-dinamico').addEventListener('click', event => 
     if (botao.dataset.acaoSalgado === 'status') abrirModalAlterarStatusSalgado(id);
     if (botao.dataset.acaoSalgado === 'exibir') abrirModalExibicaoSalgado(id);
     if (botao.dataset.acaoSalgado === 'estoque') abrirModalAtualizarEstoque(id);
-    if (botao.dataset.acaoSalgado === 'editar') abrirModalEdicaoSalgado(id);
+    if (botao.dataset.acaoSalgado === 'editar') iniciarEdicaoSalgado(id);
 });

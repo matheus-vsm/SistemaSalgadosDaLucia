@@ -332,3 +332,49 @@
         flex: 1;
     }
 }
+
+body.edicao-salgado-ativa .listagem-salgados,
+body.edicao-salgado-ativa .sidebar nav {
+    opacity: .4;
+    pointer-events: none;
+    user-select: none;
+}
+
+#form-salgado .salgado-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: none;
+    align-items: start;
+}
+
+#form-salgado .salgado-coluna {
+    min-width: 0;
+}
+
+#form-salgado .descricao-imagem-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 160px;
+    gap: 24px;
+    align-items: start;
+}
+
+#form-salgado .input-imagem:focus-visible + .campo-selecao-imagem {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+#form-salgado textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+@media (max-width: 1100px) {
+    #form-salgado .descricao-imagem-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    #form-salgado .salgado-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

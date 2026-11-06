@@ -1,7 +1,7 @@
 <h1>Área de Pedidos</h1>
 <hr>
 <section class="historico-pedidos">
-    <div class="pedidos-cabecalho"><h2>Histórico de Pedidos</h2>
+    <div class="pedidos-cabecalho"><h2>Histórico</h2>
         <div id="filtro-status-pedido" class="filtro-status-pedido" role="group"
              aria-label="Filtrar pedidos por status"></div>
     </div>
@@ -13,7 +13,7 @@
         <button type="submit" class="btn btn-primario">Filtrar</button>
         <button type="button" id="buscar-todos-pedidos" class="btn btn-secundario">Buscar todos</button>
     </form>
-    <div id="lista-pedidos" class="lista-pedidos">
+    <div id="lista-pedidos" data-altura-cards="uniforme" class="lista-paginada lista-pedidos" aria-live="polite">
         <div class="estado">Carregando pedidos...</div>
     </div>
     <div id="paginacao-pedidos" class="paginacao">
@@ -23,7 +23,7 @@
     </div>
     <hr>
 </section>
-<section><h2 id="titulo-form-pedido">Cadastro de Pedido</h2>
+<section><h2 id="titulo-form-pedido">Cadastro</h2>
     <form id="form-pedido">
         <div class="pedido-form-grid">
             <div class="pedido-formulario">
@@ -39,23 +39,32 @@
                 <fieldset id="endereco-pedido" class="hidden">
                     <legend>Endereço de entrega</legend>
                     <div class="endereco-grid">
-                        <div class="endereco-coluna"><label for="cep-pedido">CEP:</label><input type="text"
-                                                                                                id="cep-pedido"
-                                                                                                maxlength="8"
-                                                                                                required><label
-                                for="logradouro-pedido">Logradouro:</label><input type="text" id="logradouro-pedido"
-                                                                                  required><label for="numero-pedido">Número:</label><input
-                                type="text" id="numero-pedido" required><label
-                                for="complemento-pedido">Complemento:</label><input type="text" id="complemento-pedido">
+                        <div class="endereco-coluna">
+                            <label for="cep-pedido">CEP:</label>
+                            <input type="text" id="cep-pedido" maxlength="8" required>
+
+                            <label for="numero-pedido">Número:</label>
+                            <input type="text" id="numero-pedido" required>
+
+                            <label for="complemento-pedido">Complemento:</label>
+                            <input type="text" id="complemento-pedido">
+
+                            <label for="frete-pedido">Frete:</label>
+                            <input type="number" id="frete-pedido" min="0.01" step="0.01" required>
                         </div>
-                        <div class="endereco-coluna"><label for="bairro-pedido">Bairro:</label><input type="text"
-                                                                                                      id="bairro-pedido"
-                                                                                                      required><label
-                                for="cidade-pedido">Cidade:</label><input type="text" id="cidade-pedido" required><label
-                                for="uf-pedido">UF:</label><input type="text" id="uf-pedido" maxlength="2"
-                                                                  required><label
-                                for="frete-pedido">Frete:</label><input type="number" id="frete-pedido" min="0.01"
-                                                                        step="0.01" required></div>
+                        <div class="endereco-coluna">
+                            <label for="logradouro-pedido">Logradouro:</label>
+                            <input type="text" id="logradouro-pedido" readonly tabindex="-1" required>
+
+                            <label for="bairro-pedido">Bairro:</label>
+                            <input type="text" id="bairro-pedido" readonly tabindex="-1" required>
+
+                            <label for="cidade-pedido">Cidade:</label>
+                            <input type="text" id="cidade-pedido" readonly tabindex="-1" required>
+
+                            <label for="uf-pedido">UF:</label>
+                            <input type="text" id="uf-pedido" maxlength="2" readonly tabindex="-1" required>
+                        </div>
                     </div>
                 </fieldset>
                 <fieldset>
@@ -87,9 +96,6 @@
                         <option value="">Selecione</option>
                     </select></div>
                 </div>
-                <button type="submit" class="btn btn-primario">Cadastrar Pedido</button>
-                <button type="button" id="cancelar-edicao-pedido" class="btn btn-secundario hidden">Cancelar edição
-                </button>
             </div>
             <aside class="carrinho-pedido"><h2>Itens</h2>
                 <div id="itens-pedido" class="itens-pedido">
@@ -97,6 +103,10 @@
                 </div>
                 <div class="total-pedido">Valor Total: <strong id="valor-total-pedido">R$ 0,00</strong></div>
             </aside>
+        </div>
+        <div class="acoes-cadastro">
+            <button type="submit" class="btn btn-primario">Cadastrar Pedido</button>
+            <button type="button" id="cancelar-edicao-pedido" class="btn btn-secundario hidden">Cancelar edição</button>
         </div>
     </form>
 </section>

@@ -2,7 +2,6 @@ let paginaUsuarios = 0;
 let usuariosAtivos = true;
 let perfisUsuario = [];
 let usuariosListados = [];
-let requisicaoUsuarios = 0;
 let templateCardUsuario = '';
 let termoBuscaUsuarios = '';
 
@@ -11,6 +10,7 @@ async function carregarDadosIniciaisUsuario() {
     perfisUsuario = [];
     termoBuscaUsuarios = '';
     filtrarUsuarios(true);
+
     await carregarPerfisUsuario();
 }
 
@@ -65,12 +65,10 @@ function criarCardUsuario(usuario) {
 async function listarUsuarios(numero = 0) {
     const lista = document.getElementById('lista-usuarios');
     if (!lista) return;
+    const carregamento = iniciarCarregamentoListagem(lista);
 
-    const chamada = ++requisicaoUsuarios;
     document.getElementById('usuarios-anterior').disabled = true;
     document.getElementById('usuarios-proximo').disabled = true;
-    document.getElementById('usuarios-pagina').textContent = '';
-    lista.innerHTML = '<div class="estado">Carregando usuários...</div>';
 
     try {
         if (!templateCardUsuario) {
@@ -79,15 +77,20 @@ async function listarUsuarios(numero = 0) {
 
             templateCardUsuario = await respostaCard.text();
         }
+
         const endpoint = termoBuscaUsuarios ? '/usuarios/nome' : '/usuarios';
-        const parametros = new URLSearchParams({ativo: usuariosAtivos, page: numero, size: 4});
+        const parametros = new URLSearchParams({ativo: usuariosAtivos, page: numero, size: 8});
+
         if (termoBuscaUsuarios) parametros.set('nome', termoBuscaUsuarios);
+
         const {response, data} = await apiJson(`${endpoint}?${parametros}`);
+
+        if (!carregamento.atual()) return;
         if (!response.ok) throw new Error(data?.mensagem || 'Erro ao carregar usuários.');
 
-        if (chamada !== requisicaoUsuarios || !lista.isConnected) return;
         usuariosListados = data.content || [];
         const detalhes = data.page || data;
+
         if (!usuariosListados.length && numero > 0) return listarUsuarios(numero - 1);
 
         paginaUsuarios = detalhes.number ?? numero;
@@ -98,9 +101,12 @@ async function listarUsuarios(numero = 0) {
         document.getElementById('usuarios-anterior').disabled = paginaUsuarios === 0;
         document.getElementById('usuarios-proximo').disabled = paginaUsuarios + 1 >= (detalhes.totalPages || 0);
     } catch (erro) {
-        if (chamada !== requisicaoUsuarios || !lista.isConnected) return;
+        if (!carregamento.atual()) return;
+
         lista.innerHTML = '<div class="estado"><span></span> <button type="button" class="btn btn-secundario" id="usuarios-recarregar">Tentar novamente</button></div>';
         lista.querySelector('span').textContent = erro.message || 'Erro ao conectar com o servidor.';
+    } finally {
+        carregamento.finalizar();
     }
 }
 
@@ -198,9 +204,11 @@ async function carregarModalUsuario(arquivo, titulo) {
         if (!area?.isConnected) return false;
 
         abrirModal({titulo, conteudoHtml});
+
         return true;
     } catch (erro) {
         alert(erro.message || 'Erro ao carregar o modal.');
+
         return false;
     }
 }
@@ -248,8 +256,10 @@ async function abrirAlteracaoSenhaUsuario(id) {
 
 async function alterarSenhaUsuario(usuario) {
     if (!usuarioLogado(usuario)) return;
+
     const form = document.getElementById('form-senha-usuario');
     const botao = form.querySelector('[type="submit"]');
+
     if (botao.disabled || !form.reportValidity()) return;
 
     const dados = {
@@ -257,6 +267,7 @@ async function alterarSenhaUsuario(usuario) {
         novaSenha: document.getElementById('usuario-nova-senha').value,
         novaSenhaConfirmacao: document.getElementById('usuario-confirmar-senha').value
     };
+
     if (!dados.novaSenha.trim() || dados.novaSenha !== dados.novaSenhaConfirmacao) {
         alert('Preencha a nova senha e confirme com o mesmo valor.');
         return;
@@ -265,8 +276,10 @@ async function alterarSenhaUsuario(usuario) {
 
     try {
         const {response, data} = await apiJson('/usuarios', {method: 'PATCH', body: JSON.stringify(dados)});
+
         if (!response.ok) throw new Error(data?.mensagem || 'Erro ao alterar senha.');
         if (form.isConnected) fecharModal();
+
         alert('Senha alterada com sucesso!');
     } catch (erro) {
         alert(erro.message || 'Erro ao conectar com o servidor.');
@@ -282,6 +295,7 @@ areaUsuario.addEventListener('pagina:carregada', event => {
 
 areaUsuario.addEventListener('click', event => {
     const botao = event.target.closest('button');
+
     if (botao?.disabled) return;
     if (botao?.dataset.desativarUsuario) abrirDesativacaoUsuario(botao.dataset.desativarUsuario);
     if (botao?.dataset.senhaUsuario) abrirAlteracaoSenhaUsuario(botao.dataset.senhaUsuario);
