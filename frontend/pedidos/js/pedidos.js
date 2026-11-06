@@ -269,7 +269,7 @@ function limparFormularioPedido() {
     renderizarItensPedido();
     document.querySelector('#form-pedido button[type=submit]').textContent = 'Cadastrar Pedido';
     document.getElementById('cancelar-edicao-pedido').classList.add('hidden');
-    document.getElementById('titulo-form-pedido').textContent = 'Cadastro de Pedido';
+    document.getElementById('titulo-form-pedido').textContent = 'Cadastro';
     definirModoEdicaoPedido(false);
 }
 

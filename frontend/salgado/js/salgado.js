@@ -195,7 +195,7 @@ function limparFormularioSalgado() {
     const form = document.getElementById('form-salgado');
     if (!form) return;
     form.reset();
-    document.getElementById('titulo-form-salgado').textContent = 'Cadastro de Salgado';
+    document.getElementById('titulo-form-salgado').textContent = 'Cadastro';
     form.querySelector('button[type=submit]').textContent = 'Cadastrar Salgado';
     document.getElementById('cancelar-edicao-salgado').classList.add('hidden');
     definirModoEdicaoSalgado(false);

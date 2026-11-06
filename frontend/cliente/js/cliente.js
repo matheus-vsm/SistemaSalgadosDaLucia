@@ -178,7 +178,7 @@ function limparFormularioCliente() {
     const form = document.getElementById('form-cliente');
     if (!form) return;
     form.reset();
-    document.getElementById('titulo-form-cliente').textContent = 'Cadastro de Cliente';
+    document.getElementById('titulo-form-cliente').textContent = 'Cadastro';
     form.querySelector('button[type=submit]').textContent = 'Cadastrar Cliente';
     document.getElementById('cancelar-edicao-cliente').classList.add('hidden');
     definirModoEdicaoCliente(false);

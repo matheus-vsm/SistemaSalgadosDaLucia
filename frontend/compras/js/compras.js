@@ -65,7 +65,7 @@ function limparFormularioCompra() {
     itensNovaCompra = [];
     const hoje = new Date();
     document.getElementById('data-compra').value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
-    document.getElementById('titulo-form-compra').textContent = 'Cadastro de Compra';
+    document.getElementById('titulo-form-compra').textContent = 'Cadastro';
     document.querySelector('#form-compra button[type=submit]').textContent = 'Cadastrar Compra';
     document.getElementById('cancelar-edicao-compra').classList.add('hidden');
     definirModoEdicaoCompra(false);
