@@ -17,21 +17,21 @@ import java.util.List;
 public record CriacaoPedidoRequest(
         @NotNull(message = "ID no Cliente é obrigatório!")
         Long clienteId,
-        @NotEmpty(message = "É necessário adicionar pelo menos um item ao pedido!")
+        @NotEmpty(message = "É necessário adicionar pelo menos um Item ao Pedido!")
         List<ItemPedidoDto> itens,
         @Valid
         EnderecoDto enderecoEntrega,
         LocalDate dataPedido,
-        @NotNull(message = "Data de entrega é obrigatória!")
-        @Future(message = "Data de Entrega deve ser no futuro!")
+        @NotNull(message = "Data de Entrega/Retirada é obrigatória!")
+        @Future(message = "A Data de Entrega/Retirada deve ser no futuro!")
         LocalDateTime dataEntrega,
-        @NotNull(message = "Tipo de entrega é obrigatório!")
+        @NotNull(message = "Tipo de Entrega é obrigatório!")
         TipoEntrega tipoEntrega,
-        @NotNull(message = "Forma de pagamento é obrigatória!")
+        @NotNull(message = "Forma de Pagamento é obrigatória!")
         FormaPagamento formaPagamento,
         @NotNull(message = "ID do Usuário Responsável é obrigatório!")
         Long usuarioResponsavelId,
-        @Positive(message = "O valor do frete deve ser positivo!")
+        @Positive(message = "O valor do Frete deve ser positivo!")
         BigDecimal frete
 ) {
 }

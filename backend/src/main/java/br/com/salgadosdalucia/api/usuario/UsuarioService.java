@@ -35,6 +35,9 @@ public class UsuarioService implements UserDetailsService {
 
     @Transactional
     public Usuario cadastrar(UsuarioRequest dados) {
+        if (usuarioRepository.findByUsernameIgnoreCase(dados.username()).isPresent()) {
+            throw new BusinessException("Nome de Usuário já está em uso.");
+        }
         String senhaCriptografada = passwordEncoder.encode(dados.senha());
         var perfil = perfilRepository.findByNome(dados.perfilUsuarioNome());
         Usuario usuario = UsuarioMapper.mapToEntity(dados, senhaCriptografada, perfil);
