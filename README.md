@@ -341,7 +341,7 @@ Há seis classes ativas de testes unitários de serviços: `ClienteServiceTest`,
 Na revisão de 04/11/2026, foram executados **167 testes, sem falhas, erros ou testes ignorados**. Os testes usam mocks;
 esse resultado não comprova integração HTTP, segurança, migrações ou consultas em banco real.
 
-O frontend possui 25 testes de comportamento das listagens, executáveis com Node.js, sem instalar dependências:
+O frontend possui 28 testes de comportamento das listagens, executáveis com Node.js, sem instalar dependências:
 
 ```powershell
 node --test frontend/tests/listagem.test.cjs

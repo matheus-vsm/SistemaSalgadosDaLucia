@@ -318,6 +318,17 @@ legend {
     cursor: progress;
 }
 
+.lista-paginada[data-altura-cards="uniforme"] {
+    max-height: none;
+    overflow: visible;
+    scrollbar-gutter: auto;
+    align-items: start;
+}
+
+.lista-paginada[data-altura-cards="uniforme"] > :is(.card, .card-pedido, .card-compra) {
+    min-height: var(--altura-card, 0px);
+}
+
 .card {
     display: flex;
     align-items: center;

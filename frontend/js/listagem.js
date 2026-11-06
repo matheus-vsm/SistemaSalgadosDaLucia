@@ -1,13 +1,29 @@
 function ajustarAlturaListagem(lista) {
+    const uniformizarCards = lista.dataset.alturaCards === 'uniforme';
     if (lista.dataset.recalcularAltura === 'true') {
         lista.style.height = '';
+        delete lista.dataset.maiorAlturaCard;
         delete lista.dataset.recalcularAltura;
     }
-    if (lista.style.height || !lista.querySelector('.card, .card-pedido, .card-compra')) return;
+    if (!lista.querySelector('.card, .card-pedido, .card-compra')) return;
 
-    // Reserve only the space occupied by this screen's first set of cards.
-    // Subsequent pages scroll inside that space instead of moving pagination.
-    lista.style.height = `${Math.ceil(lista.getBoundingClientRect().height)}px`;
+    if (uniformizarCards) {
+        // Measure natural content again, before applying the largest height seen
+        // at this width. The list itself remains free to grow with every row.
+        lista.style.height = '';
+        lista.style.setProperty('--altura-card', '0px');
+        const cards = lista.querySelectorAll(':scope > .card, :scope > .card-pedido, :scope > .card-compra');
+        const maiorAltura = Math.ceil(Math.max(
+            Number(lista.dataset.maiorAlturaCard || 0),
+            ...Array.from(cards, card => card.getBoundingClientRect().height)
+        ));
+        lista.dataset.maiorAlturaCard = String(maiorAltura);
+        lista.style.setProperty('--altura-card', `${maiorAltura}px`);
+    } else {
+        // Keep the compact sizing already used by Clients and Users.
+        if (lista.style.height) return;
+        lista.style.height = `${Math.ceil(lista.getBoundingClientRect().height)}px`;
+    }
 
     if (lista.dataset.observandoLargura || typeof ResizeObserver === 'undefined') return;
     lista.dataset.observandoLargura = 'true';

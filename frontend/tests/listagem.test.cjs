@@ -17,14 +17,20 @@ function ambiente([pasta, arquivo, idLista, listar, criarCard, template]) {
     const elementos = new Map();
     function elemento(id) {
         if (!elementos.has(id)) elementos.set(id, {
-            dataset: {}, style: {}, children: [{}], isConnected: true, inert: false,
+            dataset: {}, style: {setProperty(nome, valor) { this[nome] = valor; }}, children: [{}], isConnected: true, inert: false,
             alturaNatural: 210,
+            alturasCards: [160, 210],
             innerHTML: 'cards existentes', textContent: 'Página 1 de 3', scrollTop: 120,
             setAttribute(nome, valor) { this[nome] = valor; },
             getAttribute(nome) { return this[nome]; },
             getBoundingClientRect() { return {height: this.alturaNatural}; },
             addEventListener() {},
             querySelector() { return elemento(`${id}-filho`); },
+            querySelectorAll() {
+                return this.alturasCards.map(altura => ({
+                    getBoundingClientRect: () => ({height: Math.max(altura, parseFloat(this.style['--altura-card']) || 0)})
+                }));
+            },
             classList: {toggle() {}}
         });
         return elementos.get(id);
@@ -44,6 +50,10 @@ function ambiente([pasta, arquivo, idLista, listar, criarCard, template]) {
             return new Promise((resolve, reject) => consultas.push({url, resolve, reject}));
         }
     });
+    const html = fs.readFileSync(path.join(frontend, pasta, 'html', `${arquivo}.html`), 'utf8');
+    if (html.includes(`id="${idLista}" data-altura-cards="uniforme"`)) {
+        elemento(idLista).dataset.alturaCards = 'uniforme';
+    }
     for (const arquivoFonte of ['js/listagem.js', `${pasta}/js/${arquivo}.js`]) {
         vm.runInContext(fs.readFileSync(path.join(frontend, arquivoFonte), 'utf8'), contexto);
     }
@@ -61,22 +71,44 @@ for (const modulo of modulos) {
         const a = ambiente(modulo);
         const altura = 180 + modulos.indexOf(modulo) * 30;
         a.lista.alturaNatural = altura;
+        a.lista.alturasCards = [altura - 20, altura];
+        const propriedade = a.lista.dataset.alturaCards ? '--altura-card' : 'height';
         const primeira = a.listar(0);
         a.consultas[0].resolve(pagina(1, 0));
         await primeira;
-        assert.equal(a.lista.style.height, `${altura}px`);
+        assert.equal(a.lista.style[propriedade], `${altura}px`);
 
         a.lista.alturaNatural = altura - 50;
+        a.lista.alturasCards = [altura - 80, altura - 50];
         const segunda = a.listar(1);
         a.consultas[1].resolve(pagina(2));
         await segunda;
-        assert.equal(a.lista.style.height, `${altura}px`);
+        assert.equal(a.lista.style[propriedade], `${altura}px`);
 
         a.observadores[0]([{contentRect: {width: 1000}}]);
         a.lista.alturaNatural = altura + 100;
+        a.lista.alturasCards = [altura, altura + 100];
         a.observadores[0]([{contentRect: {width: 600}}]);
-        assert.equal(a.lista.style.height, `${altura + 100}px`);
+        assert.equal(a.lista.style[propriedade], `${altura + 100}px`);
     });
+
+    if (['salgado', 'pedidos', 'compras'].includes(modulo[0])) {
+        test(`${modulo[0]}: cresce para o maior card sem prender a altura da lista`, async () => {
+            const a = ambiente(modulo);
+            for (const [indice, alturas] of [[160, 210, 180, 170], [180, 380, 150, 200], [150, 180, 200, 190]].entries()) {
+                a.lista.alturasCards = alturas;
+                const requisicao = a.listar(indice);
+                a.consultas[indice].resolve(pagina(indice + 1, indice));
+                await requisicao;
+                const esperado = indice === 0 ? 210 : 380;
+                assert.equal(a.lista.style['--altura-card'], `${esperado}px`);
+                assert.equal(a.lista.style.height, '');
+                for (const card of a.lista.querySelectorAll()) {
+                    assert.equal(card.getBoundingClientRect().height, esperado);
+                }
+            }
+        });
+    }
 
     test(`${modulo[0]}: mantém cards e indicador de página enquanto consulta a API`, async () => {
         const a = ambiente(modulo);
