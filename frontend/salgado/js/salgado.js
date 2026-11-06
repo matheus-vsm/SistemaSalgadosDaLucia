@@ -29,16 +29,10 @@ async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBu
             ? `nome=${encodeURIComponent(termoBuscaSalgados)}&page=${pagina}&size=4`
             : `page=${pagina}&size=4&ativo=${tipo}`;
         const {
-            response,
             data: salgadosPage
         } = await apiJson(`${endpoint}?${parametros}`);
 
         if (!carregamento.atual()) return;
-
-        if (!response.ok) {
-            lista.innerHTML = '<div class="estado">Erro ao carregar salgados</div>';
-            return;
-        }
 
         const salgados = termoBuscaSalgados
             ? salgadosPage.content.filter(salgado => salgado.ativo === tipo)
@@ -67,7 +61,8 @@ async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBu
     } catch (erro) {
         if (!carregamento.atual()) return;
         console.error('Erro ao listar salgados:', erro);
-        lista.innerHTML = '<div class="estado">Erro ao conectar com o servidor</div>';
+        lista.innerHTML = '<div class="estado"><span></span></div>';
+        lista.querySelector('span').textContent = notificarErro('Não foi possível carregar os salgados', erro);
     } finally {
         carregamento.finalizar();
     }
@@ -119,11 +114,7 @@ async function carregarCategoriasSalgado(idSelect) {
     if (!select) return false;
     try {
         if (categoriasSalgados.length === 0) {
-            const {response, data: enums} = await apiJson('/enums/salgado');
-
-            if (!response.ok) {
-                throw new Error('Erro ao carregar categorias');
-            }
+            const {data: enums} = await apiJson('/enums/salgado');
 
             categoriasSalgados = enums.categorias;
         }
@@ -142,7 +133,7 @@ async function carregarCategoriasSalgado(idSelect) {
         return true;
     } catch (erro) {
         console.error('Erro ao carregar categorias:', erro);
-        if (select.isConnected) alert('Erro ao carregar categorias de salgado.');
+        if (select.isConnected) notificarErro('Não foi possível carregar as categorias', erro);
         return false;
     }
 }
@@ -163,18 +154,18 @@ async function salvarSalgado() {
     form.querySelectorAll('button').forEach(botao => botao.disabled = true);
     form.querySelector('fieldset').disabled = true;
     try {
-        const {response, data: resultado} = await apiJson(id ? `/salgados/${id}` : '/salgados', {
+        await apiJson(id ? `/salgados/${id}` : '/salgados', {
             method: id ? 'PUT' : 'POST',
             body: JSON.stringify(dados)
         });
         if (!form.isConnected || versao !== versaoFormularioSalgado) return;
-        if (!response.ok) throw new Error(resultado?.mensagem || 'Erro ao salvar salgado');
-        alert(id ? 'Salgado editado com sucesso!' : 'Salgado cadastrado com sucesso!');
+
+        mostrarNotificacao({ tipo: 'sucesso', titulo: id ? 'Salgado editado com sucesso!' : 'Salgado cadastrado com sucesso!', mensagem: '' });
         limparFormularioSalgado();
         await listarSalgados(paginaAtualSalgados, salgadosAtivos, termoBuscaSalgados);
     } catch (erro) {
         if (form.isConnected && versao === versaoFormularioSalgado) {
-            alert(erro.message || 'Erro ao conectar com o servidor.');
+            notificarErro('Não foi possível salvar o salgado', erro);
         }
     } finally {
         if (form.isConnected) {
@@ -213,9 +204,9 @@ async function iniciarEdicaoSalgado(id) {
     carregandoEdicaoSalgado = true;
     form.querySelector('button[type=submit]').disabled = true;
     try {
-        const {response, data: salgado} = await apiJson(`/salgados/${id}`);
+        const {data: salgado} = await apiJson(`/salgados/${id}`);
         if (!form.isConnected || versao !== versaoFormularioSalgado) return;
-        if (!response.ok) throw new Error('Erro ao carregar dados do salgado');
+
         if (!await carregarCategoriasSalgado('categoria-salgado')) return;
         if (!form.isConnected || versao !== versaoFormularioSalgado) return;
         limparFormularioSalgado();
@@ -232,7 +223,7 @@ async function iniciarEdicaoSalgado(id) {
         form.scrollIntoView({behavior: 'smooth'});
         document.getElementById('nome-salgado').focus({preventScroll: true});
     } catch (erro) {
-        if (form.isConnected && versao === versaoFormularioSalgado) alert(erro.message);
+        if (form.isConnected && versao === versaoFormularioSalgado) notificarErro('Não foi possível carregar o salgado para edição', erro);
     } finally {
         if (form.isConnected) {
             carregandoEdicaoSalgado = false;
@@ -244,8 +235,7 @@ async function iniciarEdicaoSalgado(id) {
 async function abrirModalExibicaoSalgado(id) {
     try {
         const response = await fetch('salgado/html/modal-exibir-salgado.html');
-
-        if (!response.ok) throw new Error('Erro ao carregar modal de exibição');
+        if (!response.ok) throw new Error('Erro ao carregar modal de exibição.');
 
         const htmlModal = await response.text();
 
@@ -256,22 +246,17 @@ async function abrirModalExibicaoSalgado(id) {
         await buscarSalgadoPorId(id, 'exibicao');
     } catch (erro) {
         console.error('Erro ao abrir modal de exibição:', erro);
-        alert('Erro ao abrir modal de exibição.');
+        notificarErro('Não foi possível exibir o salgado', erro);
     }
 }
 
 async function abrirModalAtualizarEstoque(id) {
     try {
         const response = await fetch('salgado/html/modal-atualizar-estoque.html');
-
-        if (!response.ok) throw new Error('Erro ao carregar modal de estoque');
+        if (!response.ok) throw new Error('Erro ao carregar modal de estoque.');
 
         const htmlModal = await response.text();
-        const {response: respostaSalgado, data: salgado} = await apiJson(`/salgados/${id}`);
-
-        if (!respostaSalgado.ok) {
-            throw new Error('Erro ao carregar dados do salgado');
-        }
+        const {data: salgado} = await apiJson(`/salgados/${id}`);
 
         abrirModal({
             titulo: 'Atualizar Estoque',
@@ -283,22 +268,17 @@ async function abrirModalAtualizarEstoque(id) {
         document.getElementById('quantidade-atual-estoque').textContent = salgado.estoque?.quantidade ?? 0;
     } catch (erro) {
         console.error('Erro ao abrir modal de estoque:', erro);
-        alert('Erro ao abrir modal de atualização de estoque.');
+        notificarErro('Não foi possível abrir a atualização de estoque', erro);
     }
 }
 
 async function abrirModalAlterarStatusSalgado(id) {
     try {
         const response = await fetch('salgado/html/modal-alterar-status-salgado.html');
-
-        if (!response.ok) throw new Error('Erro ao carregar modal de alteração de status');
+        if (!response.ok) throw new Error('Erro ao carregar modal de alteração de status.');
 
         const htmlModal = await response.text();
-        const {response: respostaSalgado, data: salgado} = await apiJson(`/salgados/${id}`);
-
-        if (!respostaSalgado.ok) {
-            throw new Error('Erro ao carregar dados do salgado');
-        }
+        const {data: salgado} = await apiJson(`/salgados/${id}`);
 
         const ativar = salgado.ativo !== true;
         const estado = ativar ? 'ativar' : 'desativar';
@@ -310,7 +290,7 @@ async function abrirModalAlterarStatusSalgado(id) {
         configurarModalAlterarStatusSalgado(id, salgado, ativar, estado);
     } catch (erro) {
         console.error('Erro ao abrir modal de alteração de status:', erro);
-        alert('Erro ao abrir modal de alteração de status.');
+        notificarErro('Não foi possível abrir a alteração de status do salgado', erro);
     }
 }
 
@@ -325,16 +305,12 @@ function configurarModalAlterarStatusSalgado(id, salgado, ativar, estado) {
 
 async function buscarSalgadoPorId(id, tipo) {
     try {
-        const {response, data: salgado} = await apiJson(`/salgados/${id}`);
+        const {data: salgado} = await apiJson(`/salgados/${id}`);
 
-        if (!response.ok) {
-            alert('Erro ao carregar dados do salgado');
-            return;
-        }
         await preencherDadosSalgado(salgado, tipo);
     } catch (erro) {
         console.error('Erro ao buscar salgado para edição:', erro);
-        alert('Erro ao conectar com o servidor.');
+        notificarErro('Não foi possível carregar o salgado', erro);
     }
 }
 
@@ -373,21 +349,17 @@ async function editarSalgadoPelaExibicao() {
 
 async function alterarStatusSalgado(id, estado) {
     try {
-        const {response, data: resultado} = await apiJson(`/salgados/${id}`, {
+        await apiJson(`/salgados/${id}`, {
             method: 'PATCH',
             body: JSON.stringify({status: estado})
         });
 
-        if (response.ok) {
-            alert(`Salgado ${estado ? 'ativado' : 'inativado'} com sucesso!`);
-            fecharModal();
-            listarSalgados();
-        } else {
-            alert(resultado?.mensagem || `Erro ao ${estado ? 'ativar' : 'desativar'} salgado`);
-        }
+        mostrarNotificacao({ tipo: 'sucesso', titulo: `Salgado ${estado ? 'ativado' : 'inativado'} com sucesso!`, mensagem: '' });
+        fecharModal();
+        listarSalgados();
     } catch (erro) {
         console.error('Erro na requisição:', erro);
-        alert(erro.message || 'Erro ao conectar com o servidor.');
+        notificarErro('Não foi possível alterar o status do salgado', erro);
     }
 }
 
@@ -396,26 +368,22 @@ async function atualizarEstoqueSalgado() {
     const quantidade = Number(document.getElementById('ajuste-estoque').value);
 
     if (!Number.isInteger(quantidade) || quantidade === 0) {
-        alert('Informe um número inteiro diferente de zero. Use um valor negativo para remover do estoque.');
+        mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'Informe um número inteiro diferente de zero. Use um valor negativo para remover do estoque.' });
         return;
     }
 
     try {
-        const {response, data: resultado} = await apiJson(`/estoque/${id}`, {
+        await apiJson(`/estoque/${id}`, {
             method: 'PATCH',
             body: JSON.stringify({quantidade})
         });
 
-        if (response.ok) {
-            alert('Estoque atualizado com sucesso!');
-            fecharModal();
-            listarSalgados(paginaAtualSalgados, salgadosAtivos, termoBuscaSalgados);
-        } else {
-            alert(resultado?.message || 'Erro ao atualizar estoque');
-        }
+        mostrarNotificacao({ tipo: 'sucesso', titulo: 'Estoque atualizado com sucesso!', mensagem: '' });
+        fecharModal();
+        listarSalgados(paginaAtualSalgados, salgadosAtivos, termoBuscaSalgados);
     } catch (erro) {
         console.error('Erro ao atualizar estoque:', erro);
-        alert(erro.message || 'Erro ao conectar com o servidor.');
+        notificarErro('Não foi possível atualizar o estoque', erro);
     }
 }
 

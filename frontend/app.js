@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const modulo = MODULOS[nomeModulo];
         if (!modulo) {
             conteudoDinamico.innerHTML = '<h1>Erro</h1><p>Módulo não encontrado.</p>';
+            notificarErro('Não foi possível abrir a tela', new Error('Módulo não encontrado.'));
             return;
         }
 
@@ -96,6 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (erro) {
             conteudoDinamico.innerHTML = '<h1>Erro 404</h1><p>Não foi possível carregar a tela correspondente.</p>';
             console.error(erro);
+            notificarErro('Não foi possível carregar a tela', erro);
         }
     }
 
@@ -109,27 +111,23 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             try {
-                const {response, data: result} = await apiJson('/autenticacao/login', {
+                const {data: result} = await apiJson('/autenticacao/login', {
                     method: 'POST',
                     body: JSON.stringify(dadosLogin),
                     skipAuth: true
                 });
 
-                if (response.ok) {
-                    localStorage.setItem('accessToken', result.tokenAcesso);
-                    localStorage.setItem('refreshToken', result.refreshToken);
+                localStorage.setItem('accessToken', result.tokenAcesso);
+                localStorage.setItem('refreshToken', result.refreshToken);
 
-                    telaLogin.classList.add('hidden');
-                    painelSistema.classList.remove('hidden');
+                telaLogin.classList.add('hidden');
+                painelSistema.classList.remove('hidden');
 
-                    await carregarModulo('inicio');
-                    alert('Login realizado com sucesso!');
-                } else {
-                    alert('Usuário ou senha inválidos');
-                }
+                mostrarNotificacao({tipo: 'sucesso', titulo: 'Login realizado com sucesso!', mensagem: ''});
+                await carregarModulo('inicio');
             } catch (erro) {
                 console.error('Erro na requisição:', erro);
-                alert('Erro ao conectar com o servidor.');
+                notificarErro('Não foi possível entrar no sistema', erro);
             }
         });
     }

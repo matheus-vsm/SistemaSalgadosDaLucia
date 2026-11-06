@@ -83,10 +83,9 @@ async function listarUsuarios(numero = 0) {
 
         if (termoBuscaUsuarios) parametros.set('nome', termoBuscaUsuarios);
 
-        const {response, data} = await apiJson(`${endpoint}?${parametros}`);
+        const {data} = await apiJson(`${endpoint}?${parametros}`);
 
         if (!carregamento.atual()) return;
-        if (!response.ok) throw new Error(data?.mensagem || 'Erro ao carregar usuários.');
 
         usuariosListados = data.content || [];
         const detalhes = data.page || data;
@@ -104,7 +103,7 @@ async function listarUsuarios(numero = 0) {
         if (!carregamento.atual()) return;
 
         lista.innerHTML = '<div class="estado"><span></span> <button type="button" class="btn btn-secundario" id="usuarios-recarregar">Tentar novamente</button></div>';
-        lista.querySelector('span').textContent = erro.message || 'Erro ao conectar com o servidor.';
+        lista.querySelector('span').textContent = notificarErro('Não foi possível carregar os usuários', erro);
     } finally {
         carregamento.finalizar();
     }
@@ -119,8 +118,8 @@ async function carregarPerfisUsuario() {
     document.getElementById('usuarios-erro-perfis').hidden = true;
 
     try {
-        const {response, data} = await apiJson('/enums/usuario');
-        if (!response.ok || !data?.perfis?.length) throw new Error('Não foi possível carregar os perfis.');
+        const {data} = await apiJson('/enums/usuario');
+        if (!data?.perfis?.length) throw new Error('Não foi possível carregar os perfis.');
         if (!select.isConnected) return;
 
         perfisUsuario = data.perfis;
@@ -139,7 +138,7 @@ async function carregarPerfisUsuario() {
         if (!select.isConnected) return;
 
         select.innerHTML = '<option value="">Perfis indisponíveis</option>';
-        document.getElementById('usuarios-erro-perfis').textContent = erro.message;
+        document.getElementById('usuarios-erro-perfis').textContent = notificarErro('Não foi possível carregar os perfis', erro);
         document.getElementById('usuarios-erro-perfis').hidden = false;
     }
 }
@@ -167,7 +166,7 @@ async function cadastrarUsuario() {
     };
 
     if (!dados.nome || !dados.username || !dados.senha.trim()) {
-        alert('Preencha nome, username e senha.');
+        mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'Preencha nome, username e senha.' });
         return;
     }
 
@@ -175,18 +174,17 @@ async function cadastrarUsuario() {
     botao.textContent = 'Cadastrando...';
 
     try {
-        const {response, data} = await apiJson('/usuarios/cadastrar', {
+        await apiJson('/usuarios/cadastrar', {
             method: 'POST', body: JSON.stringify(dados)
         });
 
-        if (!response.ok) throw new Error(data?.mensagem || 'Erro ao cadastrar usuário.');
         if (!form.isConnected) return;
 
         form.reset();
-        alert('Usuário cadastrado com sucesso!');
+        mostrarNotificacao({ tipo: 'sucesso', titulo: 'Usuário cadastrado com sucesso!', mensagem: '' });
         filtrarUsuarios(true);
     } catch (erro) {
-        alert(erro.message || 'Erro ao conectar com o servidor.');
+        if (form.isConnected) notificarErro('Não foi possível cadastrar o usuário', erro);
     } finally {
         botao.disabled = false;
         botao.textContent = 'Cadastrar Usuário';
@@ -207,7 +205,7 @@ async function carregarModalUsuario(arquivo, titulo) {
 
         return true;
     } catch (erro) {
-        alert(erro.message || 'Erro ao carregar o modal.');
+        if (area?.isConnected) notificarErro('Não foi possível abrir os dados do usuário', erro);
 
         return false;
     }
@@ -229,14 +227,14 @@ async function desativarUsuario(id) {
     botao.disabled = true;
 
     try {
-        const {response, data} = await apiJson(`/usuarios/${encodeURIComponent(id)}`, {method: 'PATCH'});
-        if (!response.ok) throw new Error(data?.mensagem || 'Erro ao desativar usuário.');
+        await apiJson(`/usuarios/${encodeURIComponent(id)}`, {method: 'PATCH'});
+
         if (botao.isConnected) fecharModal();
 
-        alert('Usuário desativado com sucesso!');
+        mostrarNotificacao({ tipo: 'sucesso', titulo: 'Usuário desativado com sucesso!', mensagem: '' });
         listarUsuarios(paginaUsuarios);
     } catch (erro) {
-        alert(erro.message || 'Erro ao conectar com o servidor.');
+        notificarErro('Não foi possível desativar o usuário', erro);
         botao.disabled = false;
     }
 }
@@ -269,20 +267,19 @@ async function alterarSenhaUsuario(usuario) {
     };
 
     if (!dados.novaSenha.trim() || dados.novaSenha !== dados.novaSenhaConfirmacao) {
-        alert('Preencha a nova senha e confirme com o mesmo valor.');
+        mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'Preencha a nova senha e confirme com o mesmo valor.' });
         return;
     }
     botao.disabled = true;
 
     try {
-        const {response, data} = await apiJson('/usuarios', {method: 'PATCH', body: JSON.stringify(dados)});
+        await apiJson('/usuarios', {method: 'PATCH', body: JSON.stringify(dados)});
 
-        if (!response.ok) throw new Error(data?.mensagem || 'Erro ao alterar senha.');
         if (form.isConnected) fecharModal();
 
-        alert('Senha alterada com sucesso!');
+        mostrarNotificacao({ tipo: 'sucesso', titulo: 'Senha alterada com sucesso!', mensagem: '' });
     } catch (erro) {
-        alert(erro.message || 'Erro ao conectar com o servidor.');
+        notificarErro('Não foi possível alterar a senha', erro);
     } finally {
         botao.disabled = false;
     }

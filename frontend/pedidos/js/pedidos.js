@@ -35,6 +35,7 @@ function formatarDataPedido(valor) {
 }
 
 async function carregarDadosIniciaisPedido() {
+    const form = document.getElementById('form-pedido');
     try {
         pedidoEmEdicao = null;
         itensNovoPedido = [];
@@ -46,22 +47,27 @@ async function carregarDadosIniciaisPedido() {
             fetch('pedidos/html/card-pedido.html'),
             fetch('pedidos/html/item-pedido.html')
         ]);
-        if (!resEnums.response.ok || !resClientes.response.ok || !resSalgados.response.ok || !respostaCard.ok || !respostaItem.ok) throw new Error('Erro ao carregar dados do cadastro');
+        if (!respostaCard.ok || !respostaItem.ok) throw new Error('Erro ao carregar dados do cadastro');
         enumsPedido = resEnums.data;
         clientesPedido = resClientes.data.content || [];
         salgadosPedido = resSalgados.data.content || [];
         templateCardPedido = await respostaCard.text();
         templateItemPedido = await respostaItem.text();
+        if (!form?.isConnected) return;
         montarFiltrosStatusPedido();
         preencherSelectPedido('tipo-entrega-pedido', enumsPedido.tiposEntrega);
         preencherSelectPedido('tipo-preco-pedido', enumsPedido.tiposPrecos);
         preencherSelectPedido('forma-pagamento-pedido', enumsPedido.formasPagamento);
         preencherSelectPedido('cliente-pedido', clientesPedido.map(c => ({valor: c.id, descricao: c.nome})));
         preencherSelectPedido('salgado-pedido', salgadosPedido.map(s => ({valor: s.id, descricao: s.nome})));
+        atualizarPreviewSalgadoPedido();
         listarPedidos(0);
     } catch (erro) {
         console.error('Erro ao iniciar pedidos:', erro);
-        document.getElementById('lista-pedidos').innerHTML = '<div class="estado">Erro ao carregar a tela de pedidos</div>';
+        if (!form?.isConnected) return;
+        const lista = document.getElementById('lista-pedidos');
+        lista.innerHTML = '<div class="estado"><span></span></div>';
+        lista.querySelector('span').textContent = notificarErro('Não foi possível carregar a tela de pedidos', erro);
     }
 }
 
@@ -89,9 +95,9 @@ async function listarPedidos(pagina = 0) {
         if (fim) params.set('dataFimEntrega', dataParaFiltroPedido(fim, true));
     }
     try {
-        const {response, data} = await apiJson(`/pedidos?${params}`);
+        const {data} = await apiJson(`/pedidos?${params}`);
         if (!carregamento.atual()) return;
-        if (!response.ok) throw new Error(data?.mensagem || 'Erro ao listar pedidos');
+
         lista.innerHTML = data.content?.length ? data.content.map(criarCardPedido).join('') : '<div class="estado">Nenhum pedido encontrado</div>';
         paginaPedidos = data.page?.number ?? data.number ?? 0;
         const total = data.page?.totalPages ?? data.totalPages ?? 0;
@@ -101,7 +107,8 @@ async function listarPedidos(pagina = 0) {
     } catch (erro) {
         if (!carregamento.atual()) return;
         console.error(erro);
-        lista.innerHTML = '<div class="estado">Erro ao carregar pedidos</div>';
+        lista.innerHTML = '<div class="estado"><span></span></div>';
+        lista.querySelector('span').textContent = notificarErro('Não foi possível carregar os pedidos', erro);
     } finally {
         carregamento.finalizar();
     }
@@ -159,7 +166,7 @@ async function preencherEnderecoPedidoPorCep(cep) {
     try {
         const endereco = await buscarEnderecoPorCep(cep);
         if (!endereco) {
-            alert('CEP não encontrado.');
+            mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'CEP não encontrado.' });
             return;
         }
         document.getElementById('logradouro-pedido').value = endereco.logradouro;
@@ -169,7 +176,7 @@ async function preencherEnderecoPedidoPorCep(cep) {
         document.getElementById('numero-pedido').focus();
     } catch (erro) {
         console.error('Erro ao buscar CEP do pedido:', erro);
-        alert('Não foi possível consultar o CEP.');
+        notificarErro('Não foi possível consultar o CEP', erro);
     }
 }
 
@@ -178,12 +185,18 @@ function precoItemPedido(salgado, tipo) {
     return precoCento / 100;
 }
 
+function atualizarPreviewSalgadoPedido() {
+    const preview = document.getElementById('preview-salgado-pedido');
+    const id = Number(document.getElementById('salgado-pedido')?.value);
+    preview?.querySelector('img')?.classList.toggle('hidden', !salgadosPedido.some(salgado => salgado.id === id));
+}
+
 function adicionarItemPedido() {
     const salgadoId = Number(document.getElementById('salgado-pedido').value);
     const tipoPreco = document.getElementById('tipo-preco-pedido').value;
     const quantidade = Number(document.getElementById('quantidade-pedido').value);
     const salgado = salgadosPedido.find(item => item.id === salgadoId);
-    if (!salgado || !tipoPreco || !quantidade) return alert('Selecione o salgado, o tipo e informe a quantidade.');
+    if (!salgado || !tipoPreco || !quantidade) return mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'Selecione o salgado, o tipo e informe a quantidade.' });
     itensNovoPedido.push({
         salgadoId,
         nomeSalgado: salgado.nome,
@@ -196,6 +209,7 @@ function adicionarItemPedido() {
     document.getElementById('salgado-pedido').value = '';
     document.getElementById('tipo-preco-pedido').value = '';
     document.getElementById('quantidade-pedido').value = '';
+    atualizarPreviewSalgadoPedido();
     document.getElementById('salgado-pedido').focus();
 }
 
@@ -249,24 +263,25 @@ function dadosFormularioPedido() {
 }
 
 async function salvarPedido() {
-    if (!itensNovoPedido.length) return alert('Adicione pelo menos um salgado ao pedido.');
+    if (!itensNovoPedido.length) return mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'Adicione pelo menos um salgado ao pedido.' });
     const id = pedidoEmEdicao;
     try {
-        const {response, data} = await apiJson(id ? `/pedidos/${id}` : '/pedidos', {
+        await apiJson(id ? `/pedidos/${id}` : '/pedidos', {
             method: id ? 'PUT' : 'POST',
             body: JSON.stringify(dadosFormularioPedido())
         });
-        if (!response.ok) return alert(data?.mensagem || `Erro ao ${id ? 'editar' : 'cadastrar'} pedido`);
-        alert(`Pedido ${id ? 'editado' : 'cadastrado'} com sucesso!`);
+
+        mostrarNotificacao({ tipo: 'sucesso', titulo: `Pedido ${id ? 'editado' : 'cadastrado'} com sucesso!`, mensagem: '' });
         limparFormularioPedido();
         listarPedidos(0);
     } catch (erro) {
-        alert(erro.message || 'Erro ao conectar com o servidor.');
+        notificarErro('Não foi possível salvar o pedido', erro);
     }
 }
 
 function limparFormularioPedido() {
     document.getElementById('form-pedido').reset();
+    atualizarPreviewSalgadoPedido();
     pedidoEmEdicao = null;
     itensNovoPedido = [];
     alternarEnderecoPedido('');
@@ -286,8 +301,8 @@ function definirModoEdicaoPedido(ativo) {
 }
 
 async function obterPedido(id) {
-    const {response, data} = await apiJson(`/pedidos/${id}`);
-    if (!response.ok) throw new Error(data?.mensagem || 'Erro ao carregar pedido');
+    const {data} = await apiJson(`/pedidos/${id}`);
+
     return data;
 }
 
@@ -305,7 +320,7 @@ async function exibirPedido(id) {
         });
         preencherModalExibicaoPedido(p);
     } catch (e) {
-        alert(e.message);
+        notificarErro('Não foi possível exibir o pedido', e);
     }
 }
 
@@ -355,7 +370,7 @@ async function abrirStatusPedido(id) {
         });
         configurarModalStatusPedido(p);
     } catch (e) {
-        alert(e.message);
+        notificarErro('Não foi possível abrir a alteração de status do pedido', e);
     }
 }
 
@@ -366,17 +381,20 @@ function configurarModalStatusPedido(pedido) {
     preencherSelectPedido('novo-status-pedido', opcoes);
     document.querySelector('.btn-confirmar-status-pedido').onclick = () => {
         const status = document.getElementById('novo-status-pedido').value;
-        if (!status) return alert('Selecione o novo status do pedido.');
+        if (!status) return mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'Selecione o novo status do pedido.' });
         alterarStatusPedido(pedido.id, status);
     };
 }
 
 async function alterarStatusPedido(id, status) {
-    const {response, data} = await apiJson(`/pedidos/${id}`, {method: 'PATCH', body: JSON.stringify({status})});
-    if (response.ok) {
+    try {
+        await apiJson(`/pedidos/${id}`, {method: 'PATCH', body: JSON.stringify({status})});
+        mostrarNotificacao({tipo: 'sucesso', titulo: 'Status do pedido atualizado com sucesso!', mensagem: ''});
         fecharModal();
         listarPedidos(paginaPedidos);
-    } else alert(data?.mensagem || 'Erro ao alterar status');
+    } catch (erro) {
+        notificarErro('Não foi possível alterar o status do pedido', erro);
+    }
 }
 
 async function editarPedido(id) {
@@ -407,7 +425,7 @@ async function editarPedido(id) {
         definirModoEdicaoPedido(true);
         document.getElementById('form-pedido').scrollIntoView({behavior: 'smooth'});
     } catch (e) {
-        alert(e.message);
+        notificarErro('Não foi possível carregar o pedido para edição', e);
     }
 }
 
@@ -453,6 +471,7 @@ areaPedido.addEventListener('click', e => {
 });
 
 areaPedido.addEventListener('change', e => {
+    if (e.target.id === 'salgado-pedido') atualizarPreviewSalgadoPedido();
     if (e.target.id === 'usar-data-final-pedido') {
         document.getElementById('data-fim-pedido').disabled = !e.target.checked;
         document.getElementById('data-fim-pedido').required = e.target.checked;

@@ -37,6 +37,7 @@ function ambiente([pasta, arquivo, idLista, listar, criarCard, template]) {
     }
     const consultas = [];
     const observadores = [];
+    const notificacoes = [];
     const contexto = vm.createContext({
         document: {getElementById: elemento, addEventListener() {}},
         URLSearchParams,
@@ -46,6 +47,10 @@ function ambiente([pasta, arquivo, idLista, listar, criarCard, template]) {
             disconnect() {}
         },
         console: {error() {}},
+        notificarErro(titulo, erro) {
+            notificacoes.push({titulo, mensagem: erro.message});
+            return erro.message;
+        },
         apiJson(url) {
             return new Promise((resolve, reject) => consultas.push({url, resolve, reject}));
         }
@@ -59,7 +64,7 @@ function ambiente([pasta, arquivo, idLista, listar, criarCard, template]) {
     }
     vm.runInContext(`${template} = 'template em cache';`, contexto);
     contexto[criarCard] = item => `card-${item.id}`;
-    return {lista: elemento(idLista), elemento, consultas, observadores, listar: pagina => contexto[listar](pagina)};
+    return {lista: elemento(idLista), elemento, consultas, observadores, notificacoes, listar: pagina => contexto[listar](pagina)};
 }
 
 function pagina(id, numero = 1) {
@@ -160,6 +165,8 @@ for (const modulo of modulos) {
         const falha = a.listar(1);
         a.consultas[0].reject(new Error('Falha de conexão'));
         await falha;
+        assert.equal(a.notificacoes.length, 1);
+        assert.equal(a.notificacoes[0].mensagem, 'Falha de conexão');
         assert.equal(a.lista['aria-busy'], 'false');
         assert.equal(a.lista.inert, false);
         const tentativa = a.listar(1);
@@ -175,5 +182,17 @@ for (const modulo of modulos) {
         a.consultas[0].resolve(pagina(40));
         await requisicao;
         assert.equal(a.lista.innerHTML, 'cards existentes');
+    });
+
+    test(`${modulo[0]}: falhas de consultas antigas não geram notificações`, async () => {
+        const a = ambiente(modulo);
+        const antiga = a.listar(0);
+        const recente = a.listar(1);
+        a.consultas[0].reject(new Error('Erro antigo'));
+        await antiga;
+        assert.equal(a.notificacoes.length, 0);
+        a.consultas[1].resolve(pagina(50));
+        await recente;
+        assert.equal(a.lista.innerHTML, 'card-50');
     });
 }
