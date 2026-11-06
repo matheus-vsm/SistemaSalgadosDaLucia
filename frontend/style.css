@@ -259,6 +259,12 @@ fieldset {
     margin-bottom: 16px;
 }
 
+#form-salgado > fieldset,
+#form-cliente > fieldset,
+#form-usuario > fieldset {
+    background: var(--surface);
+}
+
 legend {
     font-weight: 600;
     padding: 0 8px;
