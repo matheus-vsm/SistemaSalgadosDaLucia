@@ -50,7 +50,10 @@ async function carregarDadosIniciaisCompra() {
         listarCompras(0);
     } catch (erro) {
         console.error('Erro ao iniciar compras:', erro);
-        if (form.isConnected) document.getElementById('lista-compras').innerHTML = '<div class="estado">Erro ao carregar a tela de compras</div>';
+        if (!form.isConnected) return;
+        const lista = document.getElementById('lista-compras');
+        lista.innerHTML = '<div class="estado"><span></span></div>';
+        lista.querySelector('span').textContent = notificarErro('Não foi possível carregar a tela de compras', erro);
     }
 }
 
@@ -87,9 +90,9 @@ async function listarCompras(pagina = 0) {
         params.set('dataFimCompra', dataFiltroCompra(filtroCompras.fim));
     }
     try {
-        const {response, data} = await apiJson(`/compras?${params}`);
+        const {data} = await apiJson(`/compras?${params}`);
         if (!carregamento.atual()) return;
-        if (!response.ok) throw new Error(data?.mensagem || 'Erro ao carregar compras.');
+
         lista.innerHTML = data.content?.length ? data.content.map(criarCardCompra).join('') : '<div class="estado">Nenhuma compra encontrada</div>';
         paginaCompras = data.page?.number ?? data.number ?? 0;
         const total = data.page?.totalPages ?? data.totalPages ?? 0;
@@ -98,7 +101,8 @@ async function listarCompras(pagina = 0) {
         document.getElementById('compra-proximo').disabled = paginaCompras + 1 >= total;
     } catch (erro) {
         if (!carregamento.atual()) return;
-        lista.innerHTML = `<div class="estado">${escaparCompra(erro.message)} <button type="button" class="btn btn-secundario" id="tentar-compras">Tentar novamente</button></div>`;
+        const mensagem = notificarErro('Não foi possível carregar as compras', erro);
+        lista.innerHTML = `<div class="estado">${escaparCompra(mensagem)} <button type="button" class="btn btn-secundario" id="tentar-compras">Tentar novamente</button></div>`;
     } finally {
         carregamento.finalizar();
     }
@@ -129,7 +133,7 @@ function adicionarItemCompra() {
     const quantidade = document.getElementById('quantidade-compra');
     const valor = document.getElementById('valor-unitario-compra');
     if (!nome.value.trim() || !quantidade.value || !valor.value) {
-        alert('Informe o nome do produto, a quantidade e o valor unitário.');
+        mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'Informe o nome do produto, a quantidade e o valor unitário.' });
         (!nome.value.trim() ? nome : !quantidade.value ? quantidade : valor).focus();
         return;
     }
@@ -182,9 +186,9 @@ function dadosFormularioCompra() {
 
 async function salvarCompra() {
     if (salvandoCompra) return;
-    if (!itensNovaCompra.length) return alert('Adicione pelo menos um item à compra.');
+    if (!itensNovaCompra.length) return mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'Adicione pelo menos um item à compra.' });
     if (['nome-produto-compra', 'quantidade-compra', 'valor-unitario-compra'].some(id => document.getElementById(id).value)) {
-        alert('Há um item em preenchimento. Adicione-o ao carrinho ou limpe os campos antes de salvar.');
+        mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'Há um item em preenchimento. Adicione-o ao carrinho ou limpe os campos antes de salvar.' });
         return;
     }
     const id = compraEmEdicao;
@@ -197,17 +201,17 @@ async function salvarCompra() {
     botao.disabled = true;
     botao.textContent = 'Salvando...';
     try {
-        const {response, data} = await apiJson(id ? `/compras/${id}` : '/compras', {
+        await apiJson(id ? `/compras/${id}` : '/compras', {
             method: id ? 'PUT' : 'POST',
             body: JSON.stringify(dados)
         });
-        if (!response.ok) throw new Error(data?.mensagem || 'Não foi possível salvar a compra.');
+
         if (!form.isConnected) return;
         limparFormularioCompra();
+        mostrarNotificacao({ tipo: 'sucesso', titulo: `Compra ${id ? 'editada' : 'cadastrada'} com sucesso!`, mensagem: '' });
         await listarCompras(0);
-        alert(`Compra ${id ? 'editada' : 'cadastrada'} com sucesso!`);
     } catch (erro) {
-        alert(erro.message || 'Erro ao conectar com o servidor.');
+        if (form.isConnected) notificarErro('Não foi possível salvar a compra', erro);
     } finally {
         salvandoCompra = false;
         form.inert = false;
@@ -218,8 +222,8 @@ async function salvarCompra() {
 }
 
 async function obterCompra(id) {
-    const {response, data} = await apiJson(`/compras/${id}`);
-    if (!response.ok) throw new Error(data?.mensagem || 'Erro ao carregar compra.');
+    const {data} = await apiJson(`/compras/${id}`);
+
     return data;
 }
 
@@ -245,7 +249,7 @@ async function editarCompra(id) {
         document.querySelector('.cadastro-compra').scrollIntoView({behavior: 'smooth'});
         document.getElementById('nome-produto-compra').focus({preventScroll: true});
     } catch (erro) {
-        alert(erro.message);
+        if (form?.isConnected) notificarErro('Não foi possível carregar a compra para edição', erro);
     }
 }
 
@@ -265,7 +269,7 @@ async function exibirCompra(id) {
         });
         preencherModalExibicaoCompra(compra);
     } catch (erro) {
-        alert(erro.message);
+        if (form?.isConnected) notificarErro('Não foi possível exibir a compra', erro);
     }
 }
 
@@ -352,7 +356,7 @@ areaCompra.addEventListener('submit', e => {
         e.preventDefault();
         const inicio = document.getElementById('data-inicio-compra').value;
         const fim = document.getElementById('usar-data-final-compra').checked ? document.getElementById('data-fim-compra').value : inicio;
-        if (fim < inicio) return alert('A data final deve ser igual ou posterior à data inicial.');
+        if (fim < inicio) return mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'A data final deve ser igual ou posterior à data inicial.' });
         filtroCompras = {inicio, fim};
         listarCompras(0);
     }

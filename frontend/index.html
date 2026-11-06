@@ -5,8 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Salgados da Lúcia Kojima</title>
+    <link rel="icon" type="image/png" href="imagens/logo-transparente.png">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/notificacoes.css">
     <script src="js/api.js" defer></script>
+    <script src="js/notificacoes.js" defer></script>
     <script src="js/listagem.js" defer></script>
     <script src="js/modal.js" defer></script>
     <script src="js/viacep.js" defer></script>
@@ -18,7 +21,7 @@
 <!-- 1. TELA DE LOGIN (Aparece primeiro) -->
 <section id="tela-login" class="login-container">
     <div class="card-login">
-        <img class="login-logo" src="imagens/logo.jpg" alt="Logo">
+        <img class="login-logo" src="imagens/logo-transparente.png" alt="Logo">
         <h2>Login</h2>
         <form id="form-login">
             <input type="text" id="usuario" placeholder="Usuário" required>
@@ -33,7 +36,7 @@
 
     <header>
         <a class="brand" href="#inicio" aria-label="Salgados da Lúcia Kojima - início">
-            <img class="brand-logo" src="imagens/logo.jpg" alt="Logo Salgados da Lúcia Kojima">
+            <img class="brand-logo" src="imagens/logo-transparente.png" alt="Logo Salgados da Lúcia Kojima">
             <span>Salgados da Lúcia Kojima</span>
         </a>
         <nav class="social-links" aria-label="Redes sociais">
@@ -80,5 +83,13 @@
     </div>
 </div>
 
+<!-- Região global: permanece disponível durante login, navegação e modais. -->
+<section id="lucia-notificacoes" class="lucia-notificacoes" aria-label="Notificações"></section>
+<div id="lucia-anuncios-sucesso" class="lucia-notificacao-leitor" role="status" aria-atomic="false"
+     aria-relevant="additions"></div>
+<div id="lucia-anuncios-urgentes" class="lucia-notificacao-leitor" role="alert" aria-atomic="false"
+     aria-relevant="additions"></div>
+
 </body>
+
 </html>

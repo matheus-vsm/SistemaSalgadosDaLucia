@@ -1,0 +1,27 @@
+.lucia-notificacao-sucesso { --cor: #2e7d32; --fundo: #edf7ee; }
+.lucia-notificacao-erro { --cor: #c62828; --fundo: #fff0f0; }
+.lucia-notificacao-aviso { --cor: #e0b400; --fundo: #fffbe6; }
+.lucia-notificacao-icone { flex-shrink: 0; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--fundo); color: var(--cor); }
+.lucia-notificacao-icone svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.lucia-notificacoes { --lucia-notificacao-topo: max(24px, calc(var(--lucia-cabecalho-altura, 0px) + var(--lucia-notificacao-deslocamento, 12px))); position: fixed; z-index: 11000; top: var(--lucia-notificacao-topo); right: 24px; width: min(390px, calc(100% - 32px)); max-height: calc(100dvh - var(--lucia-notificacao-topo) - 24px); overflow-y: auto; padding: 4px 4px 12px; display: grid; gap: 12px; pointer-events: none; }
+.lucia-notificacao { position: relative; display: flex; gap: 12px; align-items: flex-start; border: 1px solid #e5e5e5; border-left: 4px solid var(--cor); border-radius: 12px; padding: 18px 12px 18px 16px; background: white; box-shadow: 0 8px 28px #00000012; pointer-events: auto; animation: lucia-notificacao-entrar .22s ease-out; }
+.lucia-notificacao-conteudo { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.lucia-notificacao-titulo { display: block; margin: 1px 0 5px; font-size: 14px; line-height: 1.4; }
+.lucia-notificacao-mensagem { margin: 0; color: #616161; font-size: 13px; line-height: 1.6; }
+.lucia-notificacao-fechar { cursor: pointer; font-family: inherit; flex-shrink: 0; display: grid; place-items: center; width: 32px; height: 32px; margin-top: -5px; border: 0; border-radius: 6px; background: transparent; color: #666; font-size: 23px; line-height: 1; }
+.lucia-notificacao-fechar:hover { background: #f1f1f1; color: #212121; }
+.lucia-notificacao-progresso { position: absolute; bottom: 0; left: 8px; right: 8px; height: 3px; border-radius: 4px; overflow: hidden; }
+.lucia-notificacao-progresso::after { content: ""; display: block; height: 100%; background: var(--cor); transform-origin: left; animation: lucia-notificacao-contagem var(--lucia-notificacao-duracao, 4000ms) linear forwards; }
+.lucia-notificacao.lucia-notificacao-pausada .lucia-notificacao-progresso::after { animation-play-state: paused; }
+.lucia-notificacao-leitor { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@keyframes lucia-notificacao-entrar { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lucia-notificacao-contagem { to { transform: scaleX(0); } }
+@media (max-width: 540px) {
+    .lucia-notificacoes { --lucia-notificacao-topo: max(16px, calc(var(--lucia-cabecalho-altura, 0px) + var(--lucia-notificacao-deslocamento, 12px))); right: 12px; max-height: calc(100dvh - var(--lucia-notificacao-topo) - 16px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .lucia-notificacao { animation: none; }
+    .lucia-notificacao-progresso { display: none; }
+}
+
+.lucia-notificacao-fechar:focus-visible { outline: 2px solid var(--cor); outline-offset: 1px; }

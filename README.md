@@ -86,7 +86,11 @@ flowchart LR
 - [`frontend/app.js`](frontend/app.js): login e carregamento dinâmico de HTML, CSS e scripts dos módulos. O evento
   `pagina:carregada` inicia cada tela.
 - [`frontend/js/api.js`](frontend/js/api.js): endereço base da API, envio de JSON e Bearer token, leitura de respostas e
-  limpeza dos tokens em respostas `401`.
+  limpeza dos tokens em respostas `401`. `apiJson` retorna `{ response, data }` nos sucessos e lança `ApiError`
+  nas falhas HTTP, preservando o `message` enviado pelo backend (com compatibilidade para `mensagem`).
+- [`frontend/js/notificacoes.js`](frontend/js/notificacoes.js): notificações compartilhadas de sucesso, erro e aviso.
+  `mostrarNotificacao({ tipo, titulo, mensagem })` exibe um cartão; `notificarErro(titulo, erro)` preserva a mensagem
+  da API e devolve o texto para reutilização nos estados de erro das telas. Os estilos ficam em `frontend/css/notificacoes.css`.
 - [`frontend/js/modal.js`](frontend/js/modal.js): abertura e fechamento do modal reutilizável.
 - [`frontend/js/viacep.js`](frontend/js/viacep.js): consulta de endereço por CEP.
 - Pastas dos módulos: templates de páginas, cards, itens e modais, estilos específicos e lógica de integração com a API.

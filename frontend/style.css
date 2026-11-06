@@ -220,6 +220,10 @@ button[type="submit"]:hover {
     background-color: var(--line);
 }
 
+.btn-buscar-todos {
+    background-color: var(--surface);
+}
+
 .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;

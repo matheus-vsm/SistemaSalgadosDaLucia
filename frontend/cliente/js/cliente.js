@@ -28,16 +28,10 @@ async function listarClientes(pagina = 0, tipo = clientesAtivos, busca = termoBu
             ? `nome=${encodeURIComponent(termoBusca)}&ativo=${tipo}&page=${pagina}&size=4`
             : `page=${pagina}&size=4&ativo=${tipo}`;
         const {
-            response, // info da requisição (status, headers, etc.) - salva na variavel response
             data: clientesPage // os dados retornados (clientes) - salva na variavel clientesPage
         } = await apiJson(`${endpoint}?${parametros}`);
 
         if (!carregamento.atual()) return;
-
-        if (!response.ok) {
-            lista.innerHTML = '<div class="estado">Erro ao carregar clientes</div>';
-            return;
-        }
 
         const clientes = termoBusca
             ? clientesPage.content.filter(cliente => cliente.ativo === tipo)
@@ -69,7 +63,8 @@ async function listarClientes(pagina = 0, tipo = clientesAtivos, busca = termoBu
     } catch (erro) {
         if (!carregamento.atual()) return;
         console.error('Erro ao listar clientes:', erro);
-        lista.innerHTML = '<div class="estado">Erro ao conectar com o servidor</div>';
+        lista.innerHTML = '<div class="estado"><span></span></div>';
+        lista.querySelector('span').textContent = notificarErro('Não foi possível carregar os clientes', erro);
     } finally {
         carregamento.finalizar();
     }
@@ -118,14 +113,14 @@ async function preencherEndereco(event) {
 
         if (!form?.isConnected || campoCep.value !== cep || versao !== versaoFormularioCliente || salvandoCliente) return;
         if (!endereco) {
-            alert('CEP não encontrado');
+            mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'CEP não encontrado' });
             return;
         }
         ['logradouro', 'bairro', 'cidade', 'uf'].forEach(campo => {
             document.getElementById(campo).value = endereco[campo];
         });
     } catch (erro) {
-        if (form?.isConnected && versao === versaoFormularioCliente) alert('Erro ao consultar CEP.');
+        if (form?.isConnected && versao === versaoFormularioCliente) notificarErro('Não foi possível consultar o CEP', erro);
     }
 }
 
@@ -154,21 +149,20 @@ async function salvarCliente() {
     form.querySelector('fieldset').disabled = true;
 
     try {
-        const {response, data: resultado} = await apiJson(id ? `/clientes/${id}` : '/clientes', {
+        await apiJson(id ? `/clientes/${id}` : '/clientes', {
             method: id ? 'PUT' : 'POST',
             body: JSON.stringify(dados)
         });
 
         if (!form.isConnected || versao !== versaoFormularioCliente) return;
-        if (!response.ok) throw new Error(resultado?.mensagem || 'Erro ao salvar cliente');
 
-        alert(id ? 'Cliente editado com sucesso!' : 'Cliente cadastrado com sucesso!');
+        mostrarNotificacao({ tipo: 'sucesso', titulo: id ? 'Cliente editado com sucesso!' : 'Cliente cadastrado com sucesso!', mensagem: '' });
         limparFormularioCliente();
 
         await listarClientes(paginaAtual, clientesAtivos, termoBusca);
     } catch (erro) {
         if (form.isConnected && versao === versaoFormularioCliente) {
-            alert(erro.message || 'Erro ao conectar com o servidor.');
+            notificarErro('Não foi possível salvar o cliente', erro);
         }
     } finally {
         if (form.isConnected) {
@@ -211,10 +205,9 @@ async function iniciarEdicaoCliente(id) {
     form.querySelector('button[type=submit]').disabled = true;
 
     try {
-        const {response, data: cliente} = await apiJson(`/clientes/${id}`);
+        const {data: cliente} = await apiJson(`/clientes/${id}`);
 
         if (!form.isConnected || versao !== versaoFormularioCliente) return;
-        if (!response.ok) throw new Error('Erro ao carregar dados do cliente');
 
         limparFormularioCliente();
         document.getElementById('nome').value = cliente.nome ?? '';
@@ -231,7 +224,7 @@ async function iniciarEdicaoCliente(id) {
         form.scrollIntoView({behavior: 'smooth'});
         document.getElementById('nome').focus({preventScroll: true});
     } catch (erro) {
-        if (form.isConnected && versao === versaoFormularioCliente) alert(erro.message);
+        if (form.isConnected && versao === versaoFormularioCliente) notificarErro('Não foi possível carregar o cliente para edição', erro);
     } finally {
         if (form.isConnected) {
             carregandoEdicaoCliente = false;
@@ -243,8 +236,7 @@ async function iniciarEdicaoCliente(id) {
 async function abrirModalExibicao(id) {
     try {
         const response = await fetch('cliente/html/modal-exibir-cliente.html');
-
-        if (!response.ok) throw new Error('Erro ao carregar modal de exibição');
+        if (!response.ok) throw new Error('Erro ao carregar modal de exibição.');
 
         const htmlModal = await response.text();
 
@@ -256,22 +248,17 @@ async function abrirModalExibicao(id) {
         await buscarClientePorId(id, 'exibicao');
     } catch (erro) {
         console.error('Erro ao abrir modal de exibição:', erro);
-        alert('Erro ao abrir modal de exibição.');
+        notificarErro('Não foi possível exibir o cliente', erro);
     }
 }
 
 async function abrirModalAlterarStatus(id) {
     try {
         const response = await fetch('cliente/html/modal-alterar-status-cliente.html');
-
-        if (!response.ok) throw new Error('Erro ao carregar modal de alteração de status');
+        if (!response.ok) throw new Error('Erro ao carregar modal de alteração de status.');
 
         const htmlModal = await response.text();
-        const {response: respostaCliente, data: cliente} = await apiJson(`/clientes/${id}`);
-
-        if (!respostaCliente.ok) {
-            throw new Error('Erro ao carregar dados do cliente');
-        }
+        const {data: cliente} = await apiJson(`/clientes/${id}`);
 
         const ativar = cliente.ativo !== true;
         const estado = ativar ? 'ativar' : 'desativar';
@@ -284,7 +271,7 @@ async function abrirModalAlterarStatus(id) {
         configurarModalAlterarStatus(id, cliente, ativar, estado);
     } catch (erro) {
         console.error('Erro ao abrir modal de alteração de status:', erro);
-        alert('Erro ao abrir modal de alteração de status.');
+        notificarErro('Não foi possível abrir a alteração de status do cliente', erro);
     }
 }
 
@@ -299,17 +286,12 @@ function configurarModalAlterarStatus(id, cliente, ativar, estado) {
 
 async function buscarClientePorId(id, tipo) {
     try {
-        const {response, data: cliente} = await apiJson(`/clientes/${id}`);
-
-        if (!response.ok) {
-            alert('Erro ao carregar dados do cliente');
-            return;
-        }
+        const {data: cliente} = await apiJson(`/clientes/${id}`);
 
         preencherDadosCliente(cliente, tipo);
     } catch (erro) {
         console.error('Erro ao buscar cliente para edição:', erro);
-        alert('Erro ao conectar com o servidor.');
+        notificarErro('Não foi possível carregar o cliente', erro);
     }
 }
 
@@ -357,21 +339,17 @@ async function editarClientePelaExibicao() {
 
 async function alterarStatusCliente(id, estado) {
     try {
-        const {response, data: resultado} = await apiJson(`/clientes/${id}`, {
+        await apiJson(`/clientes/${id}`, {
             method: 'PATCH',
             body: JSON.stringify({status: estado})
         });
 
-        if (response.ok) {
-            alert(`Cliente ${estado ? 'ativado' : 'inativado'} com sucesso!`);
-            fecharModal();
-            listarClientes();
-        } else {
-            alert(resultado?.mensagem || `Erro ao ${estado ? 'ativar' : 'desativar'} cliente`);
-        }
+        mostrarNotificacao({ tipo: 'sucesso', titulo: `Cliente ${estado ? 'ativado' : 'inativado'} com sucesso!`, mensagem: '' });
+        fecharModal();
+        listarClientes();
     } catch (erro) {
         console.error('Erro na requisição:', erro);
-        alert(erro.message || 'Erro ao conectar com o servidor.');
+        notificarErro('Não foi possível alterar o status do cliente', erro);
     }
 }
 

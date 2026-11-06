@@ -11,7 +11,7 @@
             type="checkbox" id="usar-data-final-pedido"> Usar data final</label><label for="data-fim-pedido">Data
         final:</label><input type="date" id="data-fim-pedido" disabled>
         <button type="submit" class="btn btn-primario">Filtrar</button>
-        <button type="button" id="buscar-todos-pedidos" class="btn btn-secundario">Buscar todos</button>
+        <button type="button" id="buscar-todos-pedidos" class="btn btn-secundario btn-buscar-todos">Buscar todos</button>
     </form>
     <div id="lista-pedidos" data-altura-cards="uniforme" class="lista-paginada lista-pedidos" aria-live="polite">
         <div class="estado">Carregando pedidos...</div>
@@ -82,7 +82,7 @@
                                 salgado
                             </button>
                         </div>
-                        <div class="preview-pedido"><img src="imagens/coxinha.jpg" alt="Imagem do salgado"></div>
+                        <div id="preview-salgado-pedido" class="preview-pedido"><img class="hidden" src="imagens/coxinha.jpg" alt="Imagem ilustrativa de uma coxinha"></div>
                     </div>
                 </fieldset>
                 <div class="agendamento-grid">
