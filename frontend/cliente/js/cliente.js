@@ -10,6 +10,7 @@ let termoBusca = '';
 async function listarClientes(pagina = 0, tipo = clientesAtivos, busca = termoBusca) {
     const lista = document.getElementById('lista');
     if (!lista) return;
+    const carregamento = iniciarCarregamentoListagem(lista);
 
     clientesAtivos = tipo;
     termoBusca = busca.trim();
@@ -31,7 +32,7 @@ async function listarClientes(pagina = 0, tipo = clientesAtivos, busca = termoBu
             data: clientesPage // os dados retornados (clientes) - salva na variavel clientesPage
         } = await apiJson(`${endpoint}?${parametros}`);
 
-        if (!lista.isConnected) return;
+        if (!carregamento.atual()) return;
 
         if (!response.ok) {
             lista.innerHTML = '<div class="estado">Erro ao carregar clientes</div>';
@@ -66,8 +67,11 @@ async function listarClientes(pagina = 0, tipo = clientesAtivos, busca = termoBu
         document.getElementById('btn-anterior').onclick = () => listarClientes(paginaAtual - 1, clientesAtivos, termoBusca);
         document.getElementById('btn-proximo').onclick = () => listarClientes(paginaAtual + 1, clientesAtivos, termoBusca);
     } catch (erro) {
+        if (!carregamento.atual()) return;
         console.error('Erro ao listar clientes:', erro);
         lista.innerHTML = '<div class="estado">Erro ao conectar com o servidor</div>';
+    } finally {
+        carregamento.finalizar();
     }
 }
 

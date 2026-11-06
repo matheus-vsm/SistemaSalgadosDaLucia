@@ -13,7 +13,7 @@
         <button type="submit" class="btn btn-primario">Filtrar</button>
         <button type="button" id="buscar-todos-pedidos" class="btn btn-secundario">Buscar todos</button>
     </form>
-    <div id="lista-pedidos" class="lista-pedidos">
+    <div id="lista-pedidos" class="lista-paginada lista-pedidos" aria-live="polite">
         <div class="estado">Carregando pedidos...</div>
     </div>
     <div id="paginacao-pedidos" class="paginacao">
@@ -96,9 +96,6 @@
                         <option value="">Selecione</option>
                     </select></div>
                 </div>
-                <button type="submit" class="btn btn-primario">Cadastrar Pedido</button>
-                <button type="button" id="cancelar-edicao-pedido" class="btn btn-secundario hidden">Cancelar edição
-                </button>
             </div>
             <aside class="carrinho-pedido"><h2>Itens</h2>
                 <div id="itens-pedido" class="itens-pedido">
@@ -106,6 +103,10 @@
                 </div>
                 <div class="total-pedido">Valor Total: <strong id="valor-total-pedido">R$ 0,00</strong></div>
             </aside>
+        </div>
+        <div class="acoes-cadastro">
+            <button type="submit" class="btn btn-primario">Cadastrar Pedido</button>
+            <button type="button" id="cancelar-edicao-pedido" class="btn btn-secundario hidden">Cancelar edição</button>
         </div>
     </form>
 </section>

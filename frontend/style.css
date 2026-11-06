@@ -263,6 +263,14 @@ fieldset {
 #form-cliente > fieldset,
 #form-usuario > fieldset {
     background: var(--surface);
+    margin-bottom: 0;
+}
+
+form > .acoes-cadastro {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
 }
 
 legend {
@@ -295,6 +303,20 @@ legend {
 }
 
 /* --- Cards --- */
+
+.lista-paginada {
+    max-height: 65vh;
+    overflow: auto;
+    overflow-anchor: none;
+    scrollbar-gutter: stable;
+    align-content: start;
+    padding: 2px 4px 2px 2px;
+}
+
+.lista-paginada[aria-busy="true"] {
+    opacity: .65;
+    cursor: progress;
+}
 
 .card {
     display: flex;

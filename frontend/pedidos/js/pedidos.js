@@ -79,7 +79,7 @@ function montarFiltrosStatusPedido() {
 async function listarPedidos(pagina = 0) {
     const lista = document.getElementById('lista-pedidos');
     if (!lista) return;
-    lista.innerHTML = '<div class="estado">Carregando pedidos...</div>';
+    const carregamento = iniciarCarregamentoListagem(lista);
     const params = new URLSearchParams({statusPedido: statusPedidoSelecionado, page: pagina, size: 4});
     if (filtrarPedidosPorData) {
         const inicio = document.getElementById('data-inicio-pedido')?.value;
@@ -90,6 +90,7 @@ async function listarPedidos(pagina = 0) {
     }
     try {
         const {response, data} = await apiJson(`/pedidos?${params}`);
+        if (!carregamento.atual()) return;
         if (!response.ok) throw new Error(data?.mensagem || 'Erro ao listar pedidos');
         lista.innerHTML = data.content?.length ? data.content.map(criarCardPedido).join('') : '<div class="estado">Nenhum pedido encontrado</div>';
         paginaPedidos = data.page?.number ?? data.number ?? 0;
@@ -98,8 +99,11 @@ async function listarPedidos(pagina = 0) {
         document.getElementById('pedido-anterior').disabled = paginaPedidos === 0;
         document.getElementById('pedido-proximo').disabled = paginaPedidos + 1 >= total;
     } catch (erro) {
+        if (!carregamento.atual()) return;
         console.error(erro);
         lista.innerHTML = '<div class="estado">Erro ao carregar pedidos</div>';
+    } finally {
+        carregamento.finalizar();
     }
 }
 

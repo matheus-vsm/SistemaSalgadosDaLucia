@@ -339,8 +339,16 @@ Para executar a fase de testes do Maven, dentro de `backend`:
 Há seis classes ativas de testes unitários de serviços: `ClienteServiceTest`, `SalgadoServiceTest`,
 `EstoqueServiceTest`, `PedidoServiceTest`, `CompraServiceTest` e `UsuarioServiceTest`, com JUnit Jupiter e Mockito.
 Na revisão de 04/11/2026, foram executados **167 testes, sem falhas, erros ou testes ignorados**. Os testes usam mocks;
-esse resultado não comprova integração HTTP, segurança, migrações ou consultas em banco real. O frontend não possui
-suíte automatizada configurada. Veja os [cenários e limites na wiki](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/9-%E2%80%90-Testes-e-Rastreabilidade).
+esse resultado não comprova integração HTTP, segurança, migrações ou consultas em banco real.
+
+O frontend possui 25 testes de comportamento das listagens, executáveis com Node.js, sem instalar dependências:
+
+```powershell
+node --test frontend/tests/listagem.test.cjs
+```
+
+Os testes simulam a API e os elementos usados pelas funções de listagem para verificar carregamento, falhas e respostas
+atrasadas nas cinco telas. Não validam o layout ou a navegação em um navegador real. Veja os [cenários e limites na wiki](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/9-%E2%80%90-Testes-e-Rastreabilidade).
 
 Além das telas operacionais implementadas, permanecem os seguintes pontos:
 

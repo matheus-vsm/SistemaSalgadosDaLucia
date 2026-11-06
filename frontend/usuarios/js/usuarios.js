@@ -2,7 +2,6 @@ let paginaUsuarios = 0;
 let usuariosAtivos = true;
 let perfisUsuario = [];
 let usuariosListados = [];
-let requisicaoUsuarios = 0;
 let templateCardUsuario = '';
 let termoBuscaUsuarios = '';
 
@@ -66,12 +65,10 @@ function criarCardUsuario(usuario) {
 async function listarUsuarios(numero = 0) {
     const lista = document.getElementById('lista-usuarios');
     if (!lista) return;
+    const carregamento = iniciarCarregamentoListagem(lista);
 
-    const chamada = ++requisicaoUsuarios;
     document.getElementById('usuarios-anterior').disabled = true;
     document.getElementById('usuarios-proximo').disabled = true;
-    document.getElementById('usuarios-pagina').textContent = '';
-    lista.innerHTML = '<div class="estado">Carregando usuários...</div>';
 
     try {
         if (!templateCardUsuario) {
@@ -88,9 +85,8 @@ async function listarUsuarios(numero = 0) {
 
         const {response, data} = await apiJson(`${endpoint}?${parametros}`);
 
+        if (!carregamento.atual()) return;
         if (!response.ok) throw new Error(data?.mensagem || 'Erro ao carregar usuários.');
-
-        if (chamada !== requisicaoUsuarios || !lista.isConnected) return;
 
         usuariosListados = data.content || [];
         const detalhes = data.page || data;
@@ -105,10 +101,12 @@ async function listarUsuarios(numero = 0) {
         document.getElementById('usuarios-anterior').disabled = paginaUsuarios === 0;
         document.getElementById('usuarios-proximo').disabled = paginaUsuarios + 1 >= (detalhes.totalPages || 0);
     } catch (erro) {
-        if (chamada !== requisicaoUsuarios || !lista.isConnected) return;
+        if (!carregamento.atual()) return;
 
         lista.innerHTML = '<div class="estado"><span></span> <button type="button" class="btn btn-secundario" id="usuarios-recarregar">Tentar novamente</button></div>';
         lista.querySelector('span').textContent = erro.message || 'Erro ao conectar com o servidor.';
+    } finally {
+        carregamento.finalizar();
     }
 }
 

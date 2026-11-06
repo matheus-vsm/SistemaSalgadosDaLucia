@@ -15,7 +15,7 @@
         <button type="submit">Buscar</button>
     </form>
     <div class="container">
-        <div id="lista-salgados">
+        <div id="lista-salgados" class="lista-paginada" aria-live="polite">
             <div class="estado" id="estado-inicial-salgados">Carregando salgados...</div>
         </div>
     </div>
@@ -73,9 +73,9 @@
                 </div>
             </div>
         </fieldset>
-        <br>
-
-        <button type="submit" class="btn btn-primario">Cadastrar Salgado</button>
-        <button type="button" id="cancelar-edicao-salgado" class="btn btn-secundario hidden">Cancelar edição</button>
+        <div class="acoes-cadastro">
+            <button type="submit" class="btn btn-primario">Cadastrar Salgado</button>
+            <button type="button" id="cancelar-edicao-salgado" class="btn btn-secundario hidden">Cancelar edição</button>
+        </div>
     </form>
 </section>

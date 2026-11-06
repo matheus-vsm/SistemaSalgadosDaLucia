@@ -12,7 +12,7 @@
         <input type="search" id="busca-usuarios" placeholder="Buscar por nome" aria-label="Buscar usuário por nome">
         <button type="submit" class="btn btn-primario">Buscar</button>
     </form>
-    <div id="lista-usuarios" aria-live="polite"><div class="estado">Carregando usuários...</div></div>
+    <div id="lista-usuarios" aria-live="polite" class="lista-paginada"><div class="estado">Carregando usuários...</div></div>
     <div class="paginacao paginacao-usuarios">
         <button type="button" id="usuarios-anterior" class="btn btn-secundario" disabled>Anterior</button>
         <span id="usuarios-pagina" aria-live="polite"></span>
@@ -42,6 +42,8 @@
                 <p id="usuarios-erro-perfis" role="status" hidden></p>
             </div>
         </fieldset>
-        <button type="submit" id="usuario-cadastrar" class="btn btn-primario" disabled>Cadastrar Usuário</button>
+        <div class="acoes-cadastro">
+            <button type="submit" id="usuario-cadastrar" class="btn btn-primario" disabled>Cadastrar Usuário</button>
+        </div>
     </form>
 </section>

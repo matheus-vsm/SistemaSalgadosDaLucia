@@ -2,7 +2,6 @@ let paginaCompras = 0;
 let itensNovaCompra = [];
 let compraEmEdicao = null;
 let filtroCompras = null;
-let consultaCompras = 0;
 let salvandoCompra = false;
 let templateCardCompra = '';
 let templateItemCompra = '';
@@ -79,11 +78,9 @@ function limparFormularioCompra() {
 async function listarCompras(pagina = 0) {
     const lista = document.getElementById('lista-compras');
     if (!lista) return;
-    const consulta = ++consultaCompras;
-    lista.innerHTML = '<div class="estado">Carregando compras...</div>';
+    const carregamento = iniciarCarregamentoListagem(lista);
     document.getElementById('compra-anterior').disabled = true;
     document.getElementById('compra-proximo').disabled = true;
-    document.getElementById('compra-pagina-atual').textContent = '';
     const params = new URLSearchParams({page: Math.max(0, pagina), size: 4, sort: 'dataCompra,desc'});
     if (filtroCompras) {
         params.set('dataInicioCompra', dataFiltroCompra(filtroCompras.inicio));
@@ -91,7 +88,7 @@ async function listarCompras(pagina = 0) {
     }
     try {
         const {response, data} = await apiJson(`/compras?${params}`);
-        if (consulta !== consultaCompras || !lista.isConnected) return;
+        if (!carregamento.atual()) return;
         if (!response.ok) throw new Error(data?.mensagem || 'Erro ao carregar compras.');
         lista.innerHTML = data.content?.length ? data.content.map(criarCardCompra).join('') : '<div class="estado">Nenhuma compra encontrada</div>';
         paginaCompras = data.page?.number ?? data.number ?? 0;
@@ -100,8 +97,10 @@ async function listarCompras(pagina = 0) {
         document.getElementById('compra-anterior').disabled = paginaCompras === 0;
         document.getElementById('compra-proximo').disabled = paginaCompras + 1 >= total;
     } catch (erro) {
-        if (consulta !== consultaCompras || !lista.isConnected) return;
+        if (!carregamento.atual()) return;
         lista.innerHTML = `<div class="estado">${escaparCompra(erro.message)} <button type="button" class="btn btn-secundario" id="tentar-compras">Tentar novamente</button></div>`;
+    } finally {
+        carregamento.finalizar();
     }
 }
 
@@ -297,7 +296,6 @@ function editarCompraPelaExibicao(id) {
 
 const areaCompra = document.getElementById('conteudo-dinamico');
 areaCompra.addEventListener('pagina:carregada', e => {
-    ++consultaCompras;
     if (e.detail.modulo !== 'compra') {
         definirModoEdicaoCompra(false);
         return;

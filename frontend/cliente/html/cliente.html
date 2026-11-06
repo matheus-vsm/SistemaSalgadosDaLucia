@@ -13,7 +13,7 @@
         <button type="submit">Buscar</button>
     </form>
     <div class="container">
-        <div id="lista">
+        <div id="lista" class="lista-paginada" aria-live="polite">
             <div class="estado" id="estado-inicial">Carregando clientes...</div>
         </div>
     </div>
@@ -75,9 +75,9 @@
                 </div>
             </fieldset>
         </fieldset>
-        <br>
-
-        <button type="submit" class="btn btn-primario">Cadastrar Cliente</button>
-        <button type="button" id="cancelar-edicao-cliente" class="btn btn-secundario hidden">Cancelar edição</button>
+        <div class="acoes-cadastro">
+            <button type="submit" class="btn btn-primario">Cadastrar Cliente</button>
+            <button type="button" id="cancelar-edicao-cliente" class="btn btn-secundario hidden">Cancelar edição</button>
+        </div>
     </form>
 </section>

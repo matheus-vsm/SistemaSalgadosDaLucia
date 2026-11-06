@@ -12,6 +12,7 @@ let urlPreviewImagemSalgado = null;
 async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBuscaSalgados) {
     const lista = document.getElementById('lista-salgados');
     if (!lista) return;
+    const carregamento = iniciarCarregamentoListagem(lista);
 
     salgadosAtivos = tipo;
     termoBuscaSalgados = busca.trim();
@@ -32,7 +33,7 @@ async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBu
             data: salgadosPage
         } = await apiJson(`${endpoint}?${parametros}`);
 
-        if (!lista.isConnected) return;
+        if (!carregamento.atual()) return;
 
         if (!response.ok) {
             lista.innerHTML = '<div class="estado">Erro ao carregar salgados</div>';
@@ -64,8 +65,11 @@ async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBu
         document.getElementById('btn-anterior-salgados').onclick = () => listarSalgados(paginaAtualSalgados - 1, salgadosAtivos, termoBuscaSalgados);
         document.getElementById('btn-proximo-salgados').onclick = () => listarSalgados(paginaAtualSalgados + 1, salgadosAtivos, termoBuscaSalgados);
     } catch (erro) {
+        if (!carregamento.atual()) return;
         console.error('Erro ao listar salgados:', erro);
         lista.innerHTML = '<div class="estado">Erro ao conectar com o servidor</div>';
+    } finally {
+        carregamento.finalizar();
     }
 }
 
