@@ -38,10 +38,14 @@ async function carregarDadosIniciaisCompra() {
             fetch('compras/html/card-compra.html'),
             fetch('compras/html/item-compra.html')
         ]);
+
         if (!respostaCard.ok || !respostaItem.ok) throw new Error('Erro ao carregar templates de compras');
+
         templateCardCompra = await respostaCard.text();
         templateItemCompra = await respostaItem.text();
+
         if (!form.isConnected) return;
+
         limparFormularioCompra();
         form.inert = false;
         listarCompras(0);

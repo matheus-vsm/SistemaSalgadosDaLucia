@@ -14,6 +14,7 @@ async function listarClientes(pagina = 0, tipo = clientesAtivos, busca = termoBu
     clientesAtivos = tipo;
     termoBusca = busca.trim();
     atualizarFiltroClientes();
+
     try {
         if (!templateCardCliente) {
             const respostaCard = await fetch('cliente/html/card-cliente.html');
@@ -42,12 +43,14 @@ async function listarClientes(pagina = 0, tipo = clientesAtivos, busca = termoBu
             : clientesPage.content;
 
         paginaAtual = clientesPage.page.number;
+
         if (!clientes || clientes.length === 0) {
             if (pagina > 0) return listarClientes(pagina - 1, tipo, busca);
             document.getElementById('pagina-atual').textContent = 'Página 1 de 1';
             document.getElementById('btn-anterior').disabled = true;
             document.getElementById('btn-proximo').disabled = true;
             lista.innerHTML = '<div class="estado">Nenhum cliente cadastrado</div>';
+
             return;
         }
 
@@ -105,8 +108,10 @@ async function preencherEndereco(event) {
     const form = campoCep.closest('form');
     const cep = campoCep.value;
     const versao = versaoFormularioCliente;
+
     try {
         const endereco = await buscarEnderecoPorCep(cep);
+
         if (!form?.isConnected || campoCep.value !== cep || versao !== versaoFormularioCliente || salvandoCliente) return;
         if (!endereco) {
             alert('CEP não encontrado');
@@ -123,6 +128,7 @@ async function preencherEndereco(event) {
 async function salvarCliente() {
     const form = document.getElementById('form-cliente');
     if (!form || salvandoCliente || carregandoEdicaoCliente) return;
+
     const id = clienteEmEdicao;
     const versao = versaoFormularioCliente;
     const dados = {
@@ -138,18 +144,23 @@ async function salvarCliente() {
             uf: document.getElementById('uf').value
         }
     };
+
     salvandoCliente = true;
     form.querySelectorAll('button').forEach(botao => botao.disabled = true);
     form.querySelector('fieldset').disabled = true;
+
     try {
         const {response, data: resultado} = await apiJson(id ? `/clientes/${id}` : '/clientes', {
             method: id ? 'PUT' : 'POST',
             body: JSON.stringify(dados)
         });
+
         if (!form.isConnected || versao !== versaoFormularioCliente) return;
         if (!response.ok) throw new Error(resultado?.mensagem || 'Erro ao salvar cliente');
+
         alert(id ? 'Cliente editado com sucesso!' : 'Cliente cadastrado com sucesso!');
         limparFormularioCliente();
+
         await listarClientes(paginaAtual, clientesAtivos, termoBusca);
     } catch (erro) {
         if (form.isConnected && versao === versaoFormularioCliente) {
@@ -168,6 +179,7 @@ function definirModoEdicaoCliente(ativo) {
     document.body.classList.toggle('edicao-cliente-ativa', ativo);
     const lista = document.querySelector('.listagem-clientes');
     const navegacao = document.querySelector('.sidebar nav');
+
     if (lista) lista.inert = ativo;
     if (navegacao) navegacao.inert = ativo;
 }
@@ -176,7 +188,9 @@ function limparFormularioCliente() {
     versaoFormularioCliente++;
     clienteEmEdicao = null;
     const form = document.getElementById('form-cliente');
+
     if (!form) return;
+
     form.reset();
     document.getElementById('titulo-form-cliente').textContent = 'Cadastro';
     form.querySelector('button[type=submit]').textContent = 'Cadastrar Cliente';
@@ -187,13 +201,17 @@ function limparFormularioCliente() {
 async function iniciarEdicaoCliente(id) {
     const form = document.getElementById('form-cliente');
     if (!form || salvandoCliente || carregandoEdicaoCliente || clienteEmEdicao !== null) return;
+
     const versao = versaoFormularioCliente;
     carregandoEdicaoCliente = true;
     form.querySelector('button[type=submit]').disabled = true;
+
     try {
         const {response, data: cliente} = await apiJson(`/clientes/${id}`);
+
         if (!form.isConnected || versao !== versaoFormularioCliente) return;
         if (!response.ok) throw new Error('Erro ao carregar dados do cliente');
+
         limparFormularioCliente();
         document.getElementById('nome').value = cliente.nome ?? '';
         document.getElementById('telefone').value = cliente.telefone ?? '';
@@ -202,6 +220,7 @@ async function iniciarEdicaoCliente(id) {
         });
         clienteEmEdicao = cliente.id;
         document.getElementById('titulo-form-cliente').textContent = `Edição do Cliente n° ${cliente.id}`;
+
         form.querySelector('button[type=submit]').textContent = 'Salvar alterações';
         document.getElementById('cancelar-edicao-cliente').classList.remove('hidden');
         definirModoEdicaoCliente(true);
@@ -229,6 +248,7 @@ async function abrirModalExibicao(id) {
             titulo: 'Exibir Cliente',
             conteudoHtml: htmlModal
         });
+
         await buscarClientePorId(id, 'exibicao');
     } catch (erro) {
         console.error('Erro ao abrir modal de exibição:', erro);
@@ -251,6 +271,7 @@ async function abrirModalAlterarStatus(id) {
 
         const ativar = cliente.ativo !== true;
         const estado = ativar ? 'ativar' : 'inativar';
+
         abrirModal({
             titulo: `${estado[0].toUpperCase()}${estado.slice(1)} Cliente`,
             conteudoHtml: htmlModal
@@ -280,6 +301,7 @@ async function buscarClientePorId(id, tipo) {
             alert('Erro ao carregar dados do cliente');
             return;
         }
+
         preencherDadosCliente(cliente, tipo);
     } catch (erro) {
         console.error('Erro ao buscar cliente para edição:', erro);
@@ -313,6 +335,7 @@ function preencherDadosCliente(cliente, tipo) {
     preencherCampo(`bairro-${tipo}`, cliente.endereco?.bairro);
     preencherCampo(`cidade-${tipo}`, cliente.endereco?.cidade);
     preencherCampo(`uf-${tipo}`, cliente.endereco?.uf);
+
     if (tipo === 'exibicao') {
         preencherCampo(`endereco-${tipo}`, `${cliente.endereco?.logradouro ?? ''}, 
         ${cliente.endereco?.numero ?? ''}${cliente.endereco?.complemento ? ', ' +
@@ -324,6 +347,7 @@ function preencherDadosCliente(cliente, tipo) {
 async function editarClientePelaExibicao() {
     const id = document.getElementById('cliente-id-exibicao').value;
     fecharModal();
+
     await iniciarEdicaoCliente(id);
 }
 
@@ -354,6 +378,7 @@ conteudoDinamico.addEventListener('pagina:carregada', (event) => {
     clienteEmEdicao = null;
     salvandoCliente = false;
     carregandoEdicaoCliente = false;
+
     if (document.body.classList.contains('edicao-cliente-ativa')) definirModoEdicaoCliente(false);
     if (event.detail.modulo === 'cliente') {
         limparFormularioCliente();
@@ -387,9 +412,11 @@ conteudoDinamico.addEventListener('submit', async (event) => {
     if (event.target.id === 'form-busca-clientes') {
         event.preventDefault();
         const busca = document.getElementById('busca-clientes').value;
+
         await listarClientes(0, true, busca);
     } else if (event.target.id === 'form-cliente') {
         event.preventDefault();
+
         await salvarCliente();
     } else {
         return;
@@ -399,7 +426,9 @@ conteudoDinamico.addEventListener('submit', async (event) => {
 document.getElementById('conteudo-dinamico').addEventListener('click', event => {
     const botao = event.target.closest('[data-acao-cliente]');
     if (!botao) return;
+
     const id = Number(botao.closest('[data-cliente-id]').dataset.clienteId);
+
     if (botao.dataset.acaoCliente === 'editar') iniciarEdicaoCliente(id);
     if (botao.dataset.acaoCliente === 'exibir') abrirModalExibicao(id);
     if (botao.dataset.acaoCliente === 'status') abrirModalAlterarStatus(id);
