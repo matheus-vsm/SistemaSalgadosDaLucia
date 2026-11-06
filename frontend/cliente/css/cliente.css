@@ -202,3 +202,10 @@
     border-color: #000;
     color: #fff;
 }
+
+body.edicao-cliente-ativa .listagem-clientes,
+body.edicao-cliente-ativa .sidebar nav {
+    opacity: .4;
+    pointer-events: none;
+    user-select: none;
+}

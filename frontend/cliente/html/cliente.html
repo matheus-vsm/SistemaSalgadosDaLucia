@@ -1,6 +1,6 @@
 <h1>Área de Clientes</h1>
 <hr>
-<section>
+<section class="listagem-clientes">
     <div class="clientes-cabecalho">
         <h2>Clientes Cadastrados</h2>
         <div class="filtro-clientes" role="group" aria-label="Filtrar clientes por situação">
@@ -28,7 +28,7 @@
 </section>
 
 <section>
-    <h2>Cadastro de Cliente</h2>
+    <h2 id="titulo-form-cliente">Cadastro de Cliente</h2>
     <form id="form-cliente">
         <fieldset>
             <label for="nome">Nome completo:</label>
@@ -73,5 +73,6 @@
         <br>
 
         <button type="submit" class="btn btn-primario">Cadastrar Cliente</button>
+        <button type="button" id="cancelar-edicao-cliente" class="btn btn-secundario hidden">Cancelar edição</button>
     </form>
 </section>

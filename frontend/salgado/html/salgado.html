@@ -1,6 +1,6 @@
 <h1>Área de Salgados</h1>
 <hr>
-<section>
+<section class="listagem-salgados">
     <div class="salgados-cabecalho">
         <h2>Salgados Cadastrados</h2>
         <div class="filtro-salgados" role="group" aria-label="Filtrar salgados por situação">
@@ -30,7 +30,7 @@
 </section>
 
 <section>
-    <h2>Cadastro de Salgado</h2>
+    <h2 id="titulo-form-salgado">Cadastro de Salgado</h2>
     <form id="form-salgado">
         <fieldset>
             <div class="salgado-grid">
@@ -70,5 +70,6 @@
         <br>
 
         <button type="submit" class="btn btn-primario">Cadastrar Salgado</button>
+        <button type="button" id="cancelar-edicao-salgado" class="btn btn-secundario hidden">Cancelar edição</button>
     </form>
 </section>

@@ -1,4 +1,8 @@
 let templateCardCliente = '';
+let clienteEmEdicao = null;
+let salvandoCliente = false;
+let carregandoEdicaoCliente = false;
+let versaoFormularioCliente = 0;
 let paginaAtual = 0;
 let clientesAtivos = true;
 let termoBusca = '';
@@ -26,16 +30,23 @@ async function listarClientes(pagina = 0, tipo = clientesAtivos, busca = termoBu
             data: clientesPage // os dados retornados (clientes) - salva na variavel clientesPage
         } = await apiJson(`${endpoint}?${parametros}`);
 
+        if (!lista.isConnected) return;
+
         if (!response.ok) {
             lista.innerHTML = '<div class="estado">Erro ao carregar clientes</div>';
             return;
         }
 
         const clientes = termoBusca
-            ? clientesPage.content.filter(cliente => cliente.ativo === true)
+            ? clientesPage.content.filter(cliente => cliente.ativo === tipo)
             : clientesPage.content;
 
+        paginaAtual = clientesPage.page.number;
         if (!clientes || clientes.length === 0) {
+            if (pagina > 0) return listarClientes(pagina - 1, tipo, busca);
+            document.getElementById('pagina-atual').textContent = 'Página 1 de 1';
+            document.getElementById('btn-anterior').disabled = true;
+            document.getElementById('btn-proximo').disabled = true;
             lista.innerHTML = '<div class="estado">Nenhum cliente cadastrado</div>';
             return;
         }
@@ -90,22 +101,30 @@ function criarCardHTML(cliente) {
 }
 
 async function preencherEndereco(event) {
-    const endereco = await buscarEnderecoPorCep(event.target.value);
-
-    if (!endereco) {
-        alert('CEP não encontrado');
-        return;
+    const campoCep = event.target;
+    const form = campoCep.closest('form');
+    const cep = campoCep.value;
+    const versao = versaoFormularioCliente;
+    try {
+        const endereco = await buscarEnderecoPorCep(cep);
+        if (!form?.isConnected || campoCep.value !== cep || versao !== versaoFormularioCliente || salvandoCliente) return;
+        if (!endereco) {
+            alert('CEP não encontrado');
+            return;
+        }
+        ['logradouro', 'bairro', 'cidade', 'uf'].forEach(campo => {
+            document.getElementById(campo).value = endereco[campo];
+        });
+    } catch (erro) {
+        if (form?.isConnected && versao === versaoFormularioCliente) alert('Erro ao consultar CEP.');
     }
-
-    const sufixo = event.target.id === 'cep-edicao' ? '-edicao' : '';
-
-    document.getElementById(`logradouro${sufixo}`).value = endereco.logradouro;
-    document.getElementById(`bairro${sufixo}`).value = endereco.bairro;
-    document.getElementById(`cidade${sufixo}`).value = endereco.cidade;
-    document.getElementById(`uf${sufixo}`).value = endereco.uf;
 }
 
-async function cadastrarCliente() {
+async function salvarCliente() {
+    const form = document.getElementById('form-cliente');
+    if (!form || salvandoCliente || carregandoEdicaoCliente) return;
+    const id = clienteEmEdicao;
+    const versao = versaoFormularioCliente;
     const dados = {
         nome: document.getElementById('nome').value,
         telefone: document.getElementById('telefone').value,
@@ -119,45 +138,82 @@ async function cadastrarCliente() {
             uf: document.getElementById('uf').value
         }
     };
-
+    salvandoCliente = true;
+    form.querySelectorAll('button').forEach(botao => botao.disabled = true);
+    form.querySelector('fieldset').disabled = true;
     try {
-        const {
-            response,
-            data: resultado
-        } = await apiJson('/clientes', {
-            method: 'POST',
+        const {response, data: resultado} = await apiJson(id ? `/clientes/${id}` : '/clientes', {
+            method: id ? 'PUT' : 'POST',
             body: JSON.stringify(dados)
         });
-
-        if (response.ok) {
-            alert('Cliente cadastrado com sucesso!');
-            document.getElementById('form-cliente').reset();
-            listarClientes();
-        } else {
-            alert(resultado?.mensagem || 'Erro ao cadastrar cliente');
-        }
+        if (!form.isConnected || versao !== versaoFormularioCliente) return;
+        if (!response.ok) throw new Error(resultado?.mensagem || 'Erro ao salvar cliente');
+        alert(id ? 'Cliente editado com sucesso!' : 'Cliente cadastrado com sucesso!');
+        limparFormularioCliente();
+        await listarClientes(paginaAtual, clientesAtivos, termoBusca);
     } catch (erro) {
-        console.error('Erro na requisição:', erro);
-        alert(erro.message || 'Erro ao conectar com o servidor.');
+        if (form.isConnected && versao === versaoFormularioCliente) {
+            alert(erro.message || 'Erro ao conectar com o servidor.');
+        }
+    } finally {
+        if (form.isConnected) {
+            salvandoCliente = false;
+            form.querySelectorAll('button').forEach(botao => botao.disabled = false);
+            form.querySelector('fieldset').disabled = false;
+        }
     }
 }
 
-async function abrirModalEdicao(id) {
+function definirModoEdicaoCliente(ativo) {
+    document.body.classList.toggle('edicao-cliente-ativa', ativo);
+    const lista = document.querySelector('.listagem-clientes');
+    const navegacao = document.querySelector('.sidebar nav');
+    if (lista) lista.inert = ativo;
+    if (navegacao) navegacao.inert = ativo;
+}
+
+function limparFormularioCliente() {
+    versaoFormularioCliente++;
+    clienteEmEdicao = null;
+    const form = document.getElementById('form-cliente');
+    if (!form) return;
+    form.reset();
+    document.getElementById('titulo-form-cliente').textContent = 'Cadastro de Cliente';
+    form.querySelector('button[type=submit]').textContent = 'Cadastrar Cliente';
+    document.getElementById('cancelar-edicao-cliente').classList.add('hidden');
+    definirModoEdicaoCliente(false);
+}
+
+async function iniciarEdicaoCliente(id) {
+    const form = document.getElementById('form-cliente');
+    if (!form || salvandoCliente || carregandoEdicaoCliente || clienteEmEdicao !== null) return;
+    const versao = versaoFormularioCliente;
+    carregandoEdicaoCliente = true;
+    form.querySelector('button[type=submit]').disabled = true;
     try {
-        const response = await fetch('cliente/html/modal-editar-cliente.html');
-
-        if (!response.ok) throw new Error('Erro ao carregar modal de edição');
-
-        const htmlModal = await response.text();
-
-        abrirModal({
-            titulo: 'Editar Cliente',
-            conteudoHtml: htmlModal
+        const {response, data: cliente} = await apiJson(`/clientes/${id}`);
+        if (!form.isConnected || versao !== versaoFormularioCliente) return;
+        if (!response.ok) throw new Error('Erro ao carregar dados do cliente');
+        limparFormularioCliente();
+        document.getElementById('nome').value = cliente.nome ?? '';
+        document.getElementById('telefone').value = cliente.telefone ?? '';
+        ['cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf'].forEach(campo => {
+            document.getElementById(campo).value = cliente.endereco?.[campo] ?? '';
         });
-        await buscarClientePorId(id, 'edicao');
+        clienteEmEdicao = cliente.id;
+        document.getElementById('titulo-form-cliente').textContent = `Edição do Cliente n° ${cliente.id}`;
+        form.querySelector('button[type=submit]').textContent = 'Salvar alterações';
+        document.getElementById('cancelar-edicao-cliente').classList.remove('hidden');
+        definirModoEdicaoCliente(true);
+        form.scrollIntoView({behavior: 'smooth'});
+        document.getElementById('nome').focus({preventScroll: true});
     } catch (erro) {
-        console.error('Erro ao abrir modal de edição:', erro);
-        alert('Erro ao abrir modal de edição.');
+        if (form.isConnected && versao === versaoFormularioCliente) alert(erro.message);
+    } finally {
+        if (form.isConnected) {
+            carregandoEdicaoCliente = false;
+            form.querySelector('button[type=submit]').disabled = false;
+        }
     }
 }
 
@@ -265,46 +321,10 @@ function preencherDadosCliente(cliente, tipo) {
     }
 }
 
-async function editarCliente() {
-    const id = document.getElementById('cliente-id-edicao').value;
-    const dados = {
-        nome: document.getElementById('nome-edicao').value,
-        telefone: document.getElementById('telefone-edicao').value,
-        endereco: {
-            logradouro: document.getElementById('logradouro-edicao').value,
-            numero: document.getElementById('numero-edicao').value,
-            complemento: document.getElementById('complemento-edicao').value,
-            cep: document.getElementById('cep-edicao').value,
-            bairro: document.getElementById('bairro-edicao').value,
-            cidade: document.getElementById('cidade-edicao').value,
-            uf: document.getElementById('uf-edicao').value
-        }
-    };
-
-    try {
-        const {response, data: resultado} = await apiJson(`/clientes/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(dados)
-        });
-
-        if (response.ok) {
-            alert('Cliente editado com sucesso!');
-            document.getElementById('form-cliente-edicao').reset();
-            fecharModal();
-            listarClientes();
-        } else {
-            alert(resultado?.mensagem || 'Erro ao editar cliente');
-        }
-    } catch (erro) {
-        console.error('Erro na requisição:', erro);
-        alert(erro.message || 'Erro ao conectar com o servidor.');
-    }
-}
-
 async function editarClientePelaExibicao() {
     const id = document.getElementById('cliente-id-exibicao').value;
     fecharModal();
-    await abrirModalEdicao(id);
+    await iniciarEdicaoCliente(id);
 }
 
 async function alterarStatusCliente(id, estado) {
@@ -330,12 +350,24 @@ async function alterarStatusCliente(id, estado) {
 const conteudoDinamico = document.getElementById('conteudo-dinamico');
 
 conteudoDinamico.addEventListener('pagina:carregada', (event) => {
+    versaoFormularioCliente++;
+    clienteEmEdicao = null;
+    salvandoCliente = false;
+    carregandoEdicaoCliente = false;
+    if (document.body.classList.contains('edicao-cliente-ativa')) definirModoEdicaoCliente(false);
     if (event.detail.modulo === 'cliente') {
+        limparFormularioCliente();
+        termoBusca = '';
+        paginaAtual = 0;
         listarClientes(0, true);
     }
 });
 
 conteudoDinamico.addEventListener('click', (event) => {
+    if (event.target.id === 'cancelar-edicao-cliente' && !salvandoCliente) {
+        limparFormularioCliente();
+        document.getElementById('nome').focus({preventScroll: true});
+    }
     if (event.target.id === 'btn-clientes-ativos') {
         listarClientes(0, true);
     } else if (event.target.id === 'btn-clientes-inativos') {
@@ -347,7 +379,7 @@ conteudoDinamico.addEventListener('click', (event) => {
 })
 
 document.addEventListener('focusout', (event) => {
-    if (event.target.id !== 'cep' && event.target.id !== 'cep-edicao') return;
+    if (event.target.id !== 'cep' || event.target.closest('form')?.id !== 'form-cliente') return;
     preencherEndereco(event);
 });
 
@@ -358,10 +390,7 @@ conteudoDinamico.addEventListener('submit', async (event) => {
         await listarClientes(0, true, busca);
     } else if (event.target.id === 'form-cliente') {
         event.preventDefault();
-        await cadastrarCliente();
-    } else if (event.target.id === 'form-cliente-edicao') {
-        event.preventDefault();
-        await editarCliente();
+        await salvarCliente();
     } else {
         return;
     }
@@ -371,7 +400,7 @@ document.getElementById('conteudo-dinamico').addEventListener('click', event => 
     const botao = event.target.closest('[data-acao-cliente]');
     if (!botao) return;
     const id = Number(botao.closest('[data-cliente-id]').dataset.clienteId);
-    if (botao.dataset.acaoCliente === 'editar') abrirModalEdicao(id);
+    if (botao.dataset.acaoCliente === 'editar') iniciarEdicaoCliente(id);
     if (botao.dataset.acaoCliente === 'exibir') abrirModalExibicao(id);
     if (botao.dataset.acaoCliente === 'status') abrirModalAlterarStatus(id);
 });

@@ -332,3 +332,10 @@
         flex: 1;
     }
 }
+
+body.edicao-salgado-ativa .listagem-salgados,
+body.edicao-salgado-ativa .sidebar nav {
+    opacity: .4;
+    pointer-events: none;
+    user-select: none;
+}
