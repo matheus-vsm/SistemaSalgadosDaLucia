@@ -31,13 +31,16 @@
     <h2 id="titulo-form-cliente">Cadastro de Cliente</h2>
     <form id="form-cliente">
         <fieldset>
-            <label for="nome">Nome completo:</label>
-            <input type="text" id="nome" name="nome" required>
-            <br><br>
-
-            <label for="telefone">Telefone:</label>
-            <input type="text" id="telefone" name="telefone" maxlength="11" required>
-            <br><br>
+            <div class="cliente-dados-grid">
+                <div>
+                    <label for="nome">Nome completo:</label>
+                    <input type="text" id="nome" name="nome" required>
+                </div>
+                <div>
+                    <label for="telefone">Telefone:</label>
+                    <input type="text" id="telefone" name="telefone" maxlength="11" required>
+                </div>
+            </div>
 
             <fieldset>
                 <legend>Endereço</legend>
@@ -52,15 +55,17 @@
 
                         <label for="numero">Número:</label>
                         <input type="text" id="numero" name="numero" required>
-
-                        <label for="complemento">Complemento:</label>
-                        <input type="text" id="complemento" name="complemento">
                     </div>
 
                     <div class="endereco-coluna">
+                        <label for="complemento">Complemento:</label>
+                        <input type="text" id="complemento" name="complemento">
+
                         <label for="bairro">Bairro:</label>
                         <input type="text" id="bairro" name="bairro" readonly="true" required>
+                    </div>
 
+                    <div class="endereco-coluna">
                         <label for="cidade">Cidade:</label>
                         <input type="text" id="cidade" name="cidade" readonly="true" required>
 
