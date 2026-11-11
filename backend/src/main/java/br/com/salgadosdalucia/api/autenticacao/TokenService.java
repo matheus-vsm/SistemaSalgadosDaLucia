@@ -17,16 +17,18 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 @Service
-@RequiredArgsConstructor
 public class TokenService {
 
-    @Value("${jwt.secret}")
-    private String secret;
+    private final Algorithm algorithm;
+    private final String issuer;
 
-    @Value("${jwt.issuer}")
-    private String issuer;
+    public TokenService(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.issuer}") String issuer) {
 
-    private static final Algorithm ALGORITHM = Algorithm.HMAC256("secret");
+        this.algorithm = Algorithm.HMAC256(secret);
+        this.issuer = issuer;
+    }
 
     public String gerarToken(Usuario usuario) {
         try {
@@ -34,7 +36,7 @@ public class TokenService {
                     .withIssuer(issuer)
                     .withSubject(usuario.getUsername())
                     .withExpiresAt(expiracao(60))
-                    .sign(ALGORITHM);
+                    .sign(algorithm);
         } catch (JWTCreationException e) {
             throw new BusinessException("Erro ao gerar token JWT!" + e.getMessage());
         }
@@ -46,7 +48,7 @@ public class TokenService {
                     .withIssuer(issuer)
                     .withSubject(usuario.getId().toString())
                     .withExpiresAt(expiracao(120))
-                    .sign(ALGORITHM);
+                    .sign(algorithm);
         } catch (JWTCreationException e) {
             throw new BusinessException("Erro ao gerar token JWT!" + e.getMessage());
         }
@@ -55,7 +57,7 @@ public class TokenService {
     public String verificaToken(String token) {
         DecodedJWT decodedJWT;
         try {
-            JWTVerifier verifier = JWT.require(ALGORITHM)
+            JWTVerifier verifier = JWT.require(algorithm)
                     .withIssuer(issuer)
                     .build();
             decodedJWT = verifier.verify(token);
