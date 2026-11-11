@@ -72,7 +72,8 @@ DTOs. O frontend também é organizado por funcionalidade, com arquivos HTML, CS
 
 ```mermaid
 flowchart LR
-    Browser["Navegador: HTML, CSS e JavaScript"] -->|" JSON + Bearer JWT "| API["Spring MVC / Spring Security"]
+    Browser["Navegador: HTML, CSS e JavaScript"] --> Nginx["Nginx: frontend e proxy reverso"]
+    Nginx -->|" /api/: JSON + Bearer JWT "| API["Spring MVC / Spring Security"]
     API --> Service["Services: regras de negócio"]
     Service --> Repository["Spring Data JPA / Hibernate"]
     Repository --> Database[("MySQL")]
@@ -114,7 +115,7 @@ erDiagram
 
 - JDK 21 e `JAVA_HOME` configurado.
 - MySQL 8+ para o perfil padrão.
-- Navegador e servidor HTTP estático para o frontend; o exemplo abaixo usa Python 3.
+- Navegador, PowerShell e distribuição oficial do Nginx para Windows para servir o frontend e encaminhar a API.
 - Acesso à internet no primeiro uso do Maven Wrapper para baixar Maven e dependências, e para a consulta de CEP.
 
 Os comandos abaixo usam PowerShell e partem da raiz do repositório, exceto quando indicado.
@@ -134,8 +135,8 @@ $env:JWT_ISSUER_SALGADOS_DA_LUCIA="salgados-da-lucia-kojima"
 A configuração padrão conecta ao MySQL em `localhost:3306`. O usuário do banco precisa das permissões necessárias para
 criar o banco, caso ainda não exista, e aplicar as migrações.
 
-**Limitação atual:** `JWT_HMAC256_SECRET` é exigida pela configuração, mas o `TokenService` ainda usa uma chave fixa no
-algoritmo de assinatura. Alterar essa variável, sozinho, não altera a chave efetivamente usada pelo código atual.
+O `TokenService` usa `JWT_HMAC256_SECRET` para assinar e verificar os tokens e `JWT_ISSUER_SALGADOS_DA_LUCIA` como emissor.
+Configure um segredo forte no ambiente do backend. Ao trocar esse segredo, os tokens anteriores deixam de ser válidos.
 
 ### 2. Inicie a API
 
@@ -167,18 +168,70 @@ interface exige um administrador autenticado, portanto não substitui esse provi
 
 ### 4. Inicie o frontend
 
-Em outro terminal, na raiz do repositório:
+Baixe o ZIP para Windows pela [página oficial do Nginx](https://nginx.org/en/download.html) e extraia-o, por exemplo,
+em `C:\nginx`. A pasta escolhida deve conter `nginx.exe` e `conf\mime.types`. O executável não é versionado.
+Também pode usar uma pasta dentro de `.tools/`, que está ignorada pelo Git.
+
+Em outro terminal PowerShell, na raiz do repositório, ajuste o diretório da instalação e execute:
 
 ```powershell
-python -m http.server 5500 --bind 127.0.0.1 --directory frontend
+$nginxHome = 'C:\nginx'
+$env:BACKEND_URL = 'http://127.0.0.1:8080'
+.\infra\nginx\nginx.ps1 -Action test -NginxHome $nginxHome
+.\infra\nginx\nginx.ps1 -Action start -NginxHome $nginxHome
 ```
 
-Abra [o painel local](http://127.0.0.1:5500) e entre com um usuário previamente cadastrado. Também é possível usar um
-servidor estático como o Live Server, servindo a pasta `frontend`.
+Abra [o painel local](http://127.0.0.1:5500) e entre com um usuário previamente cadastrado. Encerre o Python ou Live Server
+se estiverem usando a porta 5500. Caso a política local bloqueie scripts, você pode executar o auxiliar em um processo
+PowerShell com `powershell -NoProfile -ExecutionPolicy Bypass -File .\infra\nginx\nginx.ps1 -Action start -NginxHome C:\nginx`.
+Isso vale apenas para esse processo, sem alterar a política persistente do computador.
 
-O endereço do backend está definido em `API_BASE_URL`, no arquivo [`frontend/js/api.js`](frontend/js/api.js). Se mudar o
-host, a porta ou o contexto da API, atualize esse valor. Os controllers possuem `@CrossOrigin` e a configuração de
-segurança habilita CORS para a comunicação entre frontend e backend.
+O Nginx escuta somente em `127.0.0.1:5500`, serve a pasta `frontend` e encaminha `/api/` para o endereço de `BACKEND_URL`,
+preservando o caminho, os parâmetros, o corpo e o cabeçalho `Authorization`. O navegador chama
+`/api/salgados-da-lucia-kojima` pela mesma origem do painel; não precisa conhecer o host ou a porta do Spring.
+A configuração de CORS do backend foi mantida.
+
+Defina `BACKEND_URL` no terminal que executa o auxiliar. Se não estiver definida, será usado `http://127.0.0.1:8080`
+para desenvolvimento local. Informe somente protocolo (`http` ou `https`), host e porta, por exemplo
+`http://192.168.0.10:8080`; não inclua `/api/salgados-da-lucia-kojima`, credenciais, query ou fragmento.
+Uma barra final é removida pelo auxiliar para preservar o caminho da requisição.
+O auxiliar lê a variável ao executar `test`, `start` ou `reload` e a grava na configuração local gerada;
+o Nginx não faz essa substituição diretamente. Para mudar o destino de uma instância em execução, defina a variável
+nesse terminal e execute `reload`. A variável muda o destino do proxy, não o endereço em que o Spring Boot escuta.
+
+O auxiliar resolve os caminhos locais a partir da localização do repositório e da instalação do Nginx. A configuração
+gerada, os logs e o PID ficam em `infra/nginx/.runtime/`, ignorado pelo Git. Ele pode ser executado de outro diretório
+informando o caminho do script. Para modificar o comportamento, edite `infra/nginx/nginx.conf.template`, não o arquivo gerado.
+
+```powershell
+# Valida antes de aplicar a configuração e recarrega sem derrubar a instância.
+.\infra\nginx\nginx.ps1 -Action reload -NginxHome $nginxHome
+
+# Encerra apenas a instância iniciada com a configuração deste projeto.
+.\infra\nginx\nginx.ps1 -Action stop -NginxHome $nginxHome
+```
+
+Arquivos inexistentes retornam `404`, sem fallback para o HTML de login. Arquivos estáticos usam `Cache-Control: no-cache`
+para revalidar versões, pois seus nomes não possuem hashes. O proxy não configura cache da API e preserva suas respostas
+de erro. A consulta de CEP continua sendo feita diretamente ao ViaCEP.
+
+**Diagnóstico:**
+
+- **Porta 5500 ocupada:** use `Get-NetTCPConnection -State Listen -LocalPort 5500` para identificar o processo e encerre o
+  servidor que já estava usando a porta. Não inicie outra instância por cima dele.
+- **502 Bad Gateway:** confirme que o backend está acessível no endereço definido em `BACKEND_URL`
+  (padrão local: `http://127.0.0.1:8080`); consulte `infra/nginx/.runtime/logs/error.log`.
+- **404 em arquivo:** confira o caminho solicitado no navegador e a presença do arquivo dentro de `frontend`.
+  O acesso a arquivos ocultos, à pasta de testes e a arquivos fora do frontend não é servido.
+- **PID antigo:** confirme se o processo indicado em `infra/nginx/.runtime/logs/nginx.pid` ainda existe antes de remover
+  um PID deixado por uma interrupção. Use o auxiliar para gerenciar esta instância.
+
+Python e Live Server, sozinhos, não encaminham `/api/` e não substituem esse fluxo. Para a futura containerização, o
+valor de `BACKEND_URL` deverá apontar para o serviço do backend na rede dos containers (por exemplo, `http://backend:8080`), pois `127.0.0.1` seria o próprio
+container do Nginx. Docker, domínio, HTTPS e hospedagem ainda não fazem parte desta etapa.
+
+O Nginx para Windows é usado aqui para validação local; a [documentação oficial registra limitações dessa versão](https://nginx.org/en/docs/windows.html).
+Esta integração não é uma auditoria de prontidão para produção.
 
 Não abra `index.html` diretamente por `file://`: o carregamento dos templates depende de um servidor HTTP.
 

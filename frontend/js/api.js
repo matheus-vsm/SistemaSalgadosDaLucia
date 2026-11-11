@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080/api/salgados-da-lucia-kojima';
+const API_BASE_URL = '/api/salgados-da-lucia-kojima';
 
 class ApiError extends Error {
     constructor(message, status = 0, data = null, mensagemEspecifica = true) {
