@@ -34,7 +34,7 @@ test('frontend, proxy e validacao HTTP com backend real', async () => {
         }
     }
     await check(frontend);
-    for (const url of ['/missing.html', '/.git/config', '/tests/api.test.cjs', '/backend/pom.xml']) {
+    for (const url of ['/missing.html', '/.git/config', '/tests/api.test.cjs', '/backend/pom.xml', prefix + '/actuator/health']) {
         assert.equal((await fetch(base + url)).status, 404, url);
     }
     const invalid = await fetch(base + prefix + '/autenticacao/login', {

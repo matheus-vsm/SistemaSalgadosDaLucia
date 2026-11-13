@@ -39,10 +39,17 @@ services:
       JWT_HMAC256_SECRET: ${JWT_HMAC256_SECRET:?Defina JWT_HMAC256_SECRET}
       JWT_ISSUER_SALGADOS_DA_LUCIA: ${JWT_ISSUER_SALGADOS_DA_LUCIA:?Defina JWT_ISSUER_SALGADOS_DA_LUCIA}
       TZ: America/Sao_Paulo
+      SPRING_PROFILES_ACTIVE: prod
     depends_on:
       db:
         condition: service_healthy
     networks: [web, database]
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, http://127.0.0.1:8080/api/salgados-da-lucia-kojima/actuator/health/readiness]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
     logging: *logging
 
   frontend:
@@ -57,7 +64,7 @@ services:
       - "127.0.0.1:${FRONTEND_PORT:-5500}:80"
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
     networks: [web]
     healthcheck:
       test: [CMD-SHELL, 'wget -q -O /dev/null http://127.0.0.1/']

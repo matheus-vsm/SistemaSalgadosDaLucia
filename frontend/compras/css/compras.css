@@ -1,3 +1,10 @@
+.historico-compras > h2 {
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    margin: 0;
+}
+
 .filtro-data-compras {
     display: flex;
     align-items: center;
@@ -20,8 +27,11 @@
     padding: 9px;
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    font: inherit;
     min-width: 0;
+}
+
+#data-compra {
+    font: inherit;
 }
 
 .filtro-data-compras input:disabled {
@@ -50,26 +60,25 @@
 }
 
 .card-compra-corpo {
-    padding: 16px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
     flex: 1;
 }
 
 .card-compra h3 {
-    margin: 0 0 12px;
+    margin: 0 0 8px;
     font-size: 1rem;
 }
 
 .card-compra-itens {
-    margin: 0 0 20px;
+    margin: 0 0 8px;
     padding-left: 18px;
     flex: 1;
-    min-height: 110px;
 }
 
 .card-compra-itens li {
-    margin-bottom: 10px;
+    margin-bottom: 4px;
     font-size: .88rem;
     overflow-wrap: anywhere;
 }
@@ -87,7 +96,7 @@
 }
 
 .card-compra-total {
-    padding: 14px 16px;
+    padding: 10px 14px;
     background: var(--background);
     border-top: 1px solid var(--line);
     font-size: .9rem;
@@ -100,24 +109,14 @@
 .card-compra-acoes {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 5px;
     padding: 10px;
     border-top: 1px solid var(--line);
 }
 
 .card-compra-acoes .btn {
-    padding: 8px;
-    font-size: .85rem;
-}
-
-.paginacao-compras {
-    justify-content: center;
-    margin: 22px 0;
-}
-
-.paginacao-compras span {
-    color: var(--muted);
-    font-size: .9rem;
+    padding: 7px 5px;
+    font-size: .78rem;
 }
 
 .cadastro-compra {
@@ -305,10 +304,6 @@ body.edicao-compra-ativa .historico-compras, body.edicao-compra-ativa .sidebar n
     .compra-form-grid {
         padding: 14px;
         gap: 16px;
-    }
-
-    .card-compra-itens {
-        min-height: auto;
     }
 
     .compra-acoes-form .btn {

@@ -1,0 +1,9 @@
+spring:
+  main:
+    web-application-type: none
+
+bootstrap:
+  admin:
+    name: ${BOOTSTRAP_ADMIN_NAME:}
+    username: ${BOOTSTRAP_ADMIN_USERNAME:}
+    password: ${BOOTSTRAP_ADMIN_PASSWORD:}

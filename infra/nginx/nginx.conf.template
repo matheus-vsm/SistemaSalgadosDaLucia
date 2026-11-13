@@ -21,6 +21,7 @@ http {
         index index.html;
         autoindex off;
 
+        location ^~ /api/salgados-da-lucia-kojima/actuator { return 404; }
         location ^~ /api/ {
             # Sem URI ou barra final: preserva o contexto completo do Spring.
             proxy_pass __BACKEND_URL__;

@@ -136,6 +136,7 @@ class UsuarioServiceTest {
             assertThat(salvo.getPerfis()).containsExactly(perfil);
             assertThat(salvo.isAtivo()).isTrue();
             assertThat(resposta).isSameAs(usuario);
+            verify(usuarioRepository).findByUsernameIgnoreCase(request.username());
             verify(passwordEncoder).encode(request.senha());
             verify(perfilRepository).findByNome(request.perfilUsuarioNome());
             verifyNoMoreInteractions(usuarioRepository, perfilRepository, passwordEncoder);
@@ -152,7 +153,9 @@ class UsuarioServiceTest {
 
             verify(passwordEncoder).encode(request.senha());
             verifyNoMoreInteractions(passwordEncoder);
-            verifyNoInteractions(usuarioRepository, perfilRepository);
+            verify(usuarioRepository).findByUsernameIgnoreCase(request.username());
+            verifyNoMoreInteractions(usuarioRepository);
+            verifyNoInteractions(perfilRepository);
         }
 
         @Test
@@ -170,6 +173,7 @@ class UsuarioServiceTest {
             verify(passwordEncoder).encode(request.senha());
             verify(perfilRepository).findByNome(request.perfilUsuarioNome());
             verify(usuarioRepository).save(any(Usuario.class));
+            verify(usuarioRepository).findByUsernameIgnoreCase(request.username());
             verifyNoMoreInteractions(usuarioRepository, perfilRepository, passwordEncoder);
         }
 
@@ -186,7 +190,8 @@ class UsuarioServiceTest {
 
             verify(passwordEncoder).encode(request.senha());
             verify(perfilRepository).findByNome(request.perfilUsuarioNome());
-            verifyNoInteractions(usuarioRepository);
+            verify(usuarioRepository).findByUsernameIgnoreCase(request.username());
+            verifyNoMoreInteractions(usuarioRepository);
             verifyNoMoreInteractions(perfilRepository, passwordEncoder);
         }
     }
