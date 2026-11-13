@@ -18,6 +18,7 @@ Sistema de gestão de clientes, salgados, estoque, pedidos, compras e usuários.
 - Use telas existentes como referência, considerando diferenças intencionais entre os domínios. Mantenha o padrão de edição pelo formulário de cadastro onde aplicável.
 - Faça mudanças focadas. Preserve alterações locais e não implemente funcionalidades incidentais fora do escopo; comunique os problemas encontrados.
 - Ao criar branches de trabalho, nunca use o prefixo `codex/`. Escolha o prefixo pela finalidade: `feature/` para funcionalidades e capacidades novas, `bugfix/` para correções, `hotfix/` para correções urgentes em produção, `docs/` para documentação, `refactor/` para refatoração, `test/` para testes e `chore/` para manutenção. Use uma descrição curta em minúsculas com hífens após o prefixo. Não renomeie branches existentes fora do pedido.
+- Nas criações ou atualizações solicitadas de issues/cards e PRs no GitHub, inclua `matheus-vsm` em Assignees e preencha Labels com classificações pertinentes já existentes no repositório. Preserve responsáveis e labels existentes, salvo mudança solicitada. Para itens de Projects vinculados a issues/PRs, confira esses campos no item de origem. Não crie labels nem altere itens alheios à tarefa apenas para aplicar a convenção; informe impedimentos de acesso ou ausência de classificação adequada.
 
 ## Validação
 

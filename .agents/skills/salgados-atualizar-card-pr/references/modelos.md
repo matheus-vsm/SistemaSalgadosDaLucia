@@ -2,6 +2,8 @@
 
 Use as estruturas abaixo quando forem pertinentes; preserve formatos ou seções existentes que contenham informação útil. Substitua as orientações pelo conteúdo apurado, sem inventar requisitos ou evidências.
 
+Para cards/issues e PRs, configure **Assignees** incluindo `matheus-vsm` e **Labels** com classificações existentes pertinentes. Esses são campos do GitHub; mencioná-los no corpo não substitui seu preenchimento. Preserve valores existentes. Em propostas de texto, indique os metadados recomendados sem publicá-los.
+
 ## Card
 
 **Título:** verbo no infinitivo e resultado pretendido, preservando prefixos de identificação existentes.
