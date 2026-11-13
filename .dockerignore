@@ -3,6 +3,9 @@
 .idea
 .vscode
 .env*
+**/*.env
+**/*.pem
+**/*.key
 artifacts
 backend
 frontend/tests

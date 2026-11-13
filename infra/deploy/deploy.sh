@@ -8,9 +8,10 @@ root=$(realpath "${DEPLOY_ROOT:-/opt/salgados}")
 case "$release" in "$root"/releases/*) ;; *) echo 'Release fora do diretorio permitido.' >&2; exit 64;; esac
 test -f "$root/shared/app.env"
 test -f "$release/images.env"
+bash "$(dirname "$0")/validate-images.sh" "$release/images.env"
 test -f "$release/infra/production/compose.yaml" || { echo 'Infraestrutura de producao ainda nao incluida nesta versao.' >&2; exit 1; }
 compose() {
-    docker compose --env-file "$root/shared/app.env" --env-file "$release/images.env" \
+    env -u BACKEND_IMAGE -u FRONTEND_IMAGE docker compose --env-file "$root/shared/app.env" --env-file "$release/images.env" \
         -p salgados-production -f "$release/infra/production/compose.yaml" "$@"
 }
 compose config --quiet
@@ -29,6 +30,9 @@ compose up -d --no-build --wait --wait-timeout 240 db backend frontend
 domain=$(compose exec -T frontend printenv DOMAIN)
 [[ $domain =~ ^[a-zA-Z0-9.-]+$ ]]
 curl --fail --silent --show-error --max-time 20 "https://$domain/" >/dev/null
+login_status=$(curl --silent --show-error --max-time 20 --output /dev/null --write-out '%{http_code}' \
+    --header 'Content-Type: application/json' --data '{}' "https://$domain/api/salgados-da-lucia-kojima/autenticacao/login")
+[[ $login_status == 400 ]] || { echo 'Proxy/API nao passou na validacao de login sem credenciais.' >&2; exit 1; }
 previous=$(readlink -f "$root/current" || true)
 if [[ -n $previous && $previous != "$release" ]]; then
     ln -sfn "$previous" "$root/previous"

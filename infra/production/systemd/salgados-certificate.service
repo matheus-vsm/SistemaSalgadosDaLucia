@@ -1,0 +1,12 @@
+[Unit]
+Description=Renovar certificado HTTPS Salgados da Lucia
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+TimeoutStartSec=20min
+User=salgados
+Group=salgados
+UMask=0077
+ExecStart=/bin/bash /opt/salgados/current/infra/production/certificate.sh renew

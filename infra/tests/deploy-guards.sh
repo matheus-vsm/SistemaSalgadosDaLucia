@@ -6,6 +6,7 @@ trap 'rm -rf -- "$fixture"' EXIT
 export DEPLOY_ROOT="$fixture"
 mkdir -p "$fixture/releases/test/infra/production" "$fixture/shared" "$fixture/bin"
 touch "$fixture/releases/test/images.env" "$fixture/releases/test/infra/production/compose.yaml" "$fixture/shared/app.env"
+printf 'BACKEND_IMAGE=ghcr.io/test/backend@sha256:%064d\nFRONTEND_IMAGE=ghcr.io/test/frontend@sha256:%064d\n' 0 0 > "$fixture/releases/test/images.env"
 export CALL_LOG="$fixture/calls"
 cat > "$fixture/bin/docker" <<'MOCK'
 #!/bin/sh
@@ -24,4 +25,6 @@ if grep -E ' (pull|up|exec)( |$)' "$CALL_LOG"; then
 fi
 if bash "$repository/infra/deploy/deploy.sh" --execute /tmp; then exit 1; fi
 if bash "$repository/infra/deploy/receive.sh" invalid invalid invalid; then exit 1; fi
+printf 'BACKEND_IMAGE=local:latest\nFRONTEND_IMAGE=local:latest\n' > "$fixture/releases/test/images.env"
+if bash "$repository/infra/deploy/deploy.sh" --check "$fixture/releases/test"; then exit 1; fi
 echo 'PASS: validacao sem mutacao, bloqueio sem habilitacao e rejeicao de caminhos/referencias invalidos.'

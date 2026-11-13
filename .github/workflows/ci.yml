@@ -30,6 +30,7 @@ jobs:
           sudo apt-get install -y shellcheck
           find infra -name '*.sh' -print0 | xargs -0 -r shellcheck
       - run: bash infra/tests/deploy-guards.sh
+      - run: bash infra/tests/backup-guards.sh
 
   integration:
     needs: tests
