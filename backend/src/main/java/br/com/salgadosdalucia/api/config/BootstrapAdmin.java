@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 @Component
 @Profile("bootstrap-admin")
 public class BootstrapAdmin implements ApplicationRunner {
+
     private final UsuarioService usuarios;
     private final Validator validator;
     private final UsuarioRequest request;
@@ -37,4 +38,5 @@ public class BootstrapAdmin implements ApplicationRunner {
         usuarios.cadastrar(request);
         System.out.println("Administrador criado. Remova as variaveis BOOTSTRAP_ADMIN_* do ambiente.");
     }
+
 }

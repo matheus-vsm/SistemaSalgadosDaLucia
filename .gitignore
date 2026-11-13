@@ -1,6 +1,7 @@
 HELP.md
 /infra/nginx/.runtime/
 /.tools/
+/nginx.local.ps1
 .env
 .env.*
 !.env.example

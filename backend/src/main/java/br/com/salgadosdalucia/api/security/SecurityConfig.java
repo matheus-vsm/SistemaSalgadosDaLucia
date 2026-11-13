@@ -51,7 +51,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(FiltroTokenAcesso, UsernamePasswordAuthenticationFilter.class) // para conseguir filtrar as requisições para verificar se os tokens são validos
-        .build();
+                .build();
     }
 
     @Bean

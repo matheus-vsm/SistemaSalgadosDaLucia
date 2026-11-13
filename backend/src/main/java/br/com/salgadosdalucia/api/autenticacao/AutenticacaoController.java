@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+// “Só carregue esta classe se a aplicação estiver rodando como uma aplicação web do tipo Servlet.”
+// Ou seja, quando o backend rodar normal, atendendo HTTP (servidor web servlet), essa classe será carregada pelo spring. Caso suba com perfil "bootstrap-admin" com configuração "web-application-type=none", essa classe não será carregada, evitando que o spring tente criar beans de autenticação e segurança, que não são necessários.
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @RequestMapping("/autenticacao")
 @Validated
