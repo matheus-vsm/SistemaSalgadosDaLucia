@@ -66,3 +66,39 @@ Esta entrega prepara a implantação, mas não substitui a revisão de regras e 
 O controle de autenticação de usuário inativo segue acompanhado em [#92](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/issues/92).
 No teste integrado, editar um pedido sem `enderecoEntrega` retornou 500 por acesso a DTO nulo no mapeamento.
 O smoke cobre edição com endereço completo; o caso sem endereço precisa de correção específica antes de liberar esse fluxo.
+
+## CI/CD e versões
+
+O workflow CI testa Maven/Node, scripts shell e o conjunto Docker com MySQL real e banco descartável.
+Executa em pull requests (incluindo bases encadeadas), pushes na main e chamadas do workflow de publicação.
+As credenciais de CI são aleatórias e temporárias; não são credenciais de implantação.
+
+Após integrar e revisar a sequência de PRs, uma tag `vX.Y.Z` cujo commit pertença ao histórico da main dispara
+novamente os testes e publica imagens linux/amd64 no GHCR. As referências de deploy usam digest, não tags mutáveis.
+Não há criação automática de GitHub Release nem de tags. Nenhuma imagem é publicada em push de branch comum.
+
+O deploy SSH só é executado quando a variável de repositório `PRODUCTION_DEPLOY_ENABLED` estiver exatamente `true`.
+Mantenha-a ausente/desabilitada até concluir a infraestrutura, HTTPS, backup e restauração de teste.
+O ambiente GitHub `production` deverá conter:
+
+- `PRODUCTION_SSH_HOST`, `PRODUCTION_SSH_USER` e, opcionalmente, `PRODUCTION_SSH_PORT` (padrão 22).
+- `PRODUCTION_SSH_KEY`: chave dedicada ao deploy.
+- `PRODUCTION_SSH_KNOWN_HOSTS`: chave pública do servidor, conferida por canal independente. Não desabilite a verificação SSH.
+
+A VPS precisará de acesso de leitura às imagens no GHCR caso os pacotes sejam privados. O workflow usa GITHUB_TOKEN
+somente para publicar; não copia esse token para a VPS. Segredos de banco/JWT ficam em `/opt/salgados/shared/app.env`,
+fora das imagens e do arquivo de release. Diretórios e arquivos operacionais terão acesso restrito ao usuário responsável.
+
+As releases ficam em `/opt/salgados/releases/<commit>`. Os scripts recebem as imagens exatas, validam o Compose,
+executam backup antes de migrar e aguardam healthchecks. `current`, `previous` e `candidate` registram o estado da atualização.
+Uma falha não dispara rollback de banco nem remove volumes. A aplicação pode ter breve indisponibilidade durante a atualização.
+
+```bash
+# Na VPS, após a preparação da infraestrutura da próxima etapa:
+bash /opt/salgados/releases/COMMIT/infra/deploy/deploy.sh --check /opt/salgados/releases/COMMIT
+bash /opt/salgados/current/infra/deploy/rollback.sh
+```
+
+Só use rollback se a migração aplicada mantiver compatibilidade com a versão anterior. Uma migração destrutiva exige
+plano específico e restauração explicitamente supervisionada. A etapa seguinte entrega `infra/production`, certificados,
+backup e os procedimentos de ativação; até lá o deploy falha de forma explícita e permanece desabilitado.
