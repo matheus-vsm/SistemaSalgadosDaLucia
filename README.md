@@ -114,6 +114,9 @@ erDiagram
 Para executar frontend, backend e MySQL com Docker Compose, veja [Docker e operação do MVP](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/10-Docker-e-operacao-do-MVP).
 O fluxo local sem containers continua descrito abaixo.
 
+As imagens usam Temurin Java 21.0.13+9 sobre Ubuntu 26.04 LTS, Nginx 1.30.6 (linha estável) e MySQL 8.4.13 LTS.
+Todas estão fixadas por digest SHA-256; atualizações exigem revisar o digest e validar novamente o build e a integração.
+
 ### Pré-requisitos
 
 - JDK 21 e `JAVA_HOME` configurado.

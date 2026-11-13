@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk-jammy@sha256:432e54724c3e57d1846aeb886f4d339f3b0522931c4e64119c2797013b7cfc3c AS build
+FROM eclipse-temurin:21-jdk-resolute@sha256:490ee3b757ff32d7a6afdc57120babce54acb2e83a6ecf7d17d87c066cfe3929 AS build
 WORKDIR /build
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
