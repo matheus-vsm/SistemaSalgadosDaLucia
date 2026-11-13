@@ -111,7 +111,7 @@ erDiagram
 
 ## Como executar
 
-Para executar frontend, backend e MySQL com Docker Compose, veja [Docker e operação do MVP](docs/operacao.md).
+Para executar frontend, backend e MySQL com Docker Compose, veja [Docker e operação do MVP](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/10-Docker-e-operacao-do-MVP).
 O fluxo local sem containers continua descrito abaixo.
 
 ### Pré-requisitos
@@ -163,7 +163,7 @@ inicialização do perfil padrão.
 ### 3. Prepare o primeiro acesso
 
 Não há usuário ou senha padrão nem criação automática de administrador na subida normal. Para criar o primeiro
-administrador com Docker, use o [comando de provisionamento](docs/operacao.md#primeiro-administrador).
+administrador com Docker, use o [comando de provisionamento](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/10-Docker-e-operacao-do-MVP#primeiro-administrador).
 No fluxo manual sem containers, é necessário
 provisionar um usuário ativo na tabela `usuarios`, com senha codificada em BCrypt, e associá-lo ao perfil `ADMIN` pela
 tabela `usuarios_perfis`.
