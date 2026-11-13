@@ -6,9 +6,10 @@ test('apiJson mantém o contrato de sucesso e não envia skipAuth ao fetch', asy
     const a = ambiente();
     a.storage.set('accessToken', 'token-de-teste');
     a.respostas.push(resposta(200, {id: 1}));
-    const resultado = await a.contexto.apiJson('/clientes');
+    const resultado = await a.contexto.apiJson('/clientes?page=1&ativo=true');
     assert.equal(resultado.response.status, 200);
     assert.equal(resultado.data.id, 1);
+    assert.equal(a.consultas[0].url, '/api/salgados-da-lucia-kojima/clientes?page=1&ativo=true');
     assert.equal(a.consultas[0].opcoes.headers.Authorization, 'Bearer token-de-teste');
     assert.equal('skipAuth' in a.consultas[0].opcoes, false);
 });
@@ -77,7 +78,11 @@ test('falhas de rede e leitura têm mensagem em português; cancelamento é pres
     const a = ambiente();
     a.respostas.push(new TypeError('Failed to fetch'));
     await assert.rejects(a.contexto.apiJson('/teste'), /Não foi possível conectar com o servidor/);
-    a.respostas.push({status: 200, headers: new Headers(), text: async () => { throw new Error('stream error'); }});
+    a.respostas.push({
+        status: 200, headers: new Headers(), text: async () => {
+            throw new Error('stream error');
+        }
+    });
     await assert.rejects(a.contexto.apiJson('/teste'), /Não foi possível receber a resposta/);
     const cancelamento = new Error('cancelado');
     cancelamento.name = 'AbortError';

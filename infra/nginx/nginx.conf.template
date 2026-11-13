@@ -1,0 +1,48 @@
+# Gerado por nginx.ps1: os marcadores recebem caminhos locais absolutos.
+worker_processes 1;
+pid logs/nginx.pid;
+error_log logs/error.log;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include "__MIME_TYPES__";
+    default_type application/octet-stream;
+    access_log logs/access.log;
+    server_tokens off;
+    sendfile on;
+
+    server {
+        listen 127.0.0.1:5500;
+        server_name localhost;
+        root "__FRONTEND_ROOT__";
+        index index.html;
+        autoindex off;
+
+        location ^~ /api/ {
+            # Sem URI ou barra final: preserva o contexto completo do Spring.
+            proxy_pass __BACKEND_URL__;
+            proxy_http_version 1.1;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $remote_addr;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Connection "";
+            proxy_cache off;
+            proxy_intercept_errors off;
+        }
+
+        # Não expor arquivos ocultos ou os testes distribuídos no frontend.
+        location ~ (^|/)\. { return 404; }
+        location = /tests { return 404; }
+        location /tests/ { return 404; }
+
+        location / {
+            try_files $uri $uri/ =404;
+            # Sem hashes nos nomes: revalidar antes de reutilizar os arquivos.
+            add_header Cache-Control "no-cache";
+        }
+    }
+}
