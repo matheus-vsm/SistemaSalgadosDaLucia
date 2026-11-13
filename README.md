@@ -162,7 +162,9 @@ inicialização do perfil padrão.
 
 ### 3. Prepare o primeiro acesso
 
-Não há usuário ou senha padrão nem criação automática de administrador no repositório. Em um banco novo, é necessário
+Não há usuário ou senha padrão nem criação automática de administrador na subida normal. Para criar o primeiro
+administrador com Docker, use o [comando de provisionamento](docs/operacao.md#primeiro-administrador).
+No fluxo manual sem containers, é necessário
 provisionar um usuário ativo na tabela `usuarios`, com senha codificada em BCrypt, e associá-lo ao perfil `ADMIN` pela
 tabela `usuarios_perfis`.
 

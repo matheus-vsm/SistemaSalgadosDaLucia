@@ -18,8 +18,32 @@ docker compose logs --tail 100 backend
 
 Abra http://127.0.0.1:5500. As chamadas usam `BACKEND_URL=http://backend:8080` dentro da rede Docker.
 O banco usa `DB_HOST=db`, sem publicar a porta 3306. O fluxo Windows/Nginx do README continua disponível.
-Esta primeira etapa mantém o provisionamento manual do administrador descrito no README; a próxima entrega
-adiciona um comando próprio de primeiro acesso e o perfil de produção.
+Os containers usam o perfil `prod`: Flyway cria o esquema, a URL JDBC não cria o banco automaticamente,
+SQL detalhado/Swagger/H2 ficam desabilitados. O serviço MySQL cria o banco e o usuário no primeiro uso do volume.
+Fora de containers, `DB_HOST` e `DB_PORT` têm padrões `localhost` e `3306`.
+
+## Primeiro administrador
+
+Após `docker compose up -d --build`, informe credenciais próprias nas variáveis abaixo no seu terminal, sem colocá-las
+no histórico de comandos nem no `.env` permanente. No PowerShell, solicite a senha sem eco:
+
+```powershell
+$env:BOOTSTRAP_ADMIN_NAME = Read-Host 'Nome do administrador'
+$env:BOOTSTRAP_ADMIN_USERNAME = Read-Host 'Username do administrador'
+$adminPassword = Read-Host 'Senha do administrador' -AsSecureString
+$env:BOOTSTRAP_ADMIN_PASSWORD = [System.Net.NetworkCredential]::new('', $adminPassword).Password
+try {
+    docker compose run --rm --no-deps -e "SPRING_PROFILES_ACTIVE=prod,bootstrap-admin" -e BOOTSTRAP_ADMIN_NAME -e BOOTSTRAP_ADMIN_USERNAME -e BOOTSTRAP_ADMIN_PASSWORD backend
+} finally {
+    Remove-Item Env:BOOTSTRAP_ADMIN_NAME, Env:BOOTSTRAP_ADMIN_USERNAME, Env:BOOTSTRAP_ADMIN_PASSWORD
+    $adminPassword = $null
+}
+```
+
+O processo executa sem abrir porta HTTP, cria um usuário ativo com BCrypt e perfil ADMIN e encerra.
+Uma segunda execução com o mesmo username falha, sem trocar senha ou sobrescrever o registro. Nenhum administrador
+é criado na subida normal. O limite da senha no BCrypt é 72 bytes UTF-8; preencha nome e username conforme o cadastro.
+Para Linux, o procedimento está na seção de implantação, quando a infraestrutura estiver configurada.
 
 ```powershell
 docker compose stop
@@ -31,5 +55,14 @@ docker compose down
 As variáveis de inicialização do MySQL só criam banco e usuário no primeiro uso do volume; mudar `.env` não troca
 automaticamente a senha de um banco existente. Recriar imagens não substitui migrações Flyway.
 
-Os healthchecks verificam banco e frontend. Na primeira entrega, o backend pode levar alguns segundos após
-iniciar para ficar disponível; seu healthcheck específico será incluído na etapa de preparação para produção.
+Os healthchecks verificam banco, readiness da API e frontend. A subida aguarda a saúde de cada dependência.
+A saúde da API é acessível apenas na rede interna, em `/api/salgados-da-lucia-kojima/actuator/health/readiness`;
+o Nginx bloqueia o prefixo Actuator. Os detalhes de saúde não são expostos. Tokens expiram por instante UTC,
+independentemente do fuso do servidor; `TZ=America/Sao_Paulo` mantém os horários locais de negócio nos containers.
+
+## Pendências da aplicação antes da publicação
+
+Esta entrega prepara a implantação, mas não substitui a revisão de regras e segurança da aplicação.
+O controle de autenticação de usuário inativo segue acompanhado em [#92](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/issues/92).
+No teste integrado, editar um pedido sem `enderecoEntrega` retornou 500 por acesso a DTO nulo no mapeamento.
+O smoke cobre edição com endereço completo; o caso sem endereço precisa de correção específica antes de liberar esse fluxo.

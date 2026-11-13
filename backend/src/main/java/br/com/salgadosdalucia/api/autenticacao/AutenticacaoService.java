@@ -8,12 +8,14 @@ import br.com.salgadosdalucia.api.shared.helper.ValidacaoEntidadeHelper;
 import br.com.salgadosdalucia.api.usuario.Usuario;
 import br.com.salgadosdalucia.api.usuario.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 @Service
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @RequiredArgsConstructor
 public class AutenticacaoService {
 

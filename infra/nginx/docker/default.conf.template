@@ -6,6 +6,7 @@ server {
     autoindex off;
     server_tokens off;
 
+    location ^~ /api/salgados-da-lucia-kojima/actuator { return 404; }
     location ^~ /api/ {
         proxy_pass ${BACKEND_URL};
         proxy_http_version 1.1;

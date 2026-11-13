@@ -8,13 +8,11 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 
 @Service
 public class TokenService {
@@ -68,8 +66,7 @@ public class TokenService {
     }
 
     private Instant expiracao(Integer minutos) {
-        return LocalDateTime.now().plusMinutes(minutos) // data/hora atual + minutos sem fuso
-                .toInstant(ZoneOffset.of("-03:00")); // converte para UTC assumindo UTC-3 (Brasília)
+        return Instant.now().plus(minutos, ChronoUnit.MINUTES);
     }
 
 }
