@@ -165,7 +165,9 @@ inicialização do perfil padrão.
 
 ### 3. Prepare o primeiro acesso
 
-Não há usuário ou senha padrão nem criação automática de administrador no repositório. Em um banco novo, é necessário
+Não há usuário ou senha padrão nem criação automática de administrador na subida normal. Para criar o primeiro
+administrador com Docker, use o [comando de provisionamento](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/10-Docker-e-operacao-do-MVP#primeiro-administrador).
+No fluxo manual sem containers, é necessário
 provisionar um usuário ativo na tabela `usuarios`, com senha codificada em BCrypt, e associá-lo ao perfil `ADMIN` pela
 tabela `usuarios_perfis`.
 
@@ -258,8 +260,9 @@ libera essa rota nem configura os frames do console. O perfil, por si só, não 
 
 ## Autenticação e permissões
 
-As rotas abaixo são relativas à URL base da API. Os endpoints de `/autenticacao/**` e a documentação Swagger/OpenAPI são
-públicos; os demais exigem autenticação.
+As rotas abaixo são relativas à URL base da API. Os endpoints de `/autenticacao/**`, os diagnósticos de saúde do Actuator
+e a documentação Swagger/OpenAPI (quando habilitada) dispensam autenticação no Spring. O Nginx bloqueia o Actuator;
+as demais rotas exigem autenticação.
 
 ```http
 POST /api/salgados-da-lucia-kojima/autenticacao/login
@@ -350,12 +353,50 @@ entregas `ENTREGA`/`RETIRADA`; pagamentos `DEBITO`, `CREDITO`, `PIX`, `DINHEIRO`
 
 ### Swagger / OpenAPI
 
-Com o backend em execução:
+Com o backend executado diretamente na porta `8080`, sem o perfil `prod`:
 
 - [Swagger UI](http://localhost:8080/api/salgados-da-lucia-kojima/swagger-ui/index.html)
 - [Especificação OpenAPI](http://localhost:8080/api/salgados-da-lucia-kojima/v3/api-docs)
 
 Use o token de acesso no botão **Authorize** para experimentar os endpoints protegidos.
+
+Pelo Nginx local, com `BACKEND_URL` apontando para esse backend sem o perfil `prod`, os mesmos caminhos ficam em:
+
+- [Swagger UI pelo Nginx](http://127.0.0.1:5500/api/salgados-da-lucia-kojima/swagger-ui/index.html)
+- [OpenAPI JSON pelo Nginx](http://127.0.0.1:5500/api/salgados-da-lucia-kojima/v3/api-docs)
+
+O Compose usa o perfil `prod`, que desabilita Swagger UI e OpenAPI. Nesse fluxo, esses links não ficam disponíveis.
+O backend do Compose não publica a porta `8080` no host; os links diretos acima se aplicam ao backend iniciado fora
+dos containers. Ajuste host e porta se tiver alterado os padrões.
+
+### Actuator: saúde da aplicação
+
+O prefixo completo é `/api/salgados-da-lucia-kojima/actuator`. Os caminhos de saúde são:
+
+| Caminho | Finalidade | Disponibilidade |
+| --- | --- | --- |
+| `/actuator/health` | Estado geral da aplicação | Padrão e `prod` |
+| `/actuator/health/liveness` | Verifica se a aplicação está viva | Habilitado explicitamente em `prod` |
+| `/actuator/health/readiness` | Verifica se a aplicação está pronta, incluindo conexão com o banco | Habilitado explicitamente em `prod`; usado pelo healthcheck do Compose |
+
+Os caminhos da tabela são relativos a `/api/salgados-da-lucia-kojima`. Fora de `prod`, não presuma que os grupos
+`liveness` e `readiness` estejam habilitados. No perfil `bootstrap-admin`, não há servidor HTTP nem essas rotas.
+
+Com o backend executado diretamente na porta `8080`, consulte a [saúde geral](http://localhost:8080/api/salgados-da-lucia-kojima/actuator/health).
+Se ele estiver com o perfil `prod`, também estão disponíveis [liveness](http://localhost:8080/api/salgados-da-lucia-kojima/actuator/health/liveness)
+e [readiness](http://localhost:8080/api/salgados-da-lucia-kojima/actuator/health/readiness).
+
+Com Docker Compose, consulte por dentro do container, a partir da raiz do projeto:
+
+```powershell
+docker compose exec -T backend curl --fail --silent --show-error http://127.0.0.1:8080/api/salgados-da-lucia-kojima/actuator/health
+docker compose exec -T backend curl --fail --silent --show-error http://127.0.0.1:8080/api/salgados-da-lucia-kojima/actuator/health/liveness
+docker compose exec -T backend curl --fail --silent --show-error http://127.0.0.1:8080/api/salgados-da-lucia-kojima/actuator/health/readiness
+```
+
+O Nginx bloqueia todo o prefixo Actuator com `404`, inclusive em `http://127.0.0.1:5500`; use o acesso direto local
+ou o comando interno acima. Em `prod`, somente o endpoint `health` e seus grupos são expostos, sem detalhes internos.
+Uma resposta `{"status":"UP"}` indica saúde; `DOWN` normalmente retorna HTTP `503` e faz o `curl --fail` falhar.
 
 ## Estrutura do projeto
 

@@ -12,6 +12,9 @@ import static org.springframework.data.web.config.EnableSpringDataWebSupport.Pag
 //@OpenAPIDefinition(info = @Info(title = "API Salgados da Lúcia Kojima", version = "1.0.0", description = "API para Gerenciamento de Salgados da Lúcia Kojima", summary = "API para Gerenciamento de Salgados da Lúcia Kojima, com funcionalidades de gerenciamento de clientes, salgados, pedidos, compras e usuarios"))
 public class ApiSalgadosdaluciaApplication {
     public static void main(String[] args) {
-        SpringApplication.run(ApiSalgadosdaluciaApplication.class, args);
+        var context = SpringApplication.run(ApiSalgadosdaluciaApplication.class, args);
+        if (context.getEnvironment().matchesProfiles("bootstrap-admin")) {
+            context.close();
+        }
     }
 }

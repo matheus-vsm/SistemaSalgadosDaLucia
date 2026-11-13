@@ -61,17 +61,6 @@
     outline: 1px solid var(--text);
 }
 
-.paginacao-usuarios {
-    justify-content: center;
-    margin: 20px 0;
-}
-
-.paginacao-usuarios span {
-    color: var(--muted);
-    font-size: 0.9rem;
-    text-align: center;
-}
-
 .campos-usuario {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
