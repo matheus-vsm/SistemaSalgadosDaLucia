@@ -111,7 +111,7 @@ erDiagram
 
 ## Como executar
 
-Para executar frontend, backend e MySQL com Docker Compose, veja [Docker e operação do MVP](docs/operacao.md).
+Para executar frontend, backend e MySQL com Docker Compose, veja [Docker e operação do MVP](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/10-Docker-e-operacao-do-MVP).
 O fluxo local sem containers continua descrito abaixo.
 
 ### Pré-requisitos
