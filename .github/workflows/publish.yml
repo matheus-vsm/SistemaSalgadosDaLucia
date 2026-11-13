@@ -1,0 +1,95 @@
+name: Publish version and optionally deploy
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  version:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Require version tag on main history
+        shell: bash
+        run: |
+          [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+  publish:
+    needs: [ci, version]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      backend: ${{ steps.images.outputs.backend }}
+      frontend: ${{ steps.images.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish immutable image references
+        id: images
+        shell: bash
+        run: |
+          repository="ghcr.io/${GITHUB_REPOSITORY,,}"
+          docker buildx build --platform linux/amd64 --push --metadata-file /tmp/backend.json \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            -t "$repository-backend:$GITHUB_SHA" -f backend/Dockerfile backend
+          docker buildx build --platform linux/amd64 --push --metadata-file /tmp/frontend.json \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            -t "$repository-frontend:$GITHUB_SHA" -f frontend/Dockerfile .
+          echo "backend=$repository-backend@$(jq -r '."containerimage.digest"' /tmp/backend.json)" >> "$GITHUB_OUTPUT"
+          echo "frontend=$repository-frontend@$(jq -r '."containerimage.digest"' /tmp/frontend.json)" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: publish
+    if: vars.PRODUCTION_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    environment: production
+    concurrency:
+      group: salgados-production
+      cancel-in-progress: false
+    env:
+      SSH_HOST: ${{ secrets.PRODUCTION_SSH_HOST }}
+      SSH_USER: ${{ secrets.PRODUCTION_SSH_USER }}
+      SSH_PORT: ${{ secrets.PRODUCTION_SSH_PORT }}
+      SSH_KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}
+      BACKEND_IMAGE: ${{ needs.publish.outputs.backend }}
+      FRONTEND_IMAGE: ${{ needs.publish.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Transfer version and deploy through verified SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          SSH_HOST="${SSH_HOST:?Defina o host de producao}"
+          SSH_USER="${SSH_USER:?Defina o usuario de deploy}"
+          SSH_KEY="${SSH_KEY:?Defina a chave de deploy}"
+          SSH_KNOWN_HOSTS="${SSH_KNOWN_HOSTS:?Defina a identidade verificada da VPS}"
+          [[ "$SSH_HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
+          [[ "$SSH_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          SSH_PORT="${SSH_PORT:-22}"
+          [[ "$SSH_PORT" =~ ^[0-9]+$ ]] && (( SSH_PORT > 0 && SSH_PORT < 65536 ))
+          key="$RUNNER_TEMP/production-key"
+          known="$RUNNER_TEMP/production-known-hosts"
+          printf '%s\n' "$SSH_KEY" > "$key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$known"
+          options=(-i "$key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$known")
+          git archive --format=tar HEAD | gzip > "$RUNNER_TEMP/release.tar.gz"
+          scp "${options[@]}" -P "$SSH_PORT" "$RUNNER_TEMP/release.tar.gz" "$SSH_USER@$SSH_HOST:/opt/salgados/incoming/$GITHUB_SHA.tar.gz"
+          ssh "${options[@]}" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" bash -s -- \
+            "$GITHUB_SHA" "$BACKEND_IMAGE" "$FRONTEND_IMAGE" < infra/deploy/receive.sh
