@@ -111,6 +111,9 @@ erDiagram
 
 ## Como executar
 
+Para executar frontend, backend e MySQL com Docker Compose, veja [Docker e operação do MVP](docs/operacao.md).
+O fluxo local sem containers continua descrito abaixo.
+
 ### Pré-requisitos
 
 - JDK 21 e `JAVA_HOME` configurado.

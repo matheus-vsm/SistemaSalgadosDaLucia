@@ -1,0 +1,11 @@
+.git
+.tools
+.idea
+.vscode
+.env*
+artifacts
+backend
+frontend/tests
+frontend/Dockerfile
+infra/nginx/.runtime
+**/*.log

@@ -1,6 +1,9 @@
 HELP.md
 /infra/nginx/.runtime/
 /.tools/
+.env
+.env.*
+!.env.example
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
