@@ -111,8 +111,8 @@ erDiagram
 
 ## Como executar
 
-Para executar frontend, backend e MySQL com Docker Compose, veja [Docker e operação do MVP](docs/operacao.md).
-Para publicação, HTTPS, backups e ativação do deploy, veja [operação na VPS](docs/vps.md).
+Para executar frontend, backend e MySQL com Docker Compose, veja [Docker e operação do MVP](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/10-Docker-e-operacao-do-MVP).
+Para publicação, HTTPS, backups e ativação do deploy, veja [operação na VPS](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/11-Publicacao-e-operacao-na-VPS).
 O fluxo local sem containers continua descrito abaixo.
 
 ### Pré-requisitos
@@ -164,7 +164,7 @@ inicialização do perfil padrão.
 ### 3. Prepare o primeiro acesso
 
 Não há usuário ou senha padrão nem criação automática de administrador na subida normal. Para criar o primeiro
-administrador com Docker, use o [comando de provisionamento](docs/operacao.md#primeiro-administrador).
+administrador com Docker, use o [comando de provisionamento](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/10-Docker-e-operacao-do-MVP#primeiro-administrador).
 No fluxo manual sem containers, é necessário
 provisionar um usuário ativo na tabela `usuarios`, com senha codificada em BCrypt, e associá-lo ao perfil `ADMIN` pela
 tabela `usuarios_perfis`.
@@ -394,7 +394,7 @@ SistemaSalgadosDaLucia/
 
 ## Testes e estado atual
 
-A preparação para Docker/VPS tem [evidências de validação e pendências de publicação](docs/validacao-mvp.md).
+A preparação para Docker/VPS tem [evidências de validação e pendências de publicação](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/12-Validacao-da-preparacao-do-MVP).
 
 Para executar a fase de testes do Maven, dentro de `backend`:
 
