@@ -23,11 +23,17 @@ Consulte [modelos de card e PR](references/modelos.md) para a estrutura. Adapte 
 
 - Card: descreva o trabalho a realizar com Objetivo, Requisitos e Critérios de aceite. Use requisitos no nível do resultado esperado; não transforme cada seletor, campo reposicionado ou detalhe já implementado em requisito. Nomeie entidades específicas quando a diferença entre elas for relevante para o escopo.
 - PR: descreva o comportamento entregue e a razão das mudanças, com validações reais e limitações. Identifique correções complementares sem confundi-las com os objetivos principais.
-- Preserve identificadores do Jira, vínculos, hierarquia, metadados e histórico relevante. Não altere status, responsáveis ou relações apenas por reescrever título e descrição.
+- Preserve identificadores do Jira, vínculos, hierarquia, metadados e histórico relevante. Não altere status ou relações apenas por reescrever título e descrição. Para responsáveis e labels, aplique a convenção abaixo sem remover valores existentes.
 - Não atribua resultados antigos de testes à revisão atual. Se citar evidência de uma execução anterior, identifique sua origem e não a apresente como execução própria.
 
 ## Entrega e edição externa
 
 Quando o pedido for gerar texto, entregue título e descrição na conversa. Edite ou publique no GitHub apenas quando solicitado; criar PR, fazer merge e atualizar o card são ações distintas.
 
-Antes de uma edição autorizada, releia o conteúdo vigente e preserve alterações concorrentes. Depois, confira título, corpo e os vínculos afetados. Se faltar acesso, entregue os textos e diga o que não foi publicado. Evite repetir uma escrita sem conferir o estado após uma resposta incerta.
+Nas criações e atualizações solicitadas de issues/cards e PRs, sempre inclua o usuário `matheus-vsm` em **Assignees** e preencha **Labels** conforme o tipo e a área do trabalho. Isso significa atribuir responsabilidade, não assinar commits nem solicitar revisão. Consulte as labels disponíveis e o padrão dos itens semelhantes; use nomes existentes e pertinentes, sem inventar classificações ou criar labels automaticamente. Preserve os responsáveis e labels atuais ao acrescentar valores, preferindo operações aditivas. Se a ferramenta substituir o conjunto inteiro, releia o item antes e envie a união dos valores.
+
+Para cards de Projects vinculados a issues ou PRs, aplique e confira Assignees e Labels na issue ou PR de origem. Se o card for um rascunho sem esses campos, informe a limitação; não converta seu tipo sem autorização. Se não houver acesso aos campos ou label adequada, informe a pendência em vez de considerar a tarefa completamente configurada. Não altere itens fora do pedido nem tente atribuir responsabilidade a comentários, branches ou outros objetos sem Assignees/Labels.
+
+Em pedidos apenas de redação ou de prompt para outro agente, inclua `matheus-vsm` como responsável e a orientação para selecionar labels existentes pertinentes, sem realizar escritas externas.
+
+Antes de uma edição autorizada, releia o conteúdo vigente e preserve alterações concorrentes. Depois, confira título, corpo, vínculos, inclusão de `matheus-vsm` em Assignees e Labels preenchidas adequadamente. Se faltar acesso, entregue os textos e diga o que não foi publicado. Evite repetir uma escrita sem conferir o estado após uma resposta incerta.
