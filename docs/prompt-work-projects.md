@@ -12,21 +12,24 @@ Primeiro releia as issues e PRs abaixo, confira o estado atual e procure os card
 assignees, estimativas e histórico. Reutilize o campo Status e as colunas existentes; não crie esquema ou quadro novo.
 
 Ordem e vínculos:
-1. Pré-requisito Nginx: issue #78, branch feature/nginx, PR #102 com base main.
+1. Pré-requisito Nginx: issue #78, branch feature/nginx, PR #102 já integrado à main. Preserve o estado concluído se confirmado; não reabra esse trabalho.
    https://github.com/matheus-vsm/SistemaSalgadosDaLucia/issues/78
    https://github.com/matheus-vsm/SistemaSalgadosDaLucia/pull/102
-2. Containerização (antiga etapa 2): issue #94, branch codex/containerizacao, PR #103 com base feature/nginx.
+2. Containerização (antiga etapa 2): issue #94, branch feature/containerizacao, PR #107 com base main.
    https://github.com/matheus-vsm/SistemaSalgadosDaLucia/issues/94
-   https://github.com/matheus-vsm/SistemaSalgadosDaLucia/pull/103
-3. Backend para produção (antiga etapa 1): issue #100, branch codex/backend-producao, PR #104 com base codex/containerizacao.
+   https://github.com/matheus-vsm/SistemaSalgadosDaLucia/pull/107
+3. Backend para produção (antiga etapa 1): issue #100, branch feature/backend-producao, PR #108 com base feature/containerizacao.
    https://github.com/matheus-vsm/SistemaSalgadosDaLucia/issues/100
-   https://github.com/matheus-vsm/SistemaSalgadosDaLucia/pull/104
-4. CI/CD (etapa 3): issue #95, branch codex/ci-cd, PR #105 com base codex/backend-producao.
+   https://github.com/matheus-vsm/SistemaSalgadosDaLucia/pull/108
+4. CI/CD (etapa 3): issue #95, branch ci/ci-cd, PR #109 com base feature/backend-producao.
    https://github.com/matheus-vsm/SistemaSalgadosDaLucia/issues/95
-   https://github.com/matheus-vsm/SistemaSalgadosDaLucia/pull/105
-5. Infraestrutura (etapa 4): issue #101, branch codex/infra-producao, PR #106 com base codex/ci-cd.
+   https://github.com/matheus-vsm/SistemaSalgadosDaLucia/pull/109
+5. Infraestrutura (etapa 4): issue #101, branch infra/producao, PR #110 com base ci/ci-cd.
    https://github.com/matheus-vsm/SistemaSalgadosDaLucia/issues/101
-   https://github.com/matheus-vsm/SistemaSalgadosDaLucia/pull/106
+   https://github.com/matheus-vsm/SistemaSalgadosDaLucia/pull/110
+
+Os PRs #103, #104, #105 e #106 foram fechados pela renomeação das branches e substituídos, respectivamente,
+por #107, #108, #109 e #110. Atualize os vínculos dos cards para os substitutos, preservando as referências históricas.
 
 Adicione as issues #100 e #101 ao projeto se ainda não estiverem nele. Reutilize os cards de #94, #95 e #78.
 Não crie novas issues, cards duplicados ou cards separados para cada PR. Vincule os PRs às issues usando os
@@ -36,7 +39,7 @@ Se os PRs continuarem abertos e as implementações aguardando revisão, coloque
 Não feche issues nem mova para Done apenas porque há código. Se algo mudou desde a implementação, use o estado
 atual verificado e explique qualquer divergência; não assuma que houve merge ou implantação.
 
-As issues contêm checklists e evidências. Consulte também docs/validacao-mvp.md na branch codex/infra-producao.
+As issues contêm checklists e evidências. Consulte também docs/validacao-mvp.md na branch infra/producao.
 As validações incluíram 169 testes Maven, 81 testes frontend, smoke HTTP autenticado com MySQL real, HTTPS local
 e recuperação criptografada Restic com login no banco restaurado. Confira o CI mais recente em cada PR.
 
