@@ -1,0 +1,5 @@
+interface:
+  display_name: "Padronizar telas do Salgados"
+  short_description: "Manter fluxos e aparência consistentes nas telas"
+policy:
+  allow_implicit_invocation: true
