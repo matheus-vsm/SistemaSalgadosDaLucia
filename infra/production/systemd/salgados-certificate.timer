@@ -1,0 +1,10 @@
+[Unit]
+Description=Verificar renovacao HTTPS duas vezes ao dia
+
+[Timer]
+OnCalendar=*-*-* 00,12:00:00
+Persistent=true
+RandomizedDelaySec=30m
+
+[Install]
+WantedBy=timers.target

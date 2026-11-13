@@ -8,9 +8,10 @@ root=$(realpath "${DEPLOY_ROOT:-/opt/salgados}")
 case "$release" in "$root"/releases/*) ;; *) echo 'Release fora do diretorio permitido.' >&2; exit 64;; esac
 test -f "$root/shared/app.env"
 test -f "$release/images.env"
+bash "$(dirname "$0")/validate-images.sh" "$release/images.env"
 test -f "$release/infra/production/compose.yaml" || { echo 'Infraestrutura de producao ainda nao incluida nesta versao.' >&2; exit 1; }
 compose() {
-    docker compose --env-file "$root/shared/app.env" --env-file "$release/images.env" \
+    env -u BACKEND_IMAGE -u FRONTEND_IMAGE docker compose --env-file "$root/shared/app.env" --env-file "$release/images.env" \
         -p salgados-production -f "$release/infra/production/compose.yaml" "$@"
 }
 compose config --quiet

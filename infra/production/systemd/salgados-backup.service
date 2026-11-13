@@ -1,0 +1,12 @@
+[Unit]
+Description=Backup MySQL criptografado fora da VPS
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+TimeoutStartSec=30min
+User=salgados
+Group=salgados
+UMask=0077
+ExecStart=/bin/bash /opt/salgados/current/infra/production/backup.sh

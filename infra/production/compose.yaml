@@ -1,0 +1,100 @@
+name: salgados-production
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: mysql:8.4@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME_SALGADOS_MYSQL:?Defina o banco}
+      MYSQL_USER: ${DB_USER_MYSQL:?Defina o usuario da aplicacao}
+      MYSQL_PASSWORD: ${DB_PASSWORD_MYSQL:?Defina a senha da aplicacao}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina a senha root}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks: [database]
+    healthcheck:
+      test: [CMD-SHELL, 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u "$$MYSQL_USER" "$$MYSQL_DATABASE" -e "SELECT 1" >/dev/null 2>&1']
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    logging: *logging
+
+  backend:
+    image: ${BACKEND_IMAGE:?Informe o digest publicado no GHCR}
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME_SALGADOS_MYSQL: ${DB_NAME_SALGADOS_MYSQL:?Defina o banco}
+      DB_USER_MYSQL: ${DB_USER_MYSQL:?Defina o usuario}
+      DB_PASSWORD_MYSQL: ${DB_PASSWORD_MYSQL:?Defina a senha}
+      JWT_HMAC256_SECRET: ${JWT_HMAC256_SECRET:?Defina o segredo JWT}
+      JWT_ISSUER_SALGADOS_DA_LUCIA: ${JWT_ISSUER_SALGADOS_DA_LUCIA:?Defina o emissor}
+      TZ: America/Sao_Paulo
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70
+    mem_limit: 1024m
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [web, database]
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, http://127.0.0.1:8080/api/salgados-da-lucia-kojima/actuator/health/readiness]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    logging: *logging
+
+  frontend:
+    image: ${FRONTEND_IMAGE:?Informe o digest publicado no GHCR}
+    restart: unless-stopped
+    entrypoint: [/bin/sh, /opt/production/start.sh]
+    environment:
+      DOMAIN: ${DOMAIN:?Defina o dominio}
+      TLS_ENABLED: ${TLS_ENABLED:-false}
+      BACKEND_URL: ${BACKEND_URL:-http://backend:8080}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/opt/production:ro
+      - ${STATE_DIR:?Defina STATE_DIR}/letsencrypt:/etc/letsencrypt:ro
+      - ${STATE_DIR:?Defina STATE_DIR}/acme:/var/www/acme:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [web]
+    healthcheck:
+      test: [CMD-SHELL, 'wget -q -O /dev/null http://127.0.0.1/nginx-health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *logging
+
+  certbot:
+    image: certbot/certbot@sha256:c5698da859429ccee0fcc299a8000368198222d1f9e789ab6e388b491e8ce06d
+    profiles: [tools]
+    environment:
+      DOMAIN: ${DOMAIN:?Defina o dominio}
+      ACME_EMAIL: ${ACME_EMAIL:?Defina o email para o certificado}
+      ACME_TERMS_ACCEPTED: ${ACME_TERMS_ACCEPTED:-false}
+    volumes:
+      - ${STATE_DIR:?Defina STATE_DIR}/letsencrypt:/etc/letsencrypt
+      - ${STATE_DIR:?Defina STATE_DIR}/acme:/var/www/acme
+    logging: *logging
+
+networks:
+  web:
+  database:
+    internal: true
+
+volumes:
+  mysql-data:

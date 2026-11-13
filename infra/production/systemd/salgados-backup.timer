@@ -1,0 +1,10 @@
+[Unit]
+Description=Backup diario Salgados da Lucia
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 America/Sao_Paulo
+Persistent=true
+RandomizedDelaySec=5m
+
+[Install]
+WantedBy=timers.target

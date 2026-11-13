@@ -112,6 +112,7 @@ erDiagram
 ## Como executar
 
 Para executar frontend, backend e MySQL com Docker Compose, veja [Docker e operação do MVP](docs/operacao.md).
+Para publicação, HTTPS, backups e ativação do deploy, veja [operação na VPS](docs/vps.md).
 O fluxo local sem containers continua descrito abaixo.
 
 ### Pré-requisitos
@@ -233,7 +234,8 @@ de erro. A consulta de CEP continua sendo feita diretamente ao ViaCEP.
 
 Python e Live Server, sozinhos, não encaminham `/api/` e não substituem esse fluxo. Para a futura containerização, o
 valor de `BACKEND_URL` deverá apontar para o serviço do backend na rede dos containers (por exemplo, `http://backend:8080`), pois `127.0.0.1` seria o próprio
-container do Nginx. Docker, domínio, HTTPS e hospedagem ainda não fazem parte desta etapa.
+container do Nginx. O fluxo com containers e a preparação de HTTPS/VPS estão documentados nos guias de operação
+vinculados no início desta seção; o auxiliar PowerShell continua destinado ao desenvolvimento local.
 
 O Nginx para Windows é usado aqui para validação local; a [documentação oficial registra limitações dessa versão](https://nginx.org/en/docs/windows.html).
 Esta integração não é uma auditoria de prontidão para produção.
@@ -391,6 +393,8 @@ SistemaSalgadosDaLucia/
 ```
 
 ## Testes e estado atual
+
+A preparação para Docker/VPS tem [evidências de validação e pendências de publicação](docs/validacao-mvp.md).
 
 Para executar a fase de testes do Maven, dentro de `backend`:
 

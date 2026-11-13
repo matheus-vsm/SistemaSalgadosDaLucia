@@ -100,5 +100,6 @@ bash /opt/salgados/current/infra/deploy/rollback.sh
 ```
 
 Só use rollback se a migração aplicada mantiver compatibilidade com a versão anterior. Uma migração destrutiva exige
-plano específico e restauração explicitamente supervisionada. A etapa seguinte entrega `infra/production`, certificados,
-backup e os procedimentos de ativação; até lá o deploy falha de forma explícita e permanece desabilitado.
+plano específico e restauração explicitamente supervisionada. Os arquivos em `infra/production` e o [guia da VPS](vps.md)
+contêm configuração de certificados, backup e procedimentos de ativação. O deploy permanece desabilitado enquanto
+servidor, domínio, HTTPS e recuperação externa não forem configurados e validados.

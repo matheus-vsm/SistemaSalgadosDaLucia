@@ -52,6 +52,11 @@ jobs:
             -t "$repository-frontend:$GITHUB_SHA" -f frontend/Dockerfile .
           echo "backend=$repository-backend@$(jq -r '."containerimage.digest"' /tmp/backend.json)" >> "$GITHUB_OUTPUT"
           echo "frontend=$repository-frontend@$(jq -r '."containerimage.digest"' /tmp/frontend.json)" >> "$GITHUB_OUTPUT"
+          {
+            echo '## Imagens desta versao'
+            echo "Backend: $repository-backend@$(jq -r '."containerimage.digest"' /tmp/backend.json)"
+            echo "Frontend: $repository-frontend@$(jq -r '."containerimage.digest"' /tmp/frontend.json)"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
     needs: publish
