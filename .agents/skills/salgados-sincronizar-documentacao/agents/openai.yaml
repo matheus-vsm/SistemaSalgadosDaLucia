@@ -1,0 +1,5 @@
+interface:
+  display_name: "Sincronizar documentação do Salgados"
+  short_description: "Atualizar README, wiki, AGENTS.md e skills locais"
+policy:
+  allow_implicit_invocation: true

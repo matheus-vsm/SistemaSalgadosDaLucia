@@ -1,0 +1,5 @@
+interface:
+  display_name: "Atualizar cards e PRs do Salgados"
+  short_description: "Revisar escopo de cards e descrever entregas de PRs"
+policy:
+  allow_implicit_invocation: true
