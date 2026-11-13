@@ -7,7 +7,7 @@ server {
         root /var/www/acme;
         try_files $uri =404;
     }
-    location / { return 301 https://$host$request_uri; }
+    location / { return 301 https://${DOMAIN}$request_uri; }
 }
 
 server {

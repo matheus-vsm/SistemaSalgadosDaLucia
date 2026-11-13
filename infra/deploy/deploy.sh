@@ -30,6 +30,9 @@ compose up -d --no-build --wait --wait-timeout 240 db backend frontend
 domain=$(compose exec -T frontend printenv DOMAIN)
 [[ $domain =~ ^[a-zA-Z0-9.-]+$ ]]
 curl --fail --silent --show-error --max-time 20 "https://$domain/" >/dev/null
+login_status=$(curl --silent --show-error --max-time 20 --output /dev/null --write-out '%{http_code}' \
+    --header 'Content-Type: application/json' --data '{}' "https://$domain/api/salgados-da-lucia-kojima/autenticacao/login")
+[[ $login_status == 400 ]] || { echo 'Proxy/API nao passou na validacao de login sem credenciais.' >&2; exit 1; }
 previous=$(readlink -f "$root/current" || true)
 if [[ -n $previous && $previous != "$release" ]]; then
     ln -sfn "$previous" "$root/previous"
