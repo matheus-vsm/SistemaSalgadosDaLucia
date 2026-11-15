@@ -7,9 +7,9 @@ spring:
     name: api-salgados-da-lucia-kojima
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME_SALGADOS_MYSQL}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: ${DB_USER_MYSQL}
-    password: ${DB_PASSWORD_MYSQL}
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -26,8 +26,8 @@ spring:
     locations: classpath:db/migration
 
 jwt:
-  secret: ${JWT_HMAC256_SECRET}
-  issuer: ${JWT_ISSUER_SALGADOS_DA_LUCIA}
+  secret: ${JWT_HMC256}
+  issuer: ${JWT_ISSUER}
 #validate → o Hibernate verifica se as entidades batem com o banco, e lança erro se tiver divergência. Útil para pegar inconsistências entre o código e o banco.
 #none → o Hibernate não faz nada, nem valida. O Flyway cuida de tudo sozinho.
 #No mercado com Flyway o mais comum é validate em desenvolvimento e none em produção.
