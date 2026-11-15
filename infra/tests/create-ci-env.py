@@ -5,12 +5,12 @@ import sys
 
 password = secrets.token_hex(32)
 values = {
-    "DB_NAME_SALGADOS_MYSQL": "salgados_ci",
-    "DB_USER_MYSQL": "ci_app",
-    "DB_PASSWORD_MYSQL": secrets.token_hex(32),
-    "MYSQL_ROOT_PASSWORD": secrets.token_hex(32),
-    "JWT_HMAC256_SECRET": secrets.token_hex(32),
-    "JWT_ISSUER_SALGADOS_DA_LUCIA": "ci-local",
+    "DB_NAME": "salgados_ci",
+    "DB_USER": "ci_app",
+    "DB_PASSWORD": secrets.token_hex(32),
+    "DB_ROOT_PASSWORD": secrets.token_hex(32),
+    "JWT_HMC256": secrets.token_hex(32),
+    "JWT_ISSUER": "ci-local",
     "FRONTEND_PORT": "15500",
     "BACKEND_IMAGE": "salgados-backend:ci",
     "FRONTEND_IMAGE": "salgados-frontend:ci",

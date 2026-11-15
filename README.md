@@ -131,18 +131,34 @@ Os comandos abaixo usam PowerShell e partem da raiz do repositório, exceto quan
 Defina as variáveis no terminal em que o backend será iniciado, substituindo os valores de exemplo:
 
 ```powershell
-$env:DB_NAME_SALGADOS_MYSQL="salgados_lucia"
-$env:DB_USER_MYSQL="seu_usuario_mysql"
-$env:DB_PASSWORD_MYSQL="sua_senha_mysql"
-$env:JWT_HMAC256_SECRET="substitua-por-um-segredo-local"
-$env:JWT_ISSUER_SALGADOS_DA_LUCIA="salgados-da-lucia-kojima"
+$env:DB_NAME="salgados_lucia"
+$env:DB_USER="seu_usuario_mysql"
+$env:DB_PASSWORD="sua_senha_mysql"
+$env:JWT_HMC256="substitua-por-um-segredo-local"
+$env:JWT_ISSUER="salgados-da-lucia-kojima"
 ```
 
 A configuração padrão conecta ao MySQL em `localhost:3306`. O usuário do banco precisa das permissões necessárias para
 criar o banco, caso ainda não exista, e aplicar as migrações.
 
-O `TokenService` usa `JWT_HMAC256_SECRET` para assinar e verificar os tokens e `JWT_ISSUER_SALGADOS_DA_LUCIA` como emissor.
+O `TokenService` usa `JWT_HMC256` para assinar e verificar os tokens e `JWT_ISSUER` como emissor.
 Configure um segredo forte no ambiente do backend. Ao trocar esse segredo, os tokens anteriores deixam de ser válidos.
+
+Em ambientes já configurados, renomeie as chaves conforme o `.env.example`, mantendo os valores atuais.
+No Compose, `DB_ROOT_PASSWORD` é repassada como `MYSQL_ROOT_PASSWORD`, exigida pela imagem oficial do MySQL.
+
+Se as variáveis estiverem em um `.env` local na raiz, carregue-o no mesmo terminal antes de iniciar o backend:
+
+```powershell
+Get-Content .env | Where-Object { $_ -match '^[A-Za-z_][A-Za-z0-9_]*=' } | ForEach-Object {
+    $nome, $valor = $_ -split '=', 2
+    Set-Item -LiteralPath "Env:$nome" -Value $valor
+}
+```
+
+O Spring Boot não carrega `.env` automaticamente. Esse comando também substitui variáveis antigas do terminal
+que já usem os novos nomes. Para Compose, use um usuário de aplicação diferente de `root` em `DB_USER`
+e configure `DB_ROOT_PASSWORD` separadamente.
 
 ### 2. Inicie a API
 
