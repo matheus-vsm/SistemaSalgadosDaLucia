@@ -10,6 +10,7 @@ import br.com.salgadosdalucia.api.pedido.enums.TipoEntrega;
 import br.com.salgadosdalucia.api.pedido.enums.TipoPreco;
 import br.com.salgadosdalucia.api.salgado.Salgado;
 import br.com.salgadosdalucia.api.salgado.SalgadoRepository;
+import br.com.salgadosdalucia.api.shared.endereco.EnderecoDto;
 import br.com.salgadosdalucia.api.shared.endereco.EnderecoMapper;
 import br.com.salgadosdalucia.api.shared.helper.ValidacaoEntidadeHelper;
 import br.com.salgadosdalucia.api.usuario.Usuario;
@@ -73,7 +74,7 @@ public class PedidoService {
 
         pedido.setItens(itens);
         calcularValorTotal(pedido);
-        defineEnderecoEntrega(pedido);
+        defineEnderecoEntrega(pedido, request.enderecoEntrega());
 
         pedidoRepository.save(pedido);
 
@@ -115,18 +116,17 @@ public class PedidoService {
         ValidacaoEntidadeHelper.validarStatusAtivo(cliente.isAtivo(), cliente.getId(), "Cliente", "não pode realizar pedidos");
         Usuario usuario = ValidacaoEntidadeHelper.buscarEntidadePorId(usuarioRepository, request.usuarioResponsavelId(), "Usuario");
         ValidacaoEntidadeHelper.validarStatusAtivo(usuario.isAtivo(), usuario.getId(), "Usuario", "não pode ser responsável por pedidos");
-        
+
         pedido.setCliente(cliente);
         pedido.setDataEntrega(request.dataEntrega());
         pedido.setDataPedido(request.dataPedido());
         pedido.setTipoEntrega(request.tipoEntrega());
-        pedido.setEnderecoEntrega(EnderecoMapper.mapToEntity(request.enderecoEntrega()));
         pedido.setFormaPagamento(request.formaPagamento());
         pedido.setUsuarioResponsavel(usuario);
         atualizarItensPedido(pedido, request.itens());
 
         calcularValorTotal(pedido);
-        defineEnderecoEntrega(pedido);
+        defineEnderecoEntrega(pedido, request.enderecoEntrega());
 
         pedidoRepository.save(pedido);
 
@@ -159,13 +159,15 @@ public class PedidoService {
         }
     }
 
-    private void defineEnderecoEntrega(Pedido pedido) {
+    private void defineEnderecoEntrega(Pedido pedido, EnderecoDto enderecoInformado) {
         if (pedido.getTipoEntrega() == TipoEntrega.RETIRADA) {
             pedido.setEnderecoEntrega(null); // Retirada não tem endereço de entrega
-        } else if (pedido.getTipoEntrega() == TipoEntrega.ENTREGA && pedido.getEnderecoEntrega() == null) {
-            // Se for entrega e o endereço não foi definido, pode-se lançar uma exceção ou definir um endereço padrão
-            pedido.setEnderecoEntrega(pedido.getCliente().getEndereco());
+            return;
         }
+        if (enderecoInformado == null) {
+            throw new BusinessException("Endereço de entrega é obrigatório para pedidos com entrega.");
+        }
+        pedido.setEnderecoEntrega(EnderecoMapper.mapToEntity(enderecoInformado));
     }
 
     private void calcularPrecos(ItemPedido item) {
@@ -192,7 +194,7 @@ public class PedidoService {
         for (ItemPedidoDto item : itensDto) {
             Salgado salgado = ValidacaoEntidadeHelper.buscarEntidadePorId(salgadoRepository, item.salgadoId(), "Salgado");
             ValidacaoEntidadeHelper.validarStatusAtivo(salgado.isAtivo(), salgado.getId(), "Salgado", "não pode ser adicionado ao pedido");
-            
+
             ItemPedido itemPedido = new ItemPedido();
             itemPedido.setPedido(pedido);
             itemPedido.setSalgado(salgado);
