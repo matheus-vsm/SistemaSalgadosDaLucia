@@ -13,15 +13,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -70,6 +71,21 @@ class UsuarioServiceTest {
     @DisplayName("Buscar usuário pelo username")
     class LoadUserByUsername {
         @Test
+        @DisplayName("Deve devolver o usuário inativo como desabilitado para a decisão do provider de autenticação")
+        void devePreservarSituacaoDoUsuarioInativo() {
+            usuario.setAtivo(false);
+            when(usuarioRepository.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(usuario));
+
+            UserDetails resposta = usuarioService.loadUserByUsername("alice");
+
+            assertThat(resposta).isSameAs(usuario);
+            assertThat(resposta.isEnabled()).isFalse();
+            verify(usuarioRepository).findByUsernameIgnoreCase("alice");
+            verifyNoMoreInteractions(usuarioRepository);
+            verifyNoInteractions(perfilRepository, passwordEncoder);
+        }
+
+        @Test
         @DisplayName("Deve retornar o usuário encontrado pelo username recebido")
         void deveBuscarUsuario() {
             when(usuarioRepository.findByUsernameIgnoreCase("ALICE")).thenReturn(Optional.of(usuario));
@@ -115,6 +131,75 @@ class UsuarioServiceTest {
     @Nested
     @DisplayName("Cadastrar usuário")
     class Cadastrar {
+        @ParameterizedTest
+        @CsvSource({"alice, true", "ALICE, true", "AlIcE, false"})
+        @DisplayName("Deve rejeitar username encontrado antes de criptografar, consultar perfil ou salvar, inclusive se estiver inativo")
+        void deveRejeitarUsernameExistente(String username, boolean ativo) {
+            usuario.setAtivo(ativo);
+            UsuarioResponse anterior = criarResponse(usuario);
+            String senhaAnterior = usuario.getSenha();
+            UsuarioRequest dados = new UsuarioRequest("Outra pessoa", username, "outraSenha123", PerfilUsuarioNome.FUNCIONARIO);
+            // O repositório é simulado: o teste verifica a reação à duplicidade, não a comparação SQL de maiúsculas.
+            when(usuarioRepository.findByUsernameIgnoreCase(username)).thenReturn(Optional.of(usuario));
+
+            assertThatThrownBy(() -> usuarioService.cadastrar(dados))
+                    .isInstanceOf(BusinessException.class).hasMessage("Nome de Usuário já está em uso.");
+
+            assertThat(criarResponse(usuario)).isEqualTo(anterior);
+            assertThat(usuario.getSenha()).isEqualTo(senhaAnterior);
+            verify(usuarioRepository).findByUsernameIgnoreCase(username);
+            verifyNoMoreInteractions(usuarioRepository);
+            verifyNoInteractions(passwordEncoder, perfilRepository);
+        }
+
+        @ParameterizedTest
+        @EnumSource(PerfilUsuarioNome.class)
+        @DisplayName("Deve cadastrar com o perfil solicitado e persistir somente a senha criptografada")
+        void deveCadastrarComPerfilSolicitado(PerfilUsuarioNome nomePerfil) {
+            UsuarioRequest dados = new UsuarioRequest("Beatriz", "bia.ops", "senhaRecebida123", nomePerfil);
+            Perfil selecionado = new Perfil();
+
+            when(usuarioRepository.findByUsernameIgnoreCase("bia.ops")).thenReturn(Optional.empty());
+            when(passwordEncoder.encode("senhaRecebida123")).thenReturn("hash-da-senha-recebida");
+            when(perfilRepository.findByNome(nomePerfil)).thenReturn(selecionado);
+            when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocacao -> {
+                Usuario novo = invocacao.getArgument(0);
+                assertThat(novo.getId()).isNull();
+                novo.setId(47L);
+                return novo;
+            });
+
+            Usuario resposta = usuarioService.cadastrar(dados);
+
+            ArgumentCaptor<Usuario> enviado = ArgumentCaptor.forClass(Usuario.class);
+            var ordem = inOrder(usuarioRepository, passwordEncoder, perfilRepository);
+            ordem.verify(usuarioRepository).findByUsernameIgnoreCase("bia.ops");
+            ordem.verify(passwordEncoder).encode("senhaRecebida123");
+            ordem.verify(perfilRepository).findByNome(nomePerfil);
+            ordem.verify(usuarioRepository).save(enviado.capture());
+            assertThat(resposta).isSameAs(enviado.getValue());
+            assertThat(resposta.getId()).isEqualTo(47L);
+            assertThat(resposta.getNome()).isEqualTo("Beatriz");
+            assertThat(resposta.getUsername()).isEqualTo("bia.ops");
+            assertThat(resposta.getSenha()).isEqualTo("hash-da-senha-recebida").isNotEqualTo(dados.senha());
+            assertThat(resposta.getPerfis()).containsExactly(selecionado);
+            assertThat(resposta.isAtivo()).isTrue();
+            verifyNoMoreInteractions(usuarioRepository, passwordEncoder, perfilRepository);
+        }
+
+        @Test
+        @DisplayName("Deve interromper cadastro quando a consulta de username falhar, antes de criptografar ou salvar")
+        void deveInterromperNaBuscaDeUsername() {
+            var falha = new DataAccessResourceFailureException("Consulta de username indisponível");
+            when(usuarioRepository.findByUsernameIgnoreCase(request.username())).thenThrow(falha);
+
+            assertThatThrownBy(() -> usuarioService.cadastrar(request)).isSameAs(falha);
+
+            verify(usuarioRepository).findByUsernameIgnoreCase(request.username());
+            verifyNoMoreInteractions(usuarioRepository);
+            verifyNoInteractions(passwordEncoder, perfilRepository);
+        }
+
         @Test
         @DisplayName("Deve salvar usuário ativo com perfil e senha criptografada")
         void deveCadastrar() {
@@ -199,6 +284,36 @@ class UsuarioServiceTest {
     @Nested
     @DisplayName("Listar usuários")
     class Listar {
+        @ParameterizedTest
+        @CsvSource({"true, 1, 2, 7, false", "false, 3, 1, 7, true", "true, 4, 0, 7, true"})
+        @DisplayName("Deve preservar perfis, ordem e metadados nas páginas posteriores, parciais ou vazias")
+        void devePreservarPaginaRetornada(boolean ativo, int pagina, int quantidade, long total, boolean ultima) {
+            Pageable requisitada = PageRequest.of(pagina, 2, Sort.by("nome").descending());
+            usuario.setAtivo(ativo);
+            Usuario segundo = Usuario.builder().id(87L).nome("Zoé").username("zoe.ops")
+                    .senha("hash-de-outro-usuario").perfis(List.of(new Perfil())).ativo(ativo).build();
+            List<Usuario> conteudo = switch (quantidade) {
+                case 2 -> List.of(segundo, usuario);
+                case 1 -> List.of(segundo);
+                default -> List.of();
+            };
+
+            when(usuarioRepository.findAllByAtivo(requisitada, ativo)).thenReturn(new PageImpl<>(conteudo, requisitada, total));
+
+            Page<UsuarioResponse> resposta = usuarioService.listar(requisitada, ativo);
+
+            assertThat(resposta.getContent()).containsExactlyElementsOf(conteudo.stream().map(UsuarioServiceTest.this::criarResponse).toList());
+            assertThat(resposta.getPageable()).isEqualTo(requisitada);
+            assertThat(resposta.getNumber()).isEqualTo(pagina);
+            assertThat(resposta.getSize()).isEqualTo(2);
+            assertThat(resposta.getTotalElements()).isEqualTo(total);
+            assertThat(resposta.getTotalPages()).isEqualTo(4);
+            assertThat(resposta.isLast()).isEqualTo(ultima);
+            verify(usuarioRepository).findAllByAtivo(requisitada, ativo);
+            verifyNoMoreInteractions(usuarioRepository);
+            verifyNoInteractions(perfilRepository, passwordEncoder);
+        }
+
         @Test
         @DisplayName("Deve preservar os dados e a paginação com filtro true")
         void deveListarUsuariosAtivos() {
@@ -252,6 +367,38 @@ class UsuarioServiceTest {
     @Nested
     @DisplayName("Buscar usuário por nome")
     class BuscarPorNome {
+        @ParameterizedTest
+        @CsvSource({"1, 2, 7, false", "3, 1, 7, true", "4, 0, 7, true"})
+        @DisplayName("Deve remover espaços externos da busca e preservar o conteúdo e a paginação recebidos")
+        void devePreservarPaginasDaBusca(int pagina, int quantidade, long total, boolean ultima) {
+            Pageable requisitada = PageRequest.of(pagina, 2, Sort.by("nome").descending());
+            Usuario primeiro = criarUsuario(91L, "Ana Maria", true);
+            primeiro.setUsername("ana.m");
+            Usuario segundo = criarUsuario(92L, "Ana Luisa", true);
+            segundo.setUsername("luisa.a");
+            List<Usuario> conteudo = switch (quantidade) {
+                case 2 -> List.of(primeiro, segundo);
+                case 1 -> List.of(segundo);
+                default -> List.of();
+            };
+
+            when(usuarioRepository.findByNomeContainingIgnoreCase(requisitada, "Ana"))
+                    .thenReturn(new PageImpl<>(conteudo, requisitada, total));
+
+            Page<UsuarioResponse> resposta = usuarioService.buscarPorNome(requisitada, "  Ana  ");
+
+            assertThat(resposta.getContent()).containsExactlyElementsOf(conteudo.stream().map(UsuarioServiceTest.this::criarResponse).toList());
+            assertThat(resposta.getPageable()).isEqualTo(requisitada);
+            assertThat(resposta.getNumber()).isEqualTo(pagina);
+            assertThat(resposta.getSize()).isEqualTo(2);
+            assertThat(resposta.getTotalElements()).isEqualTo(total);
+            assertThat(resposta.getTotalPages()).isEqualTo(4);
+            assertThat(resposta.isLast()).isEqualTo(ultima);
+            verify(usuarioRepository).findByNomeContainingIgnoreCase(requisitada, "Ana");
+            verifyNoMoreInteractions(usuarioRepository);
+            verifyNoInteractions(perfilRepository, passwordEncoder);
+        }
+
         @Test
         @DisplayName("Deve preservar os dados e a paginação removendo espaços do nome")
         void deveBuscarPorNomeRemovendoEspacos() {
@@ -311,6 +458,23 @@ class UsuarioServiceTest {
     @Nested
     @DisplayName("Buscar usuário por ID")
     class BuscarPorId {
+        @Test
+        @DisplayName("Deve preservar ID, nome, username distinto, perfis e situação do usuário encontrado")
+        void deveRetornarCamposDoUsuarioEncontrado() {
+            Perfil outroPerfil = new Perfil();
+            Usuario encontrado = Usuario.builder().id(43L).nome("Beatriz").username("bia.ops")
+                    .senha("hash-de-beatriz").perfis(List.of(outroPerfil, perfil)).ativo(false).build();
+
+            when(usuarioRepository.findById(43L)).thenReturn(Optional.of(encontrado));
+
+            UsuarioResponse resposta = usuarioService.buscarPorId(43L);
+
+            assertThat(resposta).isEqualTo(new UsuarioResponse(43L, "Beatriz", "bia.ops", List.of(outroPerfil, perfil), false));
+            verify(usuarioRepository).findById(43L);
+            verifyNoMoreInteractions(usuarioRepository);
+            verifyNoInteractions(perfilRepository, passwordEncoder);
+        }
+
         @Test
         @DisplayName("Deve retornar os dados do usuário ativo")
         void deveBuscarPorIdAtivo() {
@@ -373,6 +537,29 @@ class UsuarioServiceTest {
     @DisplayName("Desativar usuário")
     class Desativar {
         @Test
+        @DisplayName("Deve preservar dados, senha e perfis ao desativar e repetir a desativação")
+        void devePreservarDadosEmDesativacoesSucessivas() {
+            UsuarioResponse anterior = criarResponse(usuario);
+            String senhaAnterior = usuario.getSenha();
+
+            when(usuarioRepository.findById(ID)).thenReturn(Optional.of(usuario));
+
+            usuarioService.desativar(ID);
+
+            assertThat(usuario.isAtivo()).isFalse();
+            assertThat(criarResponse(usuario)).usingRecursiveComparison().ignoringFields("ativo").isEqualTo(anterior);
+
+            usuarioService.desativar(ID);
+
+            assertThat(usuario.isAtivo()).isFalse();
+            assertThat(criarResponse(usuario)).usingRecursiveComparison().ignoringFields("ativo").isEqualTo(anterior);
+            assertThat(usuario.getSenha()).isEqualTo(senhaAnterior);
+            verify(usuarioRepository, times(2)).findById(ID);
+            verifyNoMoreInteractions(usuarioRepository);
+            verifyNoInteractions(perfilRepository, passwordEncoder);
+        }
+
+        @Test
         @DisplayName("Deve desativar um usuário ativo")
         void deveDesativarAtivo() {
             when(usuarioRepository.findById(ID)).thenReturn(Optional.of(usuario));
@@ -433,6 +620,44 @@ class UsuarioServiceTest {
     @Nested
     @DisplayName("Alterar senha do usuário")
     class AlterarSenha {
+        @Test
+        @DisplayName("Deve verificar a senha e gravar o hash novo no ID do usuário recebido, preservando seus demais dados")
+        void deveAlterarSenhaDoUsuarioCorreto() {
+            Usuario alvo = Usuario.builder().id(47L).nome("Beatriz").username("bia.ops")
+                    .senha("hash-atual-47").perfis(List.of(perfil)).ativo(true).build();
+            UsuarioResponse anterior = criarResponse(alvo);
+            AlterarSenhaUsuarioDto dados = new AlterarSenhaUsuarioDto("Atual!47", "Nova!47", "Nova!47");
+
+            when(passwordEncoder.matches("Atual!47", "hash-atual-47")).thenReturn(true);
+            when(passwordEncoder.encode("Nova!47")).thenReturn("hash-novo-47");
+
+            usuarioService.alterarSenha(dados, alvo);
+
+            var ordem = inOrder(passwordEncoder, usuarioRepository);
+            ordem.verify(passwordEncoder).matches("Atual!47", "hash-atual-47");
+            ordem.verify(passwordEncoder).encode("Nova!47");
+            ordem.verify(usuarioRepository).alterarSenha(47L, "hash-novo-47");
+            assertThat(criarResponse(alvo)).isEqualTo(anterior);
+            verifyNoMoreInteractions(passwordEncoder, usuarioRepository);
+            verifyNoInteractions(perfilRepository);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"NovaSenha123", "novaSenha123 ", " novaSenha123"})
+        @DisplayName("Deve exigir confirmação exatamente igual à nova senha antes de criptografar ou gravar")
+        void deveExigirConfirmacaoExata(String confirmacao) {
+            AlterarSenhaUsuarioDto dados = new AlterarSenhaUsuarioDto("senha123", "novaSenha123", confirmacao);
+
+            when(passwordEncoder.matches("senha123", SENHA_CRIPTOGRAFADA)).thenReturn(true);
+
+            assertThatThrownBy(() -> usuarioService.alterarSenha(dados, usuario))
+                    .isInstanceOf(BusinessException.class).hasMessage("Nova senha e confirmação não coincidem!");
+
+            verify(passwordEncoder).matches("senha123", SENHA_CRIPTOGRAFADA);
+            verifyNoMoreInteractions(passwordEncoder);
+            verifyNoInteractions(usuarioRepository, perfilRepository);
+        }
+
         @Test
         @DisplayName("Deve validar senha atual e salvar a nova senha criptografada")
         void deveAlterarSenha() {

@@ -23,15 +23,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -90,10 +90,119 @@ class PedidoServiceTest {
     @Nested
     @DisplayName("Registrar pedido")
     class Registrar {
+        @ParameterizedTest
+        @CsvSource({
+                "CONGELADO, 60.49, 3, 0.60, 1.80",
+                "CONGELADO, 60.50, 3, 0.61, 1.83",
+                "CONGELADO, 60.51, 3, 0.61, 1.83",
+                "PROCESSADO, 55.55, 150, 0.56, 84.00",
+                "PROCESSADO, 1.00, 7, 0.01, 0.07"
+        })
+        @DisplayName("Deve selecionar o preço do catálogo e aplicar HALF_UP antes de multiplicar a quantidade")
+        void deveCalcularPrecoPorTipo(TipoPreco tipo, String cento, int quantidade, String unitario, String subtotal) {
+            salgado.setPrecoCentoCongelado(new BigDecimal(tipo == TipoPreco.CONGELADO ? cento : "135.00"));
+            salgado.setPrecoCentoProcessado(new BigDecimal(tipo == TipoPreco.PROCESSADO ? cento : "246.00"));
+            request = criarRequest(TipoEntrega.RETIRADA, null, List.of(new ItemPedidoDto(SALGADO_ID, quantidade, tipo)), null);
+
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+
+            CriacaoPedidoResponse resposta = pedidoService.registrar(request);
+
+            assertThat(resposta.itens()).containsExactly(new ItemPedidoResponse(null, null, "Coxinha", quantidade,
+                    tipo, new BigDecimal(unitario), new BigDecimal(subtotal)));
+            assertThat(resposta.valorTotal()).isEqualByComparingTo(subtotal);
+            assertThat(resposta.frete()).isNull();
+            assertThat(resposta.enderecoEntrega()).isNull();
+            verify(clienteRepository).findById(CLIENTE_ID);
+            verify(usuarioRepository).findById(USUARIO_ID);
+            verify(salgadoRepository).findById(SALGADO_ID);
+            verify(pedidoRepository).save(any(Pedido.class));
+            verifyNoMoreInteractions(pedidoRepository, clienteRepository, usuarioRepository, salgadoRepository);
+        }
+
+        @Test
+        @DisplayName("Deve registrar produtos distintos, preservar seus vínculos e somar o frete apenas uma vez")
+        void deveRegistrarProdutosDistintos() {
+            Salgado segundo = new Salgado(41L, "Esfiha", "Queijo", Categoria.FRITO,
+                    new BigDecimal("72.50"), new BigDecimal("91.49"), true);
+            request = criarRequest(TipoEntrega.ENTREGA, new BigDecimal("2.35"), List.of(
+                    new ItemPedidoDto(SALGADO_ID, 50, TipoPreco.CONGELADO),
+                    new ItemPedidoDto(41L, 3, TipoPreco.PROCESSADO)));
+
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+            when(salgadoRepository.findById(41L)).thenReturn(Optional.of(segundo));
+            when(pedidoRepository.save(any(Pedido.class))).thenAnswer(invocacao -> {
+                Pedido novo = invocacao.getArgument(0);
+                assertThat(novo.getId()).isNull();
+                assertThat(novo.getItens()).hasSize(2).allSatisfy(item -> {
+                    assertThat(item.getId()).isNull();
+                    assertThat(item.getPedido()).isSameAs(novo);
+                });
+                assertThat(novo.getItens().get(0).getSalgado()).isSameAs(salgado);
+                assertThat(novo.getItens().get(1).getSalgado()).isSameAs(segundo);
+                novo.setId(87L);
+                novo.getItens().get(0).setId(501L);
+                novo.getItens().get(1).setId(502L);
+                return novo;
+            });
+
+            CriacaoPedidoResponse resposta = pedidoService.registrar(request);
+
+            assertThat(resposta.id()).isEqualTo(87L);
+            assertThat(resposta.itens()).containsExactly(
+                    new ItemPedidoResponse(501L, 87L, "Coxinha", 50, TipoPreco.CONGELADO, new BigDecimal("0.60"), new BigDecimal("30.00")),
+                    new ItemPedidoResponse(502L, 87L, "Esfiha", 3, TipoPreco.PROCESSADO, new BigDecimal("0.91"), new BigDecimal("2.73")));
+            assertThat(resposta.valorTotal()).isEqualByComparingTo("35.08");
+            assertThat(resposta.frete()).isEqualByComparingTo("2.35");
+            assertThat(resposta.status()).isEqualTo(StatusPedido.EM_ANDAMENTO);
+            verify(clienteRepository).findById(CLIENTE_ID);
+            verify(usuarioRepository).findById(USUARIO_ID);
+            verify(salgadoRepository).findById(SALGADO_ID);
+            verify(salgadoRepository).findById(41L);
+            verify(pedidoRepository).save(any(Pedido.class));
+            verifyNoMoreInteractions(pedidoRepository, clienteRepository, usuarioRepository, salgadoRepository);
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        @DisplayName("Deve interromper o cadastro sem salvar ou consultar o terceiro item quando o segundo for inexistente ou inativo")
+        void deveInterromperNoSegundoItemInvalido(boolean segundoExiste) {
+            request = criarRequest(TipoEntrega.ENTREGA, new BigDecimal("2.00"), List.of(
+                    new ItemPedidoDto(SALGADO_ID, 3, TipoPreco.CONGELADO),
+                    new ItemPedidoDto(37L, 2, TipoPreco.PROCESSADO),
+                    new ItemPedidoDto(77L, 1, TipoPreco.CONGELADO)));
+
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+
+            Salgado segundo = new Salgado(37L, "Kibe", "Carne", Categoria.FRITO,
+                    new BigDecimal("70.00"), new BigDecimal("90.00"), false);
+
+            when(salgadoRepository.findById(37L)).thenReturn(segundoExiste ? Optional.of(segundo) : Optional.empty());
+
+            assertThatThrownBy(() -> pedidoService.registrar(request))
+                    .isInstanceOf(segundoExiste ? BusinessException.class : NotFoundException.class)
+                    .hasMessage(segundoExiste ? "Salgado com ID 37 está inativo e não pode ser adicionado ao pedido."
+                            : "Salgado não encontrado com o ID: 37");
+
+            verify(clienteRepository).findById(CLIENTE_ID);
+            verify(usuarioRepository).findById(USUARIO_ID);
+            verify(salgadoRepository).findById(SALGADO_ID);
+            verify(salgadoRepository).findById(37L);
+            verifyNoInteractions(pedidoRepository);
+            verifyNoMoreInteractions(clienteRepository, usuarioRepository, salgadoRepository);
+        }
+
         @Test
         @DisplayName("Deve rejeitar entrega sem endereço mesmo quando o cliente possui endereço")
         void deveRejeitarEntregaSemEndereco() throws NotFoundException {
             request = criarRequest(TipoEntrega.ENTREGA, request.frete(), request.itens(), null);
+
             when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
             when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
             when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
@@ -123,6 +232,13 @@ class PedidoServiceTest {
             when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
             when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
             when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+            when(pedidoRepository.save(any(Pedido.class))).thenAnswer(invocacao -> {
+                Pedido novo = invocacao.getArgument(0);
+                assertThat(novo.getId()).isNull();
+                novo.setId(PEDIDO_ID);
+                novo.getItens().getFirst().setId(501L);
+                return novo;
+            });
 
             CriacaoPedidoResponse resposta = pedidoService.registrar(request);
 
@@ -139,6 +255,7 @@ class PedidoServiceTest {
             assertThat(resposta.cliente()).isEqualTo(new ClientePedidoDto(CLIENTE_ID, cliente.getNome()));
             assertThat(resposta.usuarioResponsavel()).isEqualTo(new UsuarioPedidoDto(USUARIO_ID, usuario.getNome()));
             assertThat(resposta.status()).isEqualTo(StatusPedido.EM_ANDAMENTO);
+            assertThat(resposta.id()).isEqualTo(PEDIDO_ID);
             assertThat(resposta.tipoEntrega()).isEqualTo(TipoEntrega.ENTREGA);
             assertThat(resposta.formaPagamento()).isEqualTo(FormaPagamento.PIX);
             assertThat(resposta.dataPedido()).isEqualTo(DATA_PEDIDO);
@@ -147,7 +264,7 @@ class PedidoServiceTest {
             assertThat(resposta.enderecoEntrega()).isNotSameAs(cliente.getEndereco());
             assertThat(resposta.frete()).isEqualByComparingTo("10.00");
             assertThat(resposta.valorTotal()).isEqualByComparingTo("40.00");
-            assertThat(resposta.itens()).containsExactly(new ItemPedidoResponse(null, null,
+            assertThat(resposta.itens()).containsExactly(new ItemPedidoResponse(501L, PEDIDO_ID,
                     "Coxinha", 50, TipoPreco.CONGELADO, new BigDecimal("0.60"), new BigDecimal("30.00")));
             verify(clienteRepository).findById(CLIENTE_ID);
             verify(usuarioRepository).findById(USUARIO_ID);
@@ -378,6 +495,125 @@ class PedidoServiceTest {
     @Nested
     @DisplayName("Atualizar pedido")
     class Atualizar {
+        @ParameterizedTest
+        @CsvSource({
+                "CONGELADO, 60.49, 3, 0.60, 1.80",
+                "CONGELADO, 60.50, 3, 0.61, 1.83",
+                "CONGELADO, 60.51, 3, 0.61, 1.83",
+                "PROCESSADO, 55.55, 150, 0.56, 84.00",
+                "PROCESSADO, 1.00, 7, 0.01, 0.07"
+        })
+        @DisplayName("Deve recalcular com o preço atual do catálogo e substituir o subtotal anterior")
+        void deveRecalcularPrecoPorTipo(TipoPreco tipo, String cento, int quantidade, String unitario, String subtotal) {
+            pedido.setFrete(null);
+            salgado.setPrecoCentoCongelado(new BigDecimal(tipo == TipoPreco.CONGELADO ? cento : "135.00"));
+            salgado.setPrecoCentoProcessado(new BigDecimal(tipo == TipoPreco.PROCESSADO ? cento : "246.00"));
+            request = criarRequest(TipoEntrega.RETIRADA, null, List.of(new ItemPedidoDto(SALGADO_ID, quantidade, tipo)), null);
+            when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+
+            CriacaoPedidoResponse resposta = pedidoService.atualizar(PEDIDO_ID, request);
+
+            assertThat(resposta.itens()).containsExactly(new ItemPedidoResponse(null, PEDIDO_ID, "Coxinha", quantidade,
+                    tipo, new BigDecimal(unitario), new BigDecimal(subtotal)));
+            assertThat(resposta.id()).isEqualTo(PEDIDO_ID);
+            assertThat(resposta.status()).isEqualTo(StatusPedido.EM_ANDAMENTO);
+            assertThat(resposta.valorTotal()).isEqualByComparingTo(subtotal);
+            assertThat(resposta.enderecoEntrega()).isNull();
+            verify(pedidoRepository).findById(PEDIDO_ID);
+            verify(pedidoRepository).save(pedido);
+            verify(clienteRepository).findById(CLIENTE_ID);
+            verify(usuarioRepository).findById(USUARIO_ID);
+            verify(salgadoRepository).findById(SALGADO_ID);
+            verifyNoMoreInteractions(pedidoRepository, clienteRepository, usuarioRepository, salgadoRepository);
+        }
+
+        @Test
+        @DisplayName("Deve substituir os itens, atualizar o endereço e retornar novos IDs sem acumular o total antigo")
+        void deveAtualizarProdutosDistintos() {
+            salgado.setPrecoCentoCongelado(new BigDecimal("65.50"));
+            Salgado segundo = new Salgado(41L, "Esfiha", "Queijo", Categoria.FRITO,
+                    new BigDecimal("72.50"), new BigDecimal("91.49"), true);
+            pedido.setFrete(new BigDecimal("2.35"));
+            EnderecoDto endereco = new EnderecoDto("Avenida Central", "81", "Fundos", "30110010",
+                    "Funcionários", "Belo Horizonte", "MG");
+            request = criarRequest(TipoEntrega.ENTREGA, new BigDecimal("2.35"), List.of(
+                    new ItemPedidoDto(SALGADO_ID, 50, TipoPreco.CONGELADO),
+                    new ItemPedidoDto(41L, 3, TipoPreco.PROCESSADO)), endereco);
+
+            when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+            when(salgadoRepository.findById(41L)).thenReturn(Optional.of(segundo));
+            when(pedidoRepository.save(pedido)).thenAnswer(invocacao -> {
+                assertThat(pedido.getItens()).hasSize(2).allSatisfy(item -> {
+                    assertThat(item.getId()).isNull();
+                    assertThat(item.getPedido()).isSameAs(pedido);
+                });
+                assertThat(pedido.getItens().get(0).getSalgado()).isSameAs(salgado);
+                assertThat(pedido.getItens().get(1).getSalgado()).isSameAs(segundo);
+                pedido.getItens().get(0).setId(501L);
+                pedido.getItens().get(1).setId(502L);
+                return pedido;
+            });
+
+            CriacaoPedidoResponse resposta = pedidoService.atualizar(PEDIDO_ID, request);
+
+            assertThat(resposta.id()).isEqualTo(PEDIDO_ID);
+            assertThat(resposta.itens()).containsExactly(
+                    new ItemPedidoResponse(501L, PEDIDO_ID, "Coxinha", 50, TipoPreco.CONGELADO, new BigDecimal("0.66"), new BigDecimal("33.00")),
+                    new ItemPedidoResponse(502L, PEDIDO_ID, "Esfiha", 3, TipoPreco.PROCESSADO, new BigDecimal("0.91"), new BigDecimal("2.73")));
+            assertThat(resposta.valorTotal()).isEqualByComparingTo("38.08");
+            assertThat(resposta.frete()).isEqualByComparingTo("2.35");
+            assertThat(resposta.enderecoEntrega()).usingRecursiveComparison().isEqualTo(endereco);
+            assertThat(cliente.getEndereco()).usingRecursiveComparison().isEqualTo(
+                    new Endereco("Rua A", "10", null, "01001000", "Centro", "Sao Bernardo", "SP"));
+            assertThat(resposta.status()).isEqualTo(StatusPedido.EM_ANDAMENTO);
+            assertThat(resposta.dataPedido()).isEqualTo(DATA_PEDIDO);
+            assertThat(resposta.dataEntrega()).isEqualTo(DATA_ENTREGA);
+            assertThat(resposta.formaPagamento()).isEqualTo(FormaPagamento.PIX);
+            verify(pedidoRepository).findById(PEDIDO_ID);
+            verify(pedidoRepository).save(pedido);
+            verify(clienteRepository).findById(CLIENTE_ID);
+            verify(usuarioRepository).findById(USUARIO_ID);
+            verify(salgadoRepository).findById(SALGADO_ID);
+            verify(salgadoRepository).findById(41L);
+            verifyNoMoreInteractions(pedidoRepository, clienteRepository, usuarioRepository, salgadoRepository);
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        @DisplayName("Deve interromper a edição sem salvar ou consultar o terceiro item quando o segundo for inexistente ou inativo")
+        void deveInterromperNoSegundoItemInvalido(boolean segundoExiste) {
+            request = criarRequest(TipoEntrega.ENTREGA, pedido.getFrete(), List.of(
+                    new ItemPedidoDto(SALGADO_ID, 3, TipoPreco.CONGELADO),
+                    new ItemPedidoDto(37L, 2, TipoPreco.PROCESSADO),
+                    new ItemPedidoDto(77L, 1, TipoPreco.CONGELADO)));
+
+            when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+            Salgado segundo = new Salgado(37L, "Kibe", "Carne", Categoria.FRITO,
+                    new BigDecimal("70.00"), new BigDecimal("90.00"), false);
+            when(salgadoRepository.findById(37L)).thenReturn(segundoExiste ? Optional.of(segundo) : Optional.empty());
+
+            assertThatThrownBy(() -> pedidoService.atualizar(PEDIDO_ID, request))
+                    .isInstanceOf(segundoExiste ? BusinessException.class : NotFoundException.class)
+                    .hasMessage(segundoExiste ? "Salgado com ID 37 está inativo e não pode ser adicionado ao pedido."
+                            : "Salgado não encontrado com o ID: 37");
+
+            verify(pedidoRepository).findById(PEDIDO_ID);
+            verify(clienteRepository).findById(CLIENTE_ID);
+            verify(usuarioRepository).findById(USUARIO_ID);
+            verify(salgadoRepository).findById(SALGADO_ID);
+            verify(salgadoRepository).findById(37L);
+            verifyNoMoreInteractions(pedidoRepository, clienteRepository, usuarioRepository, salgadoRepository);
+        }
+
         @Test
         @DisplayName("Deve rejeitar entrega sem endereço sem reutilizar o endereço anterior ou do cliente")
         void deveRejeitarEntregaSemEndereco() throws NotFoundException {
@@ -732,6 +968,68 @@ class PedidoServiceTest {
     @Nested
     @DisplayName("Listar pedidos com filtro")
     class ListarComFiltro {
+        @ParameterizedTest
+        @CsvSource({
+                "2026-11-20T15:30, , 2026-11-20T00:00, 2026-11-20T23:59:59",
+                "2026-11-20T21:45, 2026-11-23T06:10, 2026-11-20T00:00, 2026-11-23T23:59:59",
+                "2026-12-31T10:15, 2027-01-01T18:45, 2026-12-31T00:00, 2027-01-01T23:59:59"
+        })
+        @DisplayName("Deve expandir períodos válidos para os limites dos dias e preservar os demais filtros")
+        void deveNormalizarPeriodoDeEntrega(String inicio, String fim, String limiteInicial, String limiteFinal) {
+            PedidoFiltroDto filtro = criarFiltro(LocalDateTime.parse(inicio), fim == null ? null : LocalDateTime.parse(fim));
+            LocalDateTime esperadoInicio = LocalDateTime.parse(limiteInicial);
+            LocalDateTime esperadoFim = LocalDateTime.parse(limiteFinal);
+
+            when(pedidoRepository.findWithFiltros(StatusPedido.EM_ANDAMENTO, CLIENTE_ID, "Matheus", DATA_PEDIDO,
+                    esperadoInicio, esperadoFim, TipoEntrega.ENTREGA, FormaPagamento.PIX, USUARIO_ID, "Lucia", paginacao))
+                    .thenReturn(Page.empty(paginacao));
+
+            Page<PedidoListagemDto> resposta = pedidoService.listarComFiltro(filtro, paginacao);
+
+            assertThat(resposta.getContent()).isEmpty();
+            assertThat(resposta.getPageable()).isEqualTo(paginacao);
+            assertThat(resposta.getTotalElements()).isZero();
+            assertThat(resposta.getTotalPages()).isZero();
+            verify(pedidoRepository).findWithFiltros(StatusPedido.EM_ANDAMENTO, CLIENTE_ID, "Matheus", DATA_PEDIDO,
+                    esperadoInicio, esperadoFim, TipoEntrega.ENTREGA, FormaPagamento.PIX, USUARIO_ID, "Lucia", paginacao);
+            verifyNoMoreInteractions(pedidoRepository);
+            verifyNoInteractions(clienteRepository, usuarioRepository, salgadoRepository);
+        }
+
+        @ParameterizedTest
+        @CsvSource({"1, 2, 7, false", "3, 1, 7, true", "4, 0, 7, true"})
+        @DisplayName("Deve preservar conteúdo, ordem e metadados de páginas posteriores, parciais e vazias")
+        void devePreservarPaginaRetornada(int pagina, int quantidade, long total, boolean ultima) {
+            Pageable requisitada = PageRequest.of(pagina, 2, Sort.by("dataEntrega").descending());
+            Pedido segundo = criarPedido(83L);
+            segundo.setTipoEntrega(TipoEntrega.RETIRADA);
+            segundo.setEnderecoEntrega(null);
+            segundo.setStatus(StatusPedido.CANCELADO);
+            List<Pedido> conteudo = switch (quantidade) {
+                case 2 -> List.of(segundo, pedido);
+                case 1 -> List.of(pedido);
+                default -> List.of();
+            };
+            PedidoFiltroDto filtro = new PedidoFiltroDto(null, null, null, null, null, null, null, null, null, null);
+
+            when(pedidoRepository.findWithFiltros(null, null, null, null, null, null, null, null, null, null, requisitada))
+                    .thenReturn(new PageImpl<>(conteudo, requisitada, total));
+
+            Page<PedidoListagemDto> resposta = pedidoService.listarComFiltro(filtro, requisitada);
+
+            assertThat(resposta.getContent()).containsExactlyElementsOf(conteudo.stream().map(PedidoServiceTest.this::criarResponse).toList());
+            assertThat(resposta.getPageable()).isEqualTo(requisitada);
+            assertThat(resposta.getNumber()).isEqualTo(pagina);
+            assertThat(resposta.getSize()).isEqualTo(2);
+            assertThat(resposta.getTotalElements()).isEqualTo(total);
+            assertThat(resposta.getTotalPages()).isEqualTo(4);
+            assertThat(resposta.hasPrevious()).isTrue();
+            assertThat(resposta.isLast()).isEqualTo(ultima);
+            verify(pedidoRepository).findWithFiltros(null, null, null, null, null, null, null, null, null, null, requisitada);
+            verifyNoMoreInteractions(pedidoRepository);
+            verifyNoInteractions(clienteRepository, usuarioRepository, salgadoRepository);
+        }
+
         @Test
         @DisplayName("Deve repassar todos os filtros e preservar dados da página")
         void deveListarComFiltros() {
@@ -803,7 +1101,7 @@ class PedidoServiceTest {
         }
 
         @Test
-        @DisplayName("Deve manter limites nulos quando somente o fim for informado")
+        @DisplayName("Caracterização do comportamento atual: ignora o fim informado sem início")
         void deveIgnorarFimSemInicio() throws NotFoundException {
             PedidoFiltroDto filtro = criarFiltro(null, DATA_ENTREGA);
 
@@ -848,6 +1146,29 @@ class PedidoServiceTest {
     @Nested
     @DisplayName("Buscar pedido por ID")
     class BuscarPorId {
+        @Test
+        @DisplayName("Deve distinguir IDs de pedido, cliente, responsável e item ao retornar todos os dados")
+        void deveRetornarDadosDasEntidadesCorretas() {
+            Pedido encontrado = criarPedido(123L);
+            encontrado.setCliente(new Cliente(54L, "Ana", "21912345678", true, cliente.getEndereco()));
+            encontrado.setUsuarioResponsavel(Usuario.builder().id(28L).nome("Bruno").ativo(true).build());
+            encontrado.setStatus(StatusPedido.CONCLUIDO);
+
+            when(pedidoRepository.findById(123L)).thenReturn(Optional.of(encontrado));
+
+            PedidoListagemDto resposta = pedidoService.buscarPorId(123L);
+
+            assertThat(resposta).isEqualTo(new PedidoListagemDto(123L, new ClientePedidoDto(54L, "Ana"),
+                    StatusPedido.CONCLUIDO, List.of(new ItemPedidoResponse(100L, 123L, "Coxinha", 100,
+                    TipoPreco.CONGELADO, new BigDecimal("0.60"), new BigDecimal("60.00"))),
+                    new BigDecimal("5.00"), new BigDecimal("65.00"), DATA_PEDIDO.minusDays(1), DATA_ENTREGA.minusDays(1),
+                    TipoEntrega.ENTREGA, new EnderecoDto("Rua A", "10", null, "01001000", "Centro", "Sao Bernardo", "SP"),
+                    FormaPagamento.DINHEIRO, new UsuarioPedidoDto(28L, "Bruno")));
+            verify(pedidoRepository).findById(123L);
+            verifyNoMoreInteractions(pedidoRepository);
+            verifyNoInteractions(clienteRepository, usuarioRepository, salgadoRepository);
+        }
+
         @Test
         @DisplayName("Deve retornar os dados completos do pedido encontrado")
         void deveBuscar() throws NotFoundException {
@@ -940,6 +1261,7 @@ class PedidoServiceTest {
             pedidoService.alterarStatus(PEDIDO_ID, new AlterarStatusPedidoDto(StatusPedido.CONCLUIDO));
 
             assertThat(pedido.getStatus()).isEqualTo(StatusPedido.CONCLUIDO);
+            assertThat(criarResponse(pedido)).usingRecursiveComparison().ignoringFields("status").isEqualTo(anterior);
             assertThat(pedido.getValorTotal()).isEqualTo(anterior.valorTotal());
             assertThat(pedido.getDataEntrega()).isEqualTo(anterior.dataEntrega());
             assertThat(pedido.getCliente()).isSameAs(cliente);
@@ -962,6 +1284,7 @@ class PedidoServiceTest {
             pedidoService.alterarStatus(PEDIDO_ID, new AlterarStatusPedidoDto(StatusPedido.CANCELADO));
 
             assertThat(pedido.getStatus()).isEqualTo(StatusPedido.CANCELADO);
+            assertThat(criarResponse(pedido)).usingRecursiveComparison().ignoringFields("status").isEqualTo(anterior);
             assertThat(pedido.getValorTotal()).isEqualTo(anterior.valorTotal());
             assertThat(pedido.getDataEntrega()).isEqualTo(anterior.dataEntrega());
             assertThat(pedido.getCliente()).isSameAs(cliente);
@@ -984,6 +1307,7 @@ class PedidoServiceTest {
             pedidoService.alterarStatus(PEDIDO_ID, new AlterarStatusPedidoDto(StatusPedido.EM_ANDAMENTO));
 
             assertThat(pedido.getStatus()).isEqualTo(StatusPedido.EM_ANDAMENTO);
+            assertThat(criarResponse(pedido)).usingRecursiveComparison().ignoringFields("status").isEqualTo(anterior);
             assertThat(pedido.getValorTotal()).isEqualTo(anterior.valorTotal());
             assertThat(pedido.getDataEntrega()).isEqualTo(anterior.dataEntrega());
             assertThat(pedido.getCliente()).isSameAs(cliente);
@@ -1072,7 +1396,7 @@ class PedidoServiceTest {
     }
 
     private CriacaoPedidoRequest criarRequest(TipoEntrega tipoEntrega, BigDecimal frete, List<ItemPedidoDto> itens,
-                                             EnderecoDto endereco) {
+                                              EnderecoDto endereco) {
         return new CriacaoPedidoRequest(CLIENTE_ID, itens,
                 endereco,
                 DATA_PEDIDO, DATA_ENTREGA, tipoEntrega, FormaPagamento.PIX, USUARIO_ID, frete);
