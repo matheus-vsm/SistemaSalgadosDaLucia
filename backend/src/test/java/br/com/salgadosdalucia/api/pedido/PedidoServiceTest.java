@@ -91,7 +91,34 @@ class PedidoServiceTest {
     @DisplayName("Registrar pedido")
     class Registrar {
         @Test
-        @DisplayName("Deve registrar pedido com preço congelado, frete e endereço do cliente")
+        @DisplayName("Deve rejeitar entrega sem endereço mesmo quando o cliente possui endereço")
+        void deveRejeitarEntregaSemEndereco() throws NotFoundException {
+            request = criarRequest(TipoEntrega.ENTREGA, request.frete(), request.itens(), null);
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+
+            assertThatThrownBy(() -> pedidoService.registrar(request))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessage("Endereço de entrega é obrigatório para pedidos com entrega.");
+
+            verify(pedidoRepository, never()).save(any(Pedido.class));
+        }
+
+        @Test
+        @DisplayName("Deve registrar retirada com endereço nulo")
+        void deveRegistrarRetiradaSemEndereco() throws NotFoundException {
+            request = criarRequest(TipoEntrega.RETIRADA, null, request.itens(), null);
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+
+            assertThat(pedidoService.registrar(request).enderecoEntrega()).isNull();
+            verify(pedidoRepository).save(any(Pedido.class));
+        }
+
+        @Test
+        @DisplayName("Deve registrar pedido com preço congelado, frete e endereço informado")
         void deveRegistrar() throws NotFoundException {
             when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
             when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
@@ -116,7 +143,8 @@ class PedidoServiceTest {
             assertThat(resposta.formaPagamento()).isEqualTo(FormaPagamento.PIX);
             assertThat(resposta.dataPedido()).isEqualTo(DATA_PEDIDO);
             assertThat(resposta.dataEntrega()).isEqualTo(DATA_ENTREGA);
-            assertThat(resposta.enderecoEntrega()).isEqualTo(cliente.getEndereco());
+            assertThat(resposta.enderecoEntrega()).usingRecursiveComparison().isEqualTo(request.enderecoEntrega());
+            assertThat(resposta.enderecoEntrega()).isNotSameAs(cliente.getEndereco());
             assertThat(resposta.frete()).isEqualByComparingTo("10.00");
             assertThat(resposta.valorTotal()).isEqualByComparingTo("40.00");
             assertThat(resposta.itens()).containsExactly(new ItemPedidoResponse(null, null,
@@ -351,6 +379,39 @@ class PedidoServiceTest {
     @DisplayName("Atualizar pedido")
     class Atualizar {
         @Test
+        @DisplayName("Deve rejeitar entrega sem endereço sem reutilizar o endereço anterior ou do cliente")
+        void deveRejeitarEntregaSemEndereco() throws NotFoundException {
+            request = criarRequest(TipoEntrega.ENTREGA, request.frete(), request.itens(), null);
+            when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+
+            assertThatThrownBy(() -> pedidoService.atualizar(PEDIDO_ID, request))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessage("Endereço de entrega é obrigatório para pedidos com entrega.");
+
+            verify(pedidoRepository, never()).save(any(Pedido.class));
+        }
+
+        @Test
+        @DisplayName("Deve mudar retirada para entrega com o endereço informado")
+        void deveMudarRetiradaParaEntrega() throws NotFoundException {
+            pedido.setTipoEntrega(TipoEntrega.RETIRADA);
+            pedido.setEnderecoEntrega(null);
+            when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+
+            CriacaoPedidoResponse resposta = pedidoService.atualizar(PEDIDO_ID, request);
+
+            assertThat(resposta.tipoEntrega()).isEqualTo(TipoEntrega.ENTREGA);
+            assertThat(resposta.enderecoEntrega()).usingRecursiveComparison().isEqualTo(request.enderecoEntrega());
+            verify(pedidoRepository).save(pedido);
+        }
+
+        @Test
         @DisplayName("Deve substituir itens e atualizar os dados de um pedido em andamento")
         void deveAtualizar() throws NotFoundException {
             ItemPedido itemAnterior = pedido.getItens().getFirst();
@@ -388,7 +449,7 @@ class PedidoServiceTest {
         @Test
         @DisplayName("Deve remover endereço ao mudar o pedido para retirada")
         void deveRemoverEnderecoNaRetirada() throws NotFoundException {
-            request = criarRequest(TipoEntrega.RETIRADA, pedido.getFrete(), request.itens());
+            request = criarRequest(TipoEntrega.RETIRADA, pedido.getFrete(), request.itens(), null);
 
             when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
             when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
@@ -1006,8 +1067,14 @@ class PedidoServiceTest {
     }
 
     private CriacaoPedidoRequest criarRequest(TipoEntrega tipoEntrega, BigDecimal frete, List<ItemPedidoDto> itens) {
+        return criarRequest(tipoEntrega, frete, itens,
+                new EnderecoDto("Rua B", "20", "Casa", "02002000", "Centro", "São Paulo", "SP"));
+    }
+
+    private CriacaoPedidoRequest criarRequest(TipoEntrega tipoEntrega, BigDecimal frete, List<ItemPedidoDto> itens,
+                                             EnderecoDto endereco) {
         return new CriacaoPedidoRequest(CLIENTE_ID, itens,
-                new EnderecoDto("Rua B", "20", "Casa", "02002000", "Centro", "São Paulo", "SP"),
+                endereco,
                 DATA_PEDIDO, DATA_ENTREGA, tipoEntrega, FormaPagamento.PIX, USUARIO_ID, frete);
     }
 

@@ -43,6 +43,7 @@ formatação monetária brasileira e estilos com ajustes para telas menores.
 - Cadastro de salgados com criação automática do respectivo estoque.
 - Ajustes de estoque por variação positiva ou negativa, sem permitir saldo final negativo.
 - Pedidos associados a clientes, salgados e responsáveis ativos; edição permitida apenas para pedidos `EM_ANDAMENTO`.
+- No cadastro e na edição de pedidos, entrega exige endereço completo informado; retirada mantém endereço nulo. A tela preenche os campos com o endereço do cliente para conferência, mas a API não aplica esse preenchimento automaticamente. Veja as [regras de pedidos](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/3-%E2%80%90-Regras-de-Neg%C3%B3cio#pedidos).
 - Cálculo do preço unitário a partir do preço por cento, subtotais dos itens e total do pedido com frete.
 - Compras com recálculo de subtotais e total no cadastro e na edição.
 - Paginação e filtros, validação de dados, tratamento centralizado de exceções e DTOs para os contratos HTTP.
