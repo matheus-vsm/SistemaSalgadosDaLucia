@@ -48,6 +48,7 @@ public class AutenticacaoController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Tokens atualizados com sucesso."),
             @ApiResponse(responseCode = "400", description = "Refresh token inválido ou expirado."),
+            @ApiResponse(responseCode = "401", description = "Usuário inativo."),
             @ApiResponse(responseCode = "404", description = "Usuário associado ao token não encontrado.")
     })
     public ResponseEntity<TokenResponse> atualizarToken(@RequestBody @Valid DadosRefreshToken dados) throws NotFoundException {

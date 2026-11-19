@@ -294,6 +294,10 @@ A resposta contém `tokenAcesso` e `refreshToken`. Para chamadas protegidas:
 Authorization: Bearer <token_de_acesso>
 ```
 
+Usuários inativos não podem fazer login, renovar tokens ou usar tokens já emitidos. O token de acesso
+expira em 60 minutos e o refresh em 120 minutos; cada um tem finalidade própria e não pode substituir o outro.
+Tokens antigos sem a identificação de finalidade exigem novo login após a atualização.
+
 A renovação está disponível por `POST /autenticacao/atualizar-token`, com o corpo:
 
 ```json
@@ -301,6 +305,13 @@ A renovação está disponível por `POST /autenticacao/atualizar-token`, com o 
   "refreshToken": "seu_refresh_token"
 }
 ```
+
+O refresh pode ser reutilizado até expirar, enquanto o usuário existir e estiver ativo; a renovação não
+revoga o token anterior. Tokens emitidos no mesmo segundo podem ter conteúdo idêntico. O endpoint retorna
+`400` para refresh inválido, `401` para usuário inativo e `404` para usuário removido. Credenciais inválidas
+no filtro de acesso retornam `401` no formato JSON de erro da API. A ausência de credenciais em rota protegida
+mantém a resposta `403` da configuração de segurança. Veja a [matriz da revisão de autenticação](docs/revisoes/autenticacao.md)
+para cenários, decisões e limites da validação.
 
 | Perfil        | Permissões na API                                                                                                      |
 |---------------|------------------------------------------------------------------------------------------------------------------------|
