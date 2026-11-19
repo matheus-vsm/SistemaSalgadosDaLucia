@@ -4,6 +4,7 @@ package br.com.salgadosdalucia.api.autenticacao;
 import br.com.salgadosdalucia.api.autenticacao.dto.DadosLoginDto;
 import br.com.salgadosdalucia.api.autenticacao.dto.TokenResponse;
 import br.com.salgadosdalucia.api.exception.InvalidCredentialsException;
+import br.com.salgadosdalucia.api.exception.BusinessException;
 import br.com.salgadosdalucia.api.shared.helper.ValidacaoEntidadeHelper;
 import br.com.salgadosdalucia.api.usuario.Usuario;
 import br.com.salgadosdalucia.api.usuario.UsuarioRepository;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
@@ -33,15 +35,27 @@ public class AutenticacaoService {
             var usuario = (Usuario) authentication.getPrincipal();
 
             return new TokenResponse(tokenService.gerarToken(usuario), tokenService.gerarRefreshToken(usuario));
-        } catch (BadCredentialsException ex) {
+        } catch (BadCredentialsException | DisabledException ex) {
             throw new InvalidCredentialsException("Usuário ou senha inválidos.");
         }
     }
 
     public TokenResponse atualizarToken(DadosRefreshToken dados) {
         var refreshToken = dados.refreshToken();
-        Long idUsuario = Long.valueOf(tokenService.verificaToken(refreshToken));
+        String subject = tokenService.verificaRefreshToken(refreshToken);
+        Long idUsuario;
+        try {
+            idUsuario = Long.valueOf(subject);
+            if (idUsuario <= 0) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException ex) {
+            throw new BusinessException("Refresh token com identificação de usuário inválida.");
+        }
         var usuario = ValidacaoEntidadeHelper.buscarEntidadePorId(usuarioRepository, idUsuario, "Usuario");
+        if (!usuario.isAtivo()) {
+            throw new InvalidCredentialsException("Usuário inativo.");
+        }
 
         String tokenAcesso = tokenService.gerarToken(usuario);
         String refreshTokenAtualizado = tokenService.gerarRefreshToken(usuario);
