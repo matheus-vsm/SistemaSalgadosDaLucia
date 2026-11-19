@@ -22,6 +22,9 @@ Sistema de gestão de clientes, salgados, estoque, pedidos, compras e usuários.
 
 ## Validação
 
+- Nos testes Java novos ou revisados, organize os cenários por comportamento com `@Nested` e use `@DisplayName` em português nas classes de teste, nos grupos e nos métodos de teste. Use testes parametrizados quando a mesma regra e as mesmas verificações se aplicarem a entradas diferentes.
+- Não crie classes de teste exclusivas para mappers ou DTOs. Verifique as conversões pelas entradas e respostas nos testes da classe principal. Quando necessário, inclua as validações de entrada em grupos `@Nested` desses testes, executando explicitamente o Validator para restrições declarativas; uma chamada direta ao serviço não executa `@Valid` automaticamente.
+
 Execute verificações proporcionais ao impacto e informe o que foi realmente verificado. A partir da raiz, em PowerShell:
 
 ```powershell

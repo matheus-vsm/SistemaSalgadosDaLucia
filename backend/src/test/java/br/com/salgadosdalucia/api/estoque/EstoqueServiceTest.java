@@ -11,14 +11,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -54,6 +53,75 @@ class EstoqueServiceTest {
     @Nested
     @DisplayName("Atualizar quantidade do estoque")
     class AtualizarQuantidade {
+        @ParameterizedTest
+        @CsvSource({
+                "0, 0, 0",
+                "0, 1, 1",
+                "150, 1, 151",
+                "150, -1, 149",
+                "150, -150, 0",
+                "2147483646, 1, 2147483647",
+                "2147483647, -2147483647, 0",
+                "2147483647, -1, 2147483646",
+                "0, 2147483647, 2147483647"
+        })
+        @DisplayName("Deve aplicar ajustes com resultado representável sem alterar ID, vínculo ou dados do salgado")
+        void deveAplicarAjustePreservandoIdentidade(int saldoInicial, int ajuste, int esperado) {
+            estoque.setQuantidade(saldoInicial);
+            when(estoqueRepository.findBySalgadoId(SALGADO_ID)).thenReturn(Optional.of(estoque));
+
+            estoqueService.atualizarQuantidade(SALGADO_ID, new AtualizarQuantidadeRequest(ajuste));
+
+            assertThat(estoque.getQuantidade()).isEqualTo(esperado);
+            assertThat(estoque.getId()).isEqualTo(10L);
+            assertThat(estoque.getSalgado()).isSameAs(salgado);
+            assertThat(salgado).usingRecursiveComparison().isEqualTo(criarSalgado(SALGADO_ID, "Coxinha", true));
+            verify(estoqueRepository).findBySalgadoId(SALGADO_ID);
+            verifyNoMoreInteractions(estoqueRepository);
+        }
+
+        @Test
+        @DisplayName("Deve usar o saldo atualizado a cada ajuste sucessivo, incluindo zerar e repor")
+        void deveAplicarAjustesSucessivos() {
+            when(estoqueRepository.findBySalgadoId(SALGADO_ID)).thenReturn(Optional.of(estoque));
+
+            estoqueService.atualizarQuantidade(SALGADO_ID, new AtualizarQuantidadeRequest(75));
+            assertThat(estoque.getQuantidade()).isEqualTo(225);
+            estoqueService.atualizarQuantidade(SALGADO_ID, new AtualizarQuantidadeRequest(-200));
+            assertThat(estoque.getQuantidade()).isEqualTo(25);
+            estoqueService.atualizarQuantidade(SALGADO_ID, new AtualizarQuantidadeRequest(-25));
+            assertThat(estoque.getQuantidade()).isZero();
+            estoqueService.atualizarQuantidade(SALGADO_ID, new AtualizarQuantidadeRequest(10));
+            assertThat(estoque.getQuantidade()).isEqualTo(10);
+
+            assertThat(estoque.getId()).isEqualTo(10L);
+            assertThat(estoque.getSalgado()).isSameAs(salgado);
+            assertThat(salgado).usingRecursiveComparison().isEqualTo(criarSalgado(SALGADO_ID, "Coxinha", true));
+            verify(estoqueRepository, times(4)).findBySalgadoId(SALGADO_ID);
+            verifyNoMoreInteractions(estoqueRepository);
+        }
+
+        @Test
+        @DisplayName("Deve preservar o último saldo válido após uma retirada rejeitada e permitir novo ajuste")
+        void devePreservarSaldoAposAjusteRejeitado() {
+            when(estoqueRepository.findBySalgadoId(SALGADO_ID)).thenReturn(Optional.of(estoque));
+            estoqueService.atualizarQuantidade(SALGADO_ID, new AtualizarQuantidadeRequest(25));
+            EstoqueListagemDto antesDaFalha = criarResponse(estoque);
+            assertThat(estoque.getQuantidade()).isEqualTo(175);
+
+            assertThatThrownBy(() -> estoqueService.atualizarQuantidade(SALGADO_ID, new AtualizarQuantidadeRequest(-176)))
+                    .isInstanceOf(BusinessException.class).hasMessage("A quantidade no estoque não pode ser negativa.");
+
+            assertThat(criarResponse(estoque)).isEqualTo(antesDaFalha);
+            estoqueService.atualizarQuantidade(SALGADO_ID, new AtualizarQuantidadeRequest(-175));
+            assertThat(estoque.getQuantidade()).isZero();
+            assertThat(estoque.getId()).isEqualTo(10L);
+            assertThat(estoque.getSalgado()).isSameAs(salgado);
+            assertThat(salgado).usingRecursiveComparison().isEqualTo(criarSalgado(SALGADO_ID, "Coxinha", true));
+            verify(estoqueRepository, times(3)).findBySalgadoId(SALGADO_ID);
+            verifyNoMoreInteractions(estoqueRepository);
+        }
+
         @Test
         @DisplayName("Deve somar a quantidade recebida ao estoque atual")
         void deveAdicionarQuantidade() {
@@ -121,26 +189,30 @@ class EstoqueServiceTest {
             verifyNoMoreInteractions(estoqueRepository);
         }
 
-        @Test
+        @ParameterizedTest
+        @CsvSource({"150, -151", "0, -1", "2147483647, -2147483648", "1, -2"})
         @DisplayName("Deve rejeitar retirada maior que o saldo sem alterar o estoque")
-        void deveRejeitarQuantidadeNegativa() {
+        void deveRejeitarQuantidadeNegativa(int saldoInicial, int retirada) {
+            estoque.setQuantidade(saldoInicial);
             EstoqueListagemDto anterior = criarResponse(estoque);
 
             when(estoqueRepository.findBySalgadoId(SALGADO_ID)).thenReturn(Optional.of(estoque));
 
             assertThatThrownBy(() -> estoqueService.atualizarQuantidade(
-                    SALGADO_ID, new AtualizarQuantidadeRequest(-151)))
+                    SALGADO_ID, new AtualizarQuantidadeRequest(retirada)))
                     .isInstanceOf(BusinessException.class)
                     .hasMessage("A quantidade no estoque não pode ser negativa.");
 
             assertThat(criarResponse(estoque)).isEqualTo(anterior);
+            assertThat(estoque.getSalgado()).isSameAs(salgado);
+            assertThat(salgado).usingRecursiveComparison().isEqualTo(criarSalgado(SALGADO_ID, "Coxinha", true));
             verify(estoqueRepository).findBySalgadoId(SALGADO_ID);
             verify(estoqueRepository, never()).save(any(Estoque.class));
             verifyNoMoreInteractions(estoqueRepository);
         }
 
         @Test
-        @DisplayName("Deve atualizar estoque de salgado inativo sem ativá-lo")
+        @DisplayName("Caracterização do comportamento atual: ajusta estoque de salgado inativo sem ativá-lo")
         void deveAtualizarEstoqueDeSalgadoInativo() {
             salgado.setAtivo(false);
 
@@ -188,6 +260,40 @@ class EstoqueServiceTest {
     @Nested
     @DisplayName("Listar estoques de salgados ativos")
     class Listar {
+        @ParameterizedTest
+        @CsvSource({"1, 2, 7, false", "3, 1, 7, true", "4, 0, 7, true"})
+        @DisplayName("Deve preservar ordem, campos e metadados de páginas posteriores, parciais ou vazias")
+        void devePreservarPaginaRetornada(int pagina, int quantidade, long total, boolean ultima) {
+            Pageable requisitada = PageRequest.of(pagina, 2, Sort.by("salgado.nome").descending());
+            Estoque outro = criarEstoque(43L, criarSalgado(17L, "Pastel", true), 803);
+            List<Estoque> conteudo = switch (quantidade) {
+                case 2 -> List.of(outro, estoque);
+                case 1 -> List.of(outro);
+                default -> List.of();
+            };
+            List<EstoqueListagemDto> esperados = switch (quantidade) {
+                case 2 -> List.of(new EstoqueListagemDto(43L, 17L, "Pastel", 803),
+                        new EstoqueListagemDto(10L, SALGADO_ID, "Coxinha", 150));
+                case 1 -> List.of(new EstoqueListagemDto(43L, 17L, "Pastel", 803));
+                default -> List.of();
+            };
+            when(estoqueRepository.findAllSalgadosAtivos(requisitada))
+                    .thenReturn(new PageImpl<>(conteudo, requisitada, total));
+
+            Page<EstoqueListagemDto> resposta = estoqueService.listar(requisitada);
+
+            assertThat(resposta.getContent()).containsExactlyElementsOf(esperados);
+            assertThat(resposta.getPageable()).isEqualTo(requisitada);
+            assertThat(resposta.getNumber()).isEqualTo(pagina);
+            assertThat(resposta.getSize()).isEqualTo(2);
+            assertThat(resposta.getTotalElements()).isEqualTo(total);
+            assertThat(resposta.getTotalPages()).isEqualTo(4);
+            assertThat(resposta.hasPrevious()).isTrue();
+            assertThat(resposta.isLast()).isEqualTo(ultima);
+            verify(estoqueRepository).findAllSalgadosAtivos(requisitada);
+            verifyNoMoreInteractions(estoqueRepository);
+        }
+
         @Test
         @DisplayName("Deve retornar os estoques encontrados e preservar os dados da página")
         void deveListar() {
@@ -217,6 +323,7 @@ class EstoqueServiceTest {
             assertThat(resposta.getContent()).isEmpty();
             assertThat(resposta.getPageable()).isEqualTo(paginacao);
             assertThat(resposta.getTotalElements()).isZero();
+            assertThat(resposta.getTotalPages()).isZero();
             verify(estoqueRepository).findAllSalgadosAtivos(paginacao);
             verifyNoMoreInteractions(estoqueRepository);
         }
@@ -239,6 +346,19 @@ class EstoqueServiceTest {
     @Nested
     @DisplayName("Buscar estoque por ID do salgado")
     class BuscarPorSalgadoId {
+        @Test
+        @DisplayName("Deve distinguir o ID do estoque do ID do salgado e preservar nome e quantidade")
+        void deveRetornarCamposDoEstoqueEncontrado() {
+            Estoque encontrado = criarEstoque(92L, criarSalgado(37L, "Kibe", true), 803);
+            when(estoqueRepository.findBySalgadoId(37L)).thenReturn(Optional.of(encontrado));
+
+            EstoqueListagemDto resposta = estoqueService.buscarPorSalgadoId(37L);
+
+            assertThat(resposta).isEqualTo(new EstoqueListagemDto(92L, 37L, "Kibe", 803));
+            verify(estoqueRepository).findBySalgadoId(37L);
+            verifyNoMoreInteractions(estoqueRepository);
+        }
+
         @Test
         @DisplayName("Deve retornar o estoque de um salgado ativo")
         void deveBuscarEstoqueDeSalgadoAtivo() {

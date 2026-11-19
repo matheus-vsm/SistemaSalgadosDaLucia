@@ -14,15 +14,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -62,6 +62,37 @@ class SalgadoServiceTest {
     @Nested
     @DisplayName("Cadastrar salgado")
     class Cadastrar {
+        @ParameterizedTest
+        @CsvSource({"FRITO, 61.23, 87.65", "ASSADO, 42.10, 95.43", "FRITO, 0.01, 0.02"})
+        @DisplayName("Deve preservar categoria e preços distintos e criar estoque para a entidade devolvida ao salvar")
+        void deveCadastrarComEstoqueVinculadoAoSalgadoSalvo(Categoria categoria, String congelado, String processado) {
+            SalgadoRequest dados = new SalgadoRequest("Salgado especial", "Recheio especial", categoria,
+                    new BigDecimal(congelado), new BigDecimal(processado));
+            Salgado persistido = new Salgado(37L, "Salgado especial", "Recheio especial", categoria,
+                    new BigDecimal(congelado), new BigDecimal(processado), true);
+            Estoque estoqueSalvo = new Estoque(94L, persistido, 0);
+
+            when(salgadoRepository.save(any(Salgado.class))).thenReturn(persistido);
+            when(estoqueRepository.save(any(Estoque.class))).thenReturn(estoqueSalvo);
+
+            SalgadoResponse resposta = salgadoService.cadastrar(dados);
+
+            ArgumentCaptor<Salgado> salgadoEnviado = ArgumentCaptor.forClass(Salgado.class);
+            ArgumentCaptor<Estoque> estoqueEnviado = ArgumentCaptor.forClass(Estoque.class);
+            var ordem = inOrder(salgadoRepository, estoqueRepository);
+            ordem.verify(salgadoRepository).save(salgadoEnviado.capture());
+            ordem.verify(estoqueRepository).save(estoqueEnviado.capture());
+
+            assertThat(salgadoEnviado.getValue()).usingRecursiveComparison().isEqualTo(new Salgado(null,
+                    "Salgado especial", "Recheio especial", categoria, new BigDecimal(congelado), new BigDecimal(processado), true));
+            assertThat(estoqueEnviado.getValue().getId()).isNull();
+            assertThat(estoqueEnviado.getValue().getSalgado()).isSameAs(persistido);
+            assertThat(estoqueEnviado.getValue().getQuantidade()).isZero();
+            assertThat(resposta).isEqualTo(new SalgadoResponse(37L, "Salgado especial", "Recheio especial", categoria,
+                    new BigDecimal(congelado), new BigDecimal(processado), true, new EstoqueSalgadoDto(94L, 0)));
+            verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
+        }
+
         @Test
         @DisplayName("Deve salvar um salgado ativo e criar seu estoque zerado")
         void deveCadastrar() {
@@ -128,6 +159,72 @@ class SalgadoServiceTest {
     @Nested
     @DisplayName("Listar salgados")
     class ListarSalgados {
+        @ParameterizedTest
+        @ValueSource(booleans = {true, false})
+        @DisplayName("Deve retornar todos os salgados com estoque nulo quando a consulta em lote não encontrar estoques")
+        void deveListarSemEstoques(boolean ativo) {
+            salgado.setAtivo(ativo);
+            Salgado segundo = criarSalgado(23L, "Esfiha", ativo);
+
+            when(salgadoRepository.findAllByAtivo(paginacao, ativo))
+                    .thenReturn(new PageImpl<>(List.of(salgado, segundo), paginacao, 2));
+            when(estoqueRepository.findAllBySalgadoIdIn(List.of(ID, 23L))).thenReturn(List.of());
+
+            Page<SalgadoResponse> resposta = salgadoService.listarSalgados(paginacao, ativo);
+
+            assertThat(resposta.getContent()).containsExactly(criarResponse(salgado, null), criarResponse(segundo, null));
+            assertThat(resposta.getTotalElements()).isEqualTo(2);
+            verify(salgadoRepository).findAllByAtivo(paginacao, ativo);
+            verify(estoqueRepository).findAllBySalgadoIdIn(List.of(ID, 23L));
+            verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
+        }
+
+        @ParameterizedTest
+        @CsvSource({"true, 1, 2, 7, false", "false, 3, 1, 7, true", "true, 4, 0, 7, true"})
+        @DisplayName("Deve preservar páginas posteriores e associar estoques pelo ID sem confundir saldo zero com ausência")
+        void devePreservarPaginas(boolean ativo, int pagina, int quantidade, long total, boolean ultima) {
+            Pageable requisitada = PageRequest.of(pagina, 2, Sort.by("nome").descending());
+            salgado.setAtivo(ativo);
+            Salgado segundo = new Salgado(23L, "Esfiha", "Carne", Categoria.ASSADO,
+                    new BigDecimal("73.21"), new BigDecimal("92.34"), ativo);
+            Estoque segundoEstoque = new Estoque(81L, segundo, 0);
+            List<Salgado> conteudo = switch (quantidade) {
+                case 2 -> List.of(segundo, salgado);
+                case 1 -> List.of(segundo);
+                default -> List.of();
+            };
+
+            when(salgadoRepository.findAllByAtivo(requisitada, ativo))
+                    .thenReturn(new PageImpl<>(conteudo, requisitada, total));
+            if (quantidade == 2) {
+                when(estoqueRepository.findAllBySalgadoIdIn(List.of(23L, ID))).thenReturn(List.of(estoque, segundoEstoque));
+            } else if (quantidade == 1) {
+                when(estoqueRepository.findAllBySalgadoIdIn(List.of(23L))).thenReturn(List.of(segundoEstoque));
+            }
+
+            Page<SalgadoResponse> resposta = salgadoService.listarSalgados(requisitada, ativo);
+
+            List<SalgadoResponse> esperados = switch (quantidade) {
+                case 2 -> List.of(criarResponse(segundo, segundoEstoque), criarResponse(salgado, estoque));
+                case 1 -> List.of(criarResponse(segundo, segundoEstoque));
+                default -> List.of();
+            };
+            assertThat(resposta.getContent()).containsExactlyElementsOf(esperados);
+            assertThat(resposta.getPageable()).isEqualTo(requisitada);
+            assertThat(resposta.getNumber()).isEqualTo(pagina);
+            assertThat(resposta.getSize()).isEqualTo(2);
+            assertThat(resposta.getTotalElements()).isEqualTo(total);
+            assertThat(resposta.getTotalPages()).isEqualTo(4);
+            assertThat(resposta.isLast()).isEqualTo(ultima);
+            verify(salgadoRepository).findAllByAtivo(requisitada, ativo);
+            if (quantidade == 0) {
+                verifyNoInteractions(estoqueRepository);
+            } else {
+                verify(estoqueRepository).findAllBySalgadoIdIn(quantidade == 2 ? List.of(23L, ID) : List.of(23L));
+            }
+            verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
+        }
+
         @Test
         @DisplayName("Deve retornar os salgados com seus estoques e os dados da página")
         void deveListarAtivos() {
@@ -243,6 +340,50 @@ class SalgadoServiceTest {
     @Nested
     @DisplayName("Buscar salgados por nome")
     class BuscarPorNome {
+        @ParameterizedTest
+        @CsvSource({"1, 2, 7, false", "3, 1, 7, true", "4, 0, 7, true"})
+        @DisplayName("Deve preservar a paginação da busca e consultar somente os estoques dos salgados da página")
+        void devePreservarPaginaDaBusca(int pagina, int quantidade, long total, boolean ultima) {
+            Pageable requisitada = PageRequest.of(pagina, 2, Sort.by("nome").descending());
+            Salgado segundo = criarSalgado(29L, "Coxinha de queijo", true);
+            List<Salgado> conteudo = switch (quantidade) {
+                case 2 -> List.of(segundo, salgado);
+                case 1 -> List.of(segundo);
+                default -> List.of();
+            };
+
+            when(salgadoRepository.findByNomeContainingIgnoreCase(requisitada, "Coxinha"))
+                    .thenReturn(new PageImpl<>(conteudo, requisitada, total));
+            if (quantidade == 2) {
+                when(estoqueRepository.findAllBySalgadoIdIn(List.of(29L, ID))).thenReturn(List.of(estoque));
+            } else if (quantidade == 1) {
+                when(estoqueRepository.findAllBySalgadoIdIn(List.of(29L))).thenReturn(List.of());
+            }
+
+            Page<SalgadoResponse> resposta = salgadoService.buscarPorNome(requisitada, "Coxinha");
+
+            List<SalgadoResponse> esperados = switch (quantidade) {
+                case 2 -> List.of(criarResponse(segundo, null), criarResponse(salgado, estoque));
+                case 1 -> List.of(criarResponse(segundo, null));
+                default -> List.of();
+            };
+
+            assertThat(resposta.getContent()).containsExactlyElementsOf(esperados);
+            assertThat(resposta.getPageable()).isEqualTo(requisitada);
+            assertThat(resposta.getNumber()).isEqualTo(pagina);
+            assertThat(resposta.getSize()).isEqualTo(2);
+            assertThat(resposta.getTotalElements()).isEqualTo(total);
+            assertThat(resposta.getTotalPages()).isEqualTo(4);
+            assertThat(resposta.isLast()).isEqualTo(ultima);
+            verify(salgadoRepository).findByNomeContainingIgnoreCase(requisitada, "Coxinha");
+            if (quantidade == 0) {
+                verifyNoInteractions(estoqueRepository);
+            } else {
+                verify(estoqueRepository).findAllBySalgadoIdIn(quantidade == 2 ? List.of(29L, ID) : List.of(29L));
+            }
+            verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
+        }
+
         @Test
         @DisplayName("Deve buscar pelo nome informado e retornar os salgados com seus estoques")
         void deveBuscarPorNome() {
@@ -334,6 +475,24 @@ class SalgadoServiceTest {
     @Nested
     @DisplayName("Buscar salgado por ID")
     class BuscarPorId {
+        @Test
+        @DisplayName("Deve distinguir IDs de salgado e estoque e preservar todos os campos e o saldo zero")
+        void deveRetornarCamposDoSalgadoEncontrado() {
+            Salgado encontrado = new Salgado(37L, "Empada", "Frango", Categoria.ASSADO,
+                    new BigDecimal("50.17"), new BigDecimal("71.99"), false);
+
+            when(salgadoRepository.findById(37L)).thenReturn(Optional.of(encontrado));
+            when(estoqueRepository.findBySalgadoId(37L)).thenReturn(Optional.of(new Estoque(503L, encontrado, 0)));
+
+            SalgadoResponse resposta = salgadoService.buscarPorId(37L);
+
+            assertThat(resposta).isEqualTo(new SalgadoResponse(37L, "Empada", "Frango", Categoria.ASSADO,
+                    new BigDecimal("50.17"), new BigDecimal("71.99"), false, new EstoqueSalgadoDto(503L, 0)));
+            verify(salgadoRepository).findById(37L);
+            verify(estoqueRepository).findBySalgadoId(37L);
+            verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
+        }
+
         @Test
         @DisplayName("Deve buscar salgado ativo")
         void deveBuscarSalgadoAtivo() {
@@ -431,6 +590,31 @@ class SalgadoServiceTest {
     @Nested
     @DisplayName("Atualizar salgado")
     class Atualizar {
+        @ParameterizedTest
+        @CsvSource({"true, FRITO, 0", "false, ASSADO, 137", "true, ASSADO, 2147483647", "false, FRITO, 1"})
+        @DisplayName("Deve atualizar todos os dados mantendo ID, situação e o estoque existente intactos")
+        void deveAtualizarSemAlterarEstoque(boolean ativo, Categoria categoria, int saldo) {
+            salgado.setAtivo(ativo);
+            estoque.setQuantidade(saldo);
+            SalgadoRequest novosDados = new SalgadoRequest("Salgado atualizado", "Novo recheio", categoria,
+                    new BigDecimal("67.89"), new BigDecimal("93.21"));
+
+            when(salgadoRepository.findById(ID)).thenReturn(Optional.of(salgado));
+            when(estoqueRepository.findBySalgadoId(ID)).thenReturn(Optional.of(estoque));
+
+            SalgadoResponse resposta = salgadoService.atualizar(ID, novosDados);
+
+            assertThat(resposta).isEqualTo(new SalgadoResponse(ID, "Salgado atualizado", "Novo recheio", categoria,
+                    new BigDecimal("67.89"), new BigDecimal("93.21"), ativo, new EstoqueSalgadoDto(10L, saldo)));
+            assertThat(criarResponse(salgado, estoque)).isEqualTo(resposta);
+            assertThat(estoque.getId()).isEqualTo(10L);
+            assertThat(estoque.getQuantidade()).isEqualTo(saldo);
+            assertThat(estoque.getSalgado()).isSameAs(salgado);
+            verify(salgadoRepository).findById(ID);
+            verify(estoqueRepository).findBySalgadoId(ID);
+            verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
+        }
+
         @Test
         @DisplayName("Deve atualizar salgado ativo")
         void deveAtualizarSalgadoAtivo() {
@@ -551,6 +735,31 @@ class SalgadoServiceTest {
     @Nested
     @DisplayName("Atualizar status do salgado")
     class AtualizarStatus {
+        @Test
+        @DisplayName("Deve preservar dados e estoque ao desativar, rejeitar repetição e ativar novamente")
+        void deveAlternarStatusPreservandoDadosEEstoque() throws BadRequestException {
+            SalgadoResponse anterior = criarResponse(salgado, estoque);
+
+            when(salgadoRepository.findById(ID)).thenReturn(Optional.of(salgado));
+
+            salgadoService.atualizarStatus(ID, new AlterarStatusDto(false));
+
+            assertThat(salgado.isAtivo()).isFalse();
+            SalgadoResponse aposDesativar = criarResponse(salgado, estoque);
+            assertThat(aposDesativar).usingRecursiveComparison().ignoringFields("ativo").isEqualTo(anterior);
+            assertThatThrownBy(() -> salgadoService.atualizarStatus(ID, new AlterarStatusDto(false)))
+                    .isInstanceOf(BadRequestException.class).hasMessage("Salgado Coxinha já está inativo.");
+            assertThat(criarResponse(salgado, estoque)).isEqualTo(aposDesativar);
+
+            salgadoService.atualizarStatus(ID, new AlterarStatusDto(true));
+
+            assertThat(criarResponse(salgado, estoque)).isEqualTo(anterior);
+            assertThat(estoque.getSalgado()).isSameAs(salgado);
+            verify(salgadoRepository, times(3)).findById(ID);
+            verifyNoInteractions(estoqueRepository);
+            verifyNoMoreInteractions(salgadoRepository);
+        }
+
         @Test
         @DisplayName("Deve ativar salgado inativo preservando seus dados")
         void deveAtivarSalgado() throws BadRequestException {
