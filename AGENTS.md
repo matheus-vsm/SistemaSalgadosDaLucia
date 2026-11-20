@@ -46,6 +46,8 @@ Consulte `.github/workflows/ci.yml` para os checks de integração HTTP, contain
 
 Mantenha o README como ponto de entrada e a wiki como documentação detalhada. Preserve funcionalidades planejadas, distinguindo-as do que está implementado. Registre evidências e o commit de referência em revisões da documentação; evite contagens de testes e outros números que envelhecem neste guia.
 
+- Não crie pasta `docs` nem arquivos avulsos de documentação no repositório. Atualize o README ou as páginas existentes da wiki, reaproveitando o conteúdo já documentado e evitando duplicação. Convenções permanentes de agentes ficam neste `AGENTS.md`; procedimentos reutilizáveis ficam nas skills locais.
+
 As skills locais em `.agents/skills` são selecionáveis automaticamente quando pertinentes:
 
 - [salgados-padronizar-telas](.agents/skills/salgados-padronizar-telas/SKILL.md): criação e ajustes de telas, formulários, edição, listagens e notificações.
