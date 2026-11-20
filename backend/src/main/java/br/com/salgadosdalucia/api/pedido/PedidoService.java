@@ -123,6 +123,7 @@ public class PedidoService {
         pedido.setTipoEntrega(request.tipoEntrega());
         pedido.setFormaPagamento(request.formaPagamento());
         pedido.setUsuarioResponsavel(usuario);
+        pedido.setFrete(request.frete());
         atualizarItensPedido(pedido, request.itens());
 
         calcularValorTotal(pedido);
@@ -179,11 +180,10 @@ public class PedidoService {
             precoCento = item.getSalgado().getPrecoCentoProcessado();
         }
 
-        item.setPrecoUnitario(
-                precoCento.divide(BigDecimal.valueOf(100),
-                        2, // casas decimais
-                        RoundingMode.HALF_UP)); // divide por 100 e arredonda para normalmente (0.5 pra cima)
-        item.setSubTotal(item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade()))); // = item.getPrecoUnitario() * item.getQuantidade()
+        item.setPrecoUnitario(precoCento.divide(BigDecimal.valueOf(100)));
+        item.setSubTotal(item.getPrecoUnitario()
+                .multiply(BigDecimal.valueOf(item.getQuantidade()))
+                .setScale(2, RoundingMode.HALF_UP));
     }
 
     private void atualizarItensPedido(Pedido pedido, List<ItemPedidoDto> itensDto) throws NotFoundException {
