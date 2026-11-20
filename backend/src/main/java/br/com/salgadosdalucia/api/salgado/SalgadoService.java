@@ -49,8 +49,8 @@ public class SalgadoService {
         return SalgadoMapper.mapToResponse(salgado, estoque);
     }
 
-    public Page<SalgadoResponse> buscarPorNome(Pageable paginacao, String nome) {
-        return mapearComEstoque(salgadoRepository.findByNomeContainingIgnoreCase(paginacao, nome));
+    public Page<SalgadoResponse> buscarPorNome(Pageable paginacao, String nome, boolean ativo) {
+        return mapearComEstoque(salgadoRepository.findByNomeContainingIgnoreCaseAndAtivo(paginacao, nome, ativo));
     }
 
     @Transactional(rollbackFor = Exception.class)

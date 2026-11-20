@@ -33,9 +33,7 @@ async function listarClientes(pagina = 0, tipo = clientesAtivos, busca = termoBu
 
         if (!carregamento.atual()) return;
 
-        const clientes = termoBusca
-            ? clientesPage.content.filter(cliente => cliente.ativo === tipo)
-            : clientesPage.content;
+        const clientes = clientesPage.content;
 
         paginaAtual = clientesPage.page.number;
 
@@ -113,7 +111,7 @@ async function preencherEndereco(event) {
 
         if (!form?.isConnected || campoCep.value !== cep || versao !== versaoFormularioCliente || salvandoCliente) return;
         if (!endereco) {
-            mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'CEP não encontrado' });
+            mostrarNotificacao({tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'CEP não encontrado'});
             return;
         }
         ['logradouro', 'bairro', 'cidade', 'uf'].forEach(campo => {
@@ -156,7 +154,11 @@ async function salvarCliente() {
 
         if (!form.isConnected || versao !== versaoFormularioCliente) return;
 
-        mostrarNotificacao({ tipo: 'sucesso', titulo: id ? 'Cliente editado com sucesso!' : 'Cliente cadastrado com sucesso!', mensagem: '' });
+        mostrarNotificacao({
+            tipo: 'sucesso',
+            titulo: id ? 'Cliente editado com sucesso!' : 'Cliente cadastrado com sucesso!',
+            mensagem: ''
+        });
         limparFormularioCliente();
 
         await listarClientes(paginaAtual, clientesAtivos, termoBusca);
@@ -344,7 +346,11 @@ async function alterarStatusCliente(id, estado) {
             body: JSON.stringify({status: estado})
         });
 
-        mostrarNotificacao({ tipo: 'sucesso', titulo: `Cliente ${estado ? 'ativado' : 'inativado'} com sucesso!`, mensagem: '' });
+        mostrarNotificacao({
+            tipo: 'sucesso',
+            titulo: `Cliente ${estado ? 'ativado' : 'inativado'} com sucesso!`,
+            mensagem: ''
+        });
         fecharModal();
         listarClientes();
     } catch (erro) {

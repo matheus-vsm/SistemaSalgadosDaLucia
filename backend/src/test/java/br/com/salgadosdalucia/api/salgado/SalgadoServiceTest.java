@@ -341,6 +341,36 @@ class SalgadoServiceTest {
     @DisplayName("Buscar salgados por nome")
     class BuscarPorNome {
         @ParameterizedTest
+        @CsvSource({"true, 1, 1, 5", "false, 1, 1, 5", "true, 3, 0, 5", "false, 3, 0, 5"})
+        @DisplayName("Deve encaminhar nome e status juntos e carregar somente o estoque da página")
+        void deveBuscarPorNomeEStatus(boolean ativo, int numero, int quantidade, long total) {
+            Pageable pagina = PageRequest.of(numero, 2, Sort.by("nome"));
+            salgado.setAtivo(ativo);
+            List<Salgado> conteudo = quantidade == 0 ? List.of() : List.of(salgado);
+
+            when(salgadoRepository.findByNomeContainingIgnoreCaseAndAtivo(pagina, "Cox", ativo))
+                    .thenReturn(new PageImpl<>(conteudo, pagina, total));
+            if (quantidade > 0) {
+                when(estoqueRepository.findAllBySalgadoIdIn(List.of(ID))).thenReturn(List.of(estoque));
+            }
+
+            Page<SalgadoResponse> resposta = salgadoService.buscarPorNome(pagina, "Cox", ativo);
+
+            assertThat(resposta.getContent()).containsExactlyElementsOf(
+                    quantidade == 0 ? List.of() : List.of(criarResponse(salgado, estoque)));
+            assertThat(resposta.getPageable()).isEqualTo(pagina);
+            assertThat(resposta.getTotalElements()).isEqualTo(total);
+            assertThat(resposta.getTotalPages()).isEqualTo(3);
+            verify(salgadoRepository).findByNomeContainingIgnoreCaseAndAtivo(pagina, "Cox", ativo);
+            if (quantidade == 0) {
+                verifyNoInteractions(estoqueRepository);
+            } else {
+                verify(estoqueRepository).findAllBySalgadoIdIn(List.of(ID));
+            }
+            verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
+        }
+
+        @ParameterizedTest
         @CsvSource({"1, 2, 7, false", "3, 1, 7, true", "4, 0, 7, true"})
         @DisplayName("Deve preservar a paginação da busca e consultar somente os estoques dos salgados da página")
         void devePreservarPaginaDaBusca(int pagina, int quantidade, long total, boolean ultima) {
@@ -352,7 +382,7 @@ class SalgadoServiceTest {
                 default -> List.of();
             };
 
-            when(salgadoRepository.findByNomeContainingIgnoreCase(requisitada, "Coxinha"))
+            when(salgadoRepository.findByNomeContainingIgnoreCaseAndAtivo(requisitada, "Coxinha", true))
                     .thenReturn(new PageImpl<>(conteudo, requisitada, total));
             if (quantidade == 2) {
                 when(estoqueRepository.findAllBySalgadoIdIn(List.of(29L, ID))).thenReturn(List.of(estoque));
@@ -360,7 +390,7 @@ class SalgadoServiceTest {
                 when(estoqueRepository.findAllBySalgadoIdIn(List.of(29L))).thenReturn(List.of());
             }
 
-            Page<SalgadoResponse> resposta = salgadoService.buscarPorNome(requisitada, "Coxinha");
+            Page<SalgadoResponse> resposta = salgadoService.buscarPorNome(requisitada, "Coxinha", true);
 
             List<SalgadoResponse> esperados = switch (quantidade) {
                 case 2 -> List.of(criarResponse(segundo, null), criarResponse(salgado, estoque));
@@ -375,7 +405,7 @@ class SalgadoServiceTest {
             assertThat(resposta.getTotalElements()).isEqualTo(total);
             assertThat(resposta.getTotalPages()).isEqualTo(4);
             assertThat(resposta.isLast()).isEqualTo(ultima);
-            verify(salgadoRepository).findByNomeContainingIgnoreCase(requisitada, "Coxinha");
+            verify(salgadoRepository).findByNomeContainingIgnoreCaseAndAtivo(requisitada, "Coxinha", true);
             if (quantidade == 0) {
                 verifyNoInteractions(estoqueRepository);
             } else {
@@ -390,19 +420,19 @@ class SalgadoServiceTest {
             Salgado segundoSalgado = criarSalgado(2L, "Coxinha de calabresa", true);
             Estoque segundoEstoque = criarEstoque(20L, segundoSalgado, 80);
 
-            when(salgadoRepository.findByNomeContainingIgnoreCase(paginacao, "Cox"))
+            when(salgadoRepository.findByNomeContainingIgnoreCaseAndAtivo(paginacao, "Cox", true))
                     .thenReturn(new PageImpl<>(List.of(salgado, segundoSalgado), paginacao, 5));
             when(estoqueRepository.findAllBySalgadoIdIn(List.of(ID, segundoSalgado.getId())))
                     .thenReturn(List.of(segundoEstoque, estoque));
 
-            Page<SalgadoResponse> resposta = salgadoService.buscarPorNome(paginacao, "Cox");
+            Page<SalgadoResponse> resposta = salgadoService.buscarPorNome(paginacao, "Cox", true);
 
             assertThat(resposta.getContent()).containsExactly(
                     criarResponse(salgado, estoque), criarResponse(segundoSalgado, segundoEstoque));
             assertThat(resposta.getPageable()).isEqualTo(paginacao);
             assertThat(resposta.getTotalElements()).isEqualTo(5);
             assertThat(resposta.getTotalPages()).isEqualTo(3);
-            verify(salgadoRepository).findByNomeContainingIgnoreCase(paginacao, "Cox");
+            verify(salgadoRepository).findByNomeContainingIgnoreCaseAndAtivo(paginacao, "Cox", true);
             verify(estoqueRepository).findAllBySalgadoIdIn(List.of(ID, segundoSalgado.getId()));
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
@@ -412,15 +442,15 @@ class SalgadoServiceTest {
         void deveRetornarSalgadoSemEstoque() {
             Salgado segundoSalgado = criarSalgado(2L, "Coxinha de calabresa", true);
 
-            when(salgadoRepository.findByNomeContainingIgnoreCase(paginacao, "Cox"))
+            when(salgadoRepository.findByNomeContainingIgnoreCaseAndAtivo(paginacao, "Cox", true))
                     .thenReturn(new PageImpl<>(List.of(salgado, segundoSalgado), paginacao, 2));
             when(estoqueRepository.findAllBySalgadoIdIn(List.of(ID, segundoSalgado.getId()))).thenReturn(List.of(estoque));
 
-            Page<SalgadoResponse> resposta = salgadoService.buscarPorNome(paginacao, "Cox");
+            Page<SalgadoResponse> resposta = salgadoService.buscarPorNome(paginacao, "Cox", true);
 
             assertThat(resposta.getContent()).containsExactly(
                     criarResponse(salgado, estoque), criarResponse(segundoSalgado, null));
-            verify(salgadoRepository).findByNomeContainingIgnoreCase(paginacao, "Cox");
+            verify(salgadoRepository).findByNomeContainingIgnoreCaseAndAtivo(paginacao, "Cox", true);
             verify(estoqueRepository).findAllBySalgadoIdIn(List.of(ID, segundoSalgado.getId()));
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
@@ -428,14 +458,14 @@ class SalgadoServiceTest {
         @Test
         @DisplayName("Deve retornar página vazia sem consultar estoque")
         void deveRetornarPaginaVazia() {
-            when(salgadoRepository.findByNomeContainingIgnoreCase(paginacao, "Cox")).thenReturn(Page.empty(paginacao));
+            when(salgadoRepository.findByNomeContainingIgnoreCaseAndAtivo(paginacao, "Cox", true)).thenReturn(Page.empty(paginacao));
 
-            Page<SalgadoResponse> resposta = salgadoService.buscarPorNome(paginacao, "Cox");
+            Page<SalgadoResponse> resposta = salgadoService.buscarPorNome(paginacao, "Cox", true);
 
             assertThat(resposta.getContent()).isEmpty();
             assertThat(resposta.getPageable()).isEqualTo(paginacao);
             assertThat(resposta.getTotalElements()).isZero();
-            verify(salgadoRepository).findByNomeContainingIgnoreCase(paginacao, "Cox");
+            verify(salgadoRepository).findByNomeContainingIgnoreCaseAndAtivo(paginacao, "Cox", true);
             verifyNoInteractions(estoqueRepository);
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
@@ -446,11 +476,11 @@ class SalgadoServiceTest {
             DataAccessResourceFailureException erroDoBanco =
                     new DataAccessResourceFailureException("Banco indisponível");
 
-            when(salgadoRepository.findByNomeContainingIgnoreCase(paginacao, "Cox")).thenThrow(erroDoBanco);
+            when(salgadoRepository.findByNomeContainingIgnoreCaseAndAtivo(paginacao, "Cox", true)).thenThrow(erroDoBanco);
 
-            assertThatThrownBy(() -> salgadoService.buscarPorNome(paginacao, "Cox")).isSameAs(erroDoBanco);
+            assertThatThrownBy(() -> salgadoService.buscarPorNome(paginacao, "Cox", true)).isSameAs(erroDoBanco);
 
-            verify(salgadoRepository).findByNomeContainingIgnoreCase(paginacao, "Cox");
+            verify(salgadoRepository).findByNomeContainingIgnoreCaseAndAtivo(paginacao, "Cox", true);
             verifyNoInteractions(estoqueRepository);
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
@@ -461,12 +491,12 @@ class SalgadoServiceTest {
             DataAccessResourceFailureException erroDoBanco =
                     new DataAccessResourceFailureException("Banco indisponível");
 
-            when(salgadoRepository.findByNomeContainingIgnoreCase(paginacao, "Cox")).thenReturn(new PageImpl<>(List.of(salgado)));
+            when(salgadoRepository.findByNomeContainingIgnoreCaseAndAtivo(paginacao, "Cox", true)).thenReturn(new PageImpl<>(List.of(salgado)));
             when(estoqueRepository.findAllBySalgadoIdIn(List.of(ID))).thenThrow(erroDoBanco);
 
-            assertThatThrownBy(() -> salgadoService.buscarPorNome(paginacao, "Cox")).isSameAs(erroDoBanco);
+            assertThatThrownBy(() -> salgadoService.buscarPorNome(paginacao, "Cox", true)).isSameAs(erroDoBanco);
 
-            verify(salgadoRepository).findByNomeContainingIgnoreCase(paginacao, "Cox");
+            verify(salgadoRepository).findByNomeContainingIgnoreCaseAndAtivo(paginacao, "Cox", true);
             verify(estoqueRepository).findAllBySalgadoIdIn(List.of(ID));
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }

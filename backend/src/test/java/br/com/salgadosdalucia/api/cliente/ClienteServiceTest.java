@@ -289,39 +289,61 @@ class ClienteServiceTest {
     @Nested
     @DisplayName("Buscar clientes por nome")
     class BuscarPorNome {
+        @ParameterizedTest
+        @CsvSource({"true, 1, 1, 5", "false, 1, 1, 5", "true, 3, 0, 5", "false, 3, 0, 5"})
+        @DisplayName("Deve encaminhar nome e status juntos e preservar conteúdo e totais da página")
+        void deveBuscarPorNomeEStatus(boolean ativo, int numero, int quantidade, long total) {
+            Pageable pagina = PageRequest.of(numero, 2, Sort.by("nome"));
+            cliente.setAtivo(ativo);
+            List<Cliente> conteudo = quantidade == 0 ? List.of() : List.of(cliente);
+
+            when(clienteRepository.findByNomeContainingIgnoreCaseAndAtivo(pagina, "Ali", ativo))
+                    .thenReturn(new PageImpl<>(conteudo, pagina, total));
+
+            Page<ClienteResponse> resposta = clienteService.buscarPorNome(pagina, "Ali", ativo);
+
+            assertThat(resposta.getContent()).containsExactlyElementsOf(
+                    quantidade == 0 ? List.of() : List.of(criarResponse(cliente)));
+            assertThat(resposta.getPageable()).isEqualTo(pagina);
+            assertThat(resposta.getTotalElements()).isEqualTo(total);
+            assertThat(resposta.getTotalPages()).isEqualTo(3);
+            verify(clienteRepository).findByNomeContainingIgnoreCaseAndAtivo(pagina, "Ali", ativo);
+            verifyNoMoreInteractions(clienteRepository);
+        }
+
         @Test
         @DisplayName("Deve buscar pelo nome informado e retornar os clientes encontrados")
         void deveBuscar() {
             String busca = "Ali";
-            Cliente segundoCliente = criarCliente(2L, "Aline", false);
-            when(clienteRepository.findByNomeContainingIgnoreCase(paginacao, busca))
+            Cliente segundoCliente = criarCliente(2L, "Aline", true);
+            when(clienteRepository.findByNomeContainingIgnoreCaseAndAtivo(paginacao, busca, true))
                     .thenReturn(new PageImpl<>(List.of(cliente, segundoCliente), paginacao, 5));
 
-            Page<ClienteResponse> resposta = clienteService.buscarPorNome(paginacao, busca);
+            Page<ClienteResponse> resposta = clienteService.buscarPorNome(paginacao, busca, true);
 
             assertThat(resposta.getContent()).containsExactly(criarResponse(cliente), criarResponse(segundoCliente));
             assertThat(resposta.getPageable()).isEqualTo(paginacao);
             assertThat(resposta.getTotalElements()).isEqualTo(5);
             assertThat(resposta.getTotalPages()).isEqualTo(3);
 
-            verify(clienteRepository).findByNomeContainingIgnoreCase(paginacao, busca);
+            verify(clienteRepository).findByNomeContainingIgnoreCaseAndAtivo(paginacao, busca, true);
             verifyNoMoreInteractions(clienteRepository);
         }
 
         @Test
         @DisplayName("Deve retornar página vazia quando nenhum nome corresponder")
         void deveRetornarPaginaVazia() {
-            when(clienteRepository.findByNomeContainingIgnoreCase(paginacao, "inexistente"))
+            when(clienteRepository.findByNomeContainingIgnoreCaseAndAtivo(paginacao, "inexistente", true))
                     .thenReturn(Page.empty(paginacao));
 
-            Page<ClienteResponse> resposta = clienteService.buscarPorNome(paginacao, "inexistente");
+            Page<ClienteResponse> resposta = clienteService.buscarPorNome(paginacao, "inexistente", true);
 
             assertThat(resposta.getContent()).isEmpty();
             assertThat(resposta.getPageable()).isEqualTo(paginacao);
             assertThat(resposta.getTotalElements()).isZero();
             assertThat(resposta.getTotalPages()).isZero();
 
-            verify(clienteRepository).findByNomeContainingIgnoreCase(paginacao, "inexistente");
+            verify(clienteRepository).findByNomeContainingIgnoreCaseAndAtivo(paginacao, "inexistente", true);
             verifyNoMoreInteractions(clienteRepository);
         }
 
@@ -332,10 +354,10 @@ class ClienteServiceTest {
             Cliente primeiro = criarCliente(19L, "Marina", true);
             Cliente segundo = criarCliente(8L, "Maria", true);
 
-            when(clienteRepository.findByNomeContainingIgnoreCase(segundaPagina, "Mari"))
+            when(clienteRepository.findByNomeContainingIgnoreCaseAndAtivo(segundaPagina, "Mari", true))
                     .thenReturn(new PageImpl<>(List.of(primeiro, segundo), segundaPagina, 7));
 
-            Page<ClienteResponse> resposta = clienteService.buscarPorNome(segundaPagina, "Mari");
+            Page<ClienteResponse> resposta = clienteService.buscarPorNome(segundaPagina, "Mari", true);
 
             assertThat(resposta.getContent()).containsExactly(criarResponse(primeiro), criarResponse(segundo));
             assertThat(resposta.getPageable()).isEqualTo(segundaPagina);
@@ -345,7 +367,7 @@ class ClienteServiceTest {
             assertThat(resposta.getTotalPages()).isEqualTo(4);
             assertThat(resposta.hasPrevious()).isTrue();
             assertThat(resposta.hasNext()).isTrue();
-            verify(clienteRepository).findByNomeContainingIgnoreCase(segundaPagina, "Mari");
+            verify(clienteRepository).findByNomeContainingIgnoreCaseAndAtivo(segundaPagina, "Mari", true);
             verifyNoMoreInteractions(clienteRepository);
         }
 
@@ -353,16 +375,16 @@ class ClienteServiceTest {
         @DisplayName("Deve preservar os metadados da busca vazia além da última página")
         void deveBuscarPaginaForaDosResultados() {
             Pageable foraDosResultados = PageRequest.of(4, 2);
-            when(clienteRepository.findByNomeContainingIgnoreCase(foraDosResultados, "Mari"))
+            when(clienteRepository.findByNomeContainingIgnoreCaseAndAtivo(foraDosResultados, "Mari", true))
                     .thenReturn(new PageImpl<>(List.of(), foraDosResultados, 7));
 
-            Page<ClienteResponse> resposta = clienteService.buscarPorNome(foraDosResultados, "Mari");
+            Page<ClienteResponse> resposta = clienteService.buscarPorNome(foraDosResultados, "Mari", true);
 
             assertThat(resposta.getContent()).isEmpty();
             assertThat(resposta.getPageable()).isEqualTo(foraDosResultados);
             assertThat(resposta.getTotalElements()).isEqualTo(7);
             assertThat(resposta.getTotalPages()).isEqualTo(4);
-            verify(clienteRepository).findByNomeContainingIgnoreCase(foraDosResultados, "Mari");
+            verify(clienteRepository).findByNomeContainingIgnoreCaseAndAtivo(foraDosResultados, "Mari", true);
             verifyNoMoreInteractions(clienteRepository);
         }
 
@@ -371,11 +393,11 @@ class ClienteServiceTest {
         void deveRetornarErroQuandoBancoFalhar() {
             DataAccessResourceFailureException erroDoBanco =
                     new DataAccessResourceFailureException("Banco indisponível");
-            when(clienteRepository.findByNomeContainingIgnoreCase(paginacao, "Luis")).thenThrow(erroDoBanco);
+            when(clienteRepository.findByNomeContainingIgnoreCaseAndAtivo(paginacao, "Luis", true)).thenThrow(erroDoBanco);
 
-            assertThatThrownBy(() -> clienteService.buscarPorNome(paginacao, "Luis")).isSameAs(erroDoBanco);
+            assertThatThrownBy(() -> clienteService.buscarPorNome(paginacao, "Luis", true)).isSameAs(erroDoBanco);
 
-            verify(clienteRepository).findByNomeContainingIgnoreCase(paginacao, "Luis");
+            verify(clienteRepository).findByNomeContainingIgnoreCaseAndAtivo(paginacao, "Luis", true);
             verifyNoMoreInteractions(clienteRepository);
         }
     }

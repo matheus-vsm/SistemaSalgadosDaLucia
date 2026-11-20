@@ -78,8 +78,10 @@ public class SalgadoController {
     @PreAuthorize("hasRole('FUNCIONARIO')")
     @Operation(summary = "Buscar salgados por nome", description = "Retorna salgados cujo nome contenha o termo informado.")
     @ApiResponse(responseCode = "200", description = "Busca realizada com sucesso.")
-    public ResponseEntity<Page<SalgadoResponse>> buscarPorNome(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao, @RequestParam String nome) {
-        var salgados = salgadoService.buscarPorNome(paginacao, nome);
+    public ResponseEntity<Page<SalgadoResponse>> buscarPorNome(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao,
+                                                               @RequestParam String nome,
+                                                               @RequestParam boolean ativo) {
+        var salgados = salgadoService.buscarPorNome(paginacao, nome, ativo);
         return ResponseEntity.ok(salgados);
     }
 

@@ -37,8 +37,9 @@ public class ClienteService {
         return ClienteMapper.mapToResponse(cliente);
     }
 
-    public Page<ClienteResponse> buscarPorNome(Pageable paginacao, String nome) {
-        return clienteRepository.findByNomeContainingIgnoreCase(paginacao, nome).map(ClienteMapper::mapToResponse);
+    public Page<ClienteResponse> buscarPorNome(Pageable paginacao, String nome, boolean ativo) {
+        return clienteRepository.findByNomeContainingIgnoreCaseAndAtivo(paginacao, nome, ativo)
+                .map(ClienteMapper::mapToResponse);
     }
 
     @Transactional(rollbackFor = Exception.class)
