@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 
 public record ItemCompraRequest(
         @NotBlank(message = "O nome do item é obrigatório!")
+        @Size(max = 100, message = "O campo nome deve ter até 100 caracteres!")
         String nome,
         @NotNull(message = "A quantidade do item é obrigatória!")
         @Positive(message = "A quantidade deve ser maior que zero!")

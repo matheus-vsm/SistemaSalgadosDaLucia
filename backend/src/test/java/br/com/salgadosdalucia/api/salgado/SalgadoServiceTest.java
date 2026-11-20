@@ -922,4 +922,32 @@ class SalgadoServiceTest {
                 entidadeSalgado.isAtivo(), estoqueDto);
     }
 
+    @Nested
+    @DisplayName("Limites de tamanho das colunas")
+    class LimitesDeTamanho {
+        @ParameterizedTest
+        @CsvSource({"nome,100", "descricao,255"})
+        @DisplayName("Deve aceitar o limite e rejeitar um caractere excedente na propriedade correta")
+        void deveRespeitarLimite(String campo, int limite) {
+            try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+                for (int tamanho : new int[]{limite, limite + 1}) {
+                    String valor = "a".repeat(tamanho);
+                    var entrada = new SalgadoRequest(campo.equals("nome") ? valor : "Coxinha",
+                        campo.equals("descricao") ? valor : "Frango", Categoria.FRITO, BigDecimal.ONE, BigDecimal.ONE);
+                String propriedade = campo;
+                    var violacoes = factory.getValidator().validate(entrada);
+                    if (tamanho == limite) {
+                        assertThat(violacoes).isEmpty();
+                    } else {
+                        assertThat(violacoes).singleElement().satisfies(violacao -> {
+                            assertThat(violacao.getPropertyPath().toString()).isEqualTo(propriedade);
+                            assertThat(violacao.getConstraintDescriptor().getAnnotation().annotationType())
+                                    .isEqualTo(jakarta.validation.constraints.Size.class);
+                        });
+                    }
+                }
+            }
+        }
+    }
+
 }

@@ -775,4 +775,32 @@ class UsuarioServiceTest {
                 entidade.getPerfis(), entidade.isAtivo());
     }
 
+    @Nested
+    @DisplayName("Limites de tamanho das colunas")
+    class LimitesDeTamanho {
+        @ParameterizedTest
+        @CsvSource({"nome,100", "username,50"})
+        @DisplayName("Deve aceitar o limite e rejeitar um caractere excedente na propriedade correta")
+        void deveRespeitarLimite(String campo, int limite) {
+            try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+                for (int tamanho : new int[]{limite, limite + 1}) {
+                    String valor = "a".repeat(tamanho);
+                    var entrada = new UsuarioRequest(campo.equals("nome") ? valor : "Ana",
+                        campo.equals("username") ? valor : "ana", "senha", PerfilUsuarioNome.FUNCIONARIO);
+                String propriedade = campo;
+                    var violacoes = factory.getValidator().validate(entrada);
+                    if (tamanho == limite) {
+                        assertThat(violacoes).isEmpty();
+                    } else {
+                        assertThat(violacoes).singleElement().satisfies(violacao -> {
+                            assertThat(violacao.getPropertyPath().toString()).isEqualTo(propriedade);
+                            assertThat(violacao.getConstraintDescriptor().getAnnotation().annotationType())
+                                    .isEqualTo(jakarta.validation.constraints.Size.class);
+                        });
+                    }
+                }
+            }
+        }
+    }
+
 }
