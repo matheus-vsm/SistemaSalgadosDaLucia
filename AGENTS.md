@@ -4,6 +4,8 @@
 
 Sistema de gestão de clientes, salgados, estoque, pedidos, compras e usuários. Consulte o README para execução e a wiki do repositório para requisitos, regras e documentação detalhada. Confirme comportamentos no código e nos testes; documentação pode estar desatualizada.
 
+Para qualquer trabalho neste projeto, não use o Notion: não consulte nem grave páginas, memórias ou skills nesse serviço. Use a conversa, os arquivos do repositório, este `AGENTS.md`, as skills locais, o README, a wiki e o GitHub conforme o pedido. Esta orientação específica do projeto prevalece sobre preferências gerais de memória no Notion.
+
 - Backend em `backend`: Java 21, Spring Boot, Maven Wrapper, JPA, MySQL e Flyway. Organização por funcionalidade em `br.com.salgadosdalucia.api`.
 - Frontend em `frontend`: HTML, CSS e JavaScript sem framework ou build npm, com templates e scripts por módulo. Sirva por HTTP; o carregamento usa `fetch`.
 - `infra` e os workflows descrevem execução em containers e verificações de integração. Sua presença não significa que alterações operacionais foram solicitadas.
@@ -11,7 +13,7 @@ Sistema de gestão de clientes, salgados, estoque, pedidos, compras e usuários.
 ## Convenções de implementação
 
 - Acompanhe os padrões do módulo afetado: controllers para contratos HTTP, serviços para regras e transações, repositories para persistência e DTOs/mappers para entrada e saída. Valide os dados de entrada e mantenha validações de negócio nos serviços.
-- Evolua o banco por novas migrações Flyway. Não reescreva migrações já aplicadas para corrigir o esquema.
+- Evolua o banco por novas migrações Flyway. Siga o padrão de nomenclatura e de SQL de V1 a V14, com nomes em inglês descrevendo a operação e a tabela. Não renomeie nem reescreva migrações já aplicadas.
 - Preserve contratos e permissões existentes salvo quando sua alteração fizer parte do pedido.
 - No frontend, respeite o carregamento dinâmico de `app.js` e a inicialização pelo evento `pagina:carregada`.
 - Reutilize os auxiliares de `frontend/js` para API, notificações, listagens, modais e CEP. `apiJson` retorna `{ response, data }` no sucesso e lança `ApiError` em falhas; preserve as mensagens específicas retornadas pelo backend.

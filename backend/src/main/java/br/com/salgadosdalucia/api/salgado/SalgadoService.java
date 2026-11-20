@@ -3,6 +3,8 @@ package br.com.salgadosdalucia.api.salgado;
 import br.com.salgadosdalucia.api.estoque.Estoque;
 import br.com.salgadosdalucia.api.estoque.EstoqueRepository;
 import br.com.salgadosdalucia.api.exception.BadRequestException;
+import br.com.salgadosdalucia.api.exception.BusinessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
 import br.com.salgadosdalucia.api.salgado.dto.SalgadoRequest;
 import br.com.salgadosdalucia.api.salgado.dto.SalgadoResponse;
@@ -28,7 +30,16 @@ public class SalgadoService {
 
     @Transactional(rollbackFor = Exception.class)
     public SalgadoResponse cadastrar(SalgadoRequest salgado) {
-        Salgado novoSalgado = salgadoRepository.save(SalgadoMapper.mapToEntity(salgado));
+        if (salgadoRepository.existsByNome(salgado.nome())) {
+            throw new BusinessException("Já existe um salgado com esse nome.");
+        }
+
+        Salgado novoSalgado;
+        try {
+            novoSalgado = salgadoRepository.save(SalgadoMapper.mapToEntity(salgado));
+        } catch (DataIntegrityViolationException ex) {
+            throw new BusinessException("Não foi possível salvar o salgado por conflito nos dados. Verifique se o nome já está em uso.");
+        }
 
         Estoque estoque = Estoque.builder()
                 .salgado(novoSalgado)
@@ -57,11 +68,20 @@ public class SalgadoService {
     public SalgadoResponse atualizar(Long id, SalgadoRequest dto) throws NotFoundException {
         Salgado salgado = ValidacaoEntidadeHelper.buscarEntidadePorId(salgadoRepository, id, "Salgado");
 
+        if (salgadoRepository.existsByNomeAndIdNot(dto.nome(), id)) {
+            throw new BusinessException("Já existe um salgado com esse nome.");
+        }
+
         salgado.setNome(dto.nome());
         salgado.setDescricao(dto.descricao());
         salgado.setCategoria(dto.categoria());
         salgado.setPrecoCentoCongelado(dto.precoCentoCongelado());
         salgado.setPrecoCentoProcessado(dto.precoCentoProcessado());
+        try {
+            salgadoRepository.flush();
+        } catch (DataIntegrityViolationException ex) {
+            throw new BusinessException("Não foi possível salvar o salgado por conflito nos dados. Verifique se o nome já está em uso.");
+        }
         Estoque estoque = estoqueRepository.findBySalgadoId(id).orElse(null);
 
         return SalgadoMapper.mapToResponse(salgado, estoque);

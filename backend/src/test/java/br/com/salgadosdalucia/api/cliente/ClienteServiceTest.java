@@ -778,4 +778,36 @@ class ClienteServiceTest {
             }
         }
     }
+    @Nested
+    @DisplayName("Limites de tamanho das colunas")
+    class LimitesDeTamanho {
+        @ParameterizedTest
+        @CsvSource({"nome,100", "telefone,20", "logradouro,150", "numero,10", "complemento,100", "cep,10", "bairro,100", "cidade,100", "uf,2"})
+        @DisplayName("Deve aceitar o limite e rejeitar um caractere excedente na propriedade correta")
+        void deveRespeitarLimite(String campo, int limite) {
+            try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+                for (int tamanho : new int[]{limite, limite + 1}) {
+                    String valor = "a".repeat(tamanho);
+                    var endereco = new EnderecoDto(campo.equals("logradouro") ? valor : "Rua A",
+                        campo.equals("numero") ? valor : "1", campo.equals("complemento") ? valor : null,
+                        campo.equals("cep") ? valor : "12345678", campo.equals("bairro") ? valor : "Centro",
+                        campo.equals("cidade") ? valor : "Cidade", campo.equals("uf") ? valor : "SP");
+                var entrada = new ClienteDto(campo.equals("nome") ? valor : "Ana",
+                        campo.equals("telefone") ? valor : "12345", endereco);
+                String propriedade = campo.equals("nome") || campo.equals("telefone") ? campo : "endereco." + campo;
+                    var violacoes = factory.getValidator().validate(entrada);
+                    if (tamanho == limite) {
+                        assertThat(violacoes).isEmpty();
+                    } else {
+                        assertThat(violacoes).singleElement().satisfies(violacao -> {
+                            assertThat(violacao.getPropertyPath().toString()).isEqualTo(propriedade);
+                            assertThat(violacao.getConstraintDescriptor().getAnnotation().annotationType())
+                                    .isEqualTo(jakarta.validation.constraints.Size.class);
+                        });
+                    }
+                }
+            }
+        }
+    }
+
 }

@@ -1564,4 +1564,50 @@ class PedidoServiceTest {
                 new UsuarioPedidoDto(entidade.getUsuarioResponsavel().getId(), entidade.getUsuarioResponsavel().getNome()));
     }
 
+    @Nested
+    @DisplayName("Capacidade monetária do pedido")
+    class LimitesMonetarios {
+        @ParameterizedTest
+        @CsvSource({
+                "false,99999999.99,100,1,0.00,99999999.99,aceito",
+                "true,99999999.99,100,1,0.00,99999999.99,aceito",
+                "false,99999999.99,99,1,1000000.00,99999999.99,aceito",
+                "true,99999999.99,99,1,1000000.00,99999999.99,aceito",
+                "false,99999999.99,99,1,1000000.01,0,O total do pedido",
+                "true,99999999.99,99,1,1000000.01,0,O total do pedido",
+                "false,50000000.00,200,1,0.00,0,O subtotal do item do pedido",
+                "true,50000000.00,200,1,0.00,0,O subtotal do item do pedido",
+                "false,50000000.00,100,2,0.00,0,O total do pedido",
+                "true,50000000.00,100,2,0.00,0,O total do pedido",
+                "false,0.50,1,2,99999999.98,0,O total do pedido",
+                "true,0.50,1,2,99999999.98,0,O total do pedido",
+                "false,0.49,1,2,99999999.99,99999999.99,aceito",
+                "true,0.49,1,2,99999999.99,99999999.99,aceito"
+        })
+        @DisplayName("Deve validar subtotal arredondado e total com frete no cadastro e na edição")
+        void deveRespeitarCapacidade(boolean edicao, String cento, int quantidade, int numeroItens,
+                                    String frete, String esperado, String resultado) {
+            salgado.setPrecoCentoCongelado(new BigDecimal(cento));
+            var item = new ItemPedidoDto(SALGADO_ID, quantidade, TipoPreco.CONGELADO);
+            var entrada = criarRequest(TipoEntrega.ENTREGA, new BigDecimal(frete),
+                    java.util.Collections.nCopies(numeroItens, item));
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+            if (edicao) when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
+            if (resultado.equals("aceito")) {
+                var resposta = edicao ? pedidoService.atualizar(PEDIDO_ID, entrada) : pedidoService.registrar(entrada);
+                assertThat(resposta.valorTotal()).isEqualByComparingTo(esperado);
+                verify(pedidoRepository).save(any(Pedido.class));
+            } else {
+                assertThatThrownBy(() -> {
+                    if (edicao) pedidoService.atualizar(PEDIDO_ID, entrada);
+                    else pedidoService.registrar(entrada);
+                }).isInstanceOf(BusinessException.class)
+                        .hasMessage(resultado + " excede o limite de R$ 99.999.999,99.");
+                verify(pedidoRepository, never()).save(any(Pedido.class));
+            }
+        }
+    }
+
 }

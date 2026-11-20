@@ -1,9 +1,10 @@
 package br.com.salgadosdalucia.api.compra;
 
 import br.com.salgadosdalucia.api.compra.dto.CompraFiltroDto;
-import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraRequest;
 import br.com.salgadosdalucia.api.compra.dto.CompraResponse;
+import br.com.salgadosdalucia.api.compra.dto.CriacaoCompraRequest;
 import br.com.salgadosdalucia.api.compra.dto.ItemCompraRequest;
+import br.com.salgadosdalucia.api.exception.BusinessException;
 import br.com.salgadosdalucia.api.exception.NotFoundException;
 import br.com.salgadosdalucia.api.shared.helper.ValidacaoEntidadeHelper;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CompraService {
+
+    private static final BigDecimal VALOR_MAXIMO = new BigDecimal("99999999.99");
 
     private final CompraRepository compraRepository;
 
@@ -81,10 +84,19 @@ public class CompraService {
                 .filter(item -> item.getSubTotal() != null)
                 .map(ItemCompra::getSubTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add));
+        validarLimiteMonetario(compra.getValorTotal(), "O total da compra");
     }
 
     private void calcularSubTotal(ItemCompra item) {
-        item.setSubTotal(item.getValorUnitario().multiply(BigDecimal.valueOf(item.getQuantidade())));
+        BigDecimal subtotal = item.getValorUnitario().multiply(BigDecimal.valueOf(item.getQuantidade()));
+        validarLimiteMonetario(subtotal, "O subtotal do item da compra");
+        item.setSubTotal(subtotal);
+    }
+
+    private void validarLimiteMonetario(BigDecimal valor, String campo) {
+        if (valor.compareTo(VALOR_MAXIMO) > 0) {
+            throw new BusinessException(campo + " excede o limite de R$ 99.999.999,99.");
+        }
     }
 
     public Page<CompraResponse> listarComFiltro(CompraFiltroDto filtro, Pageable paginacao) {

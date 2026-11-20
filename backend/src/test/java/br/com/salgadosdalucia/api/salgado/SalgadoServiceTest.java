@@ -90,6 +90,7 @@ class SalgadoServiceTest {
             assertThat(estoqueEnviado.getValue().getQuantidade()).isZero();
             assertThat(resposta).isEqualTo(new SalgadoResponse(37L, "Salgado especial", "Recheio especial", categoria,
                     new BigDecimal(congelado), new BigDecimal(processado), true, new EstoqueSalgadoDto(94L, 0)));
+            verify(salgadoRepository).existsByNome(dados.nome());
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
 
@@ -122,6 +123,7 @@ class SalgadoServiceTest {
             assertThat(estoqueEnviado.getValue().getSalgado()).isSameAs(salgado);
             assertThat(estoqueEnviado.getValue().getQuantidade()).isZero();
             assertThat(resposta).isEqualTo(criarResponse(salgado, estoqueSalvo));
+            verify(salgadoRepository).existsByNome(dto.nome());
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
 
@@ -137,6 +139,7 @@ class SalgadoServiceTest {
 
             verify(salgadoRepository).save(any(Salgado.class));
             verifyNoInteractions(estoqueRepository);
+            verify(salgadoRepository).existsByNome(dto.nome());
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
 
@@ -152,6 +155,7 @@ class SalgadoServiceTest {
 
             verify(salgadoRepository).save(any(Salgado.class));
             verify(estoqueRepository).save(any(Estoque.class));
+            verify(salgadoRepository).existsByNome(dto.nome());
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
     }
@@ -642,6 +646,8 @@ class SalgadoServiceTest {
             assertThat(estoque.getSalgado()).isSameAs(salgado);
             verify(salgadoRepository).findById(ID);
             verify(estoqueRepository).findBySalgadoId(ID);
+            verify(salgadoRepository).existsByNomeAndIdNot(novosDados.nome(), ID);
+            verify(salgadoRepository).flush();
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
 
@@ -668,6 +674,8 @@ class SalgadoServiceTest {
             verify(salgadoRepository).findById(ID);
             verify(estoqueRepository).findBySalgadoId(ID);
             verify(salgadoRepository, never()).save(any(Salgado.class));
+            verify(salgadoRepository).existsByNomeAndIdNot(novosDados.nome(), ID);
+            verify(salgadoRepository).flush();
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
 
@@ -695,6 +703,8 @@ class SalgadoServiceTest {
             verify(salgadoRepository).findById(ID);
             verify(estoqueRepository).findBySalgadoId(ID);
             verify(salgadoRepository, never()).save(any(Salgado.class));
+            verify(salgadoRepository).existsByNomeAndIdNot(novosDados.nome(), ID);
+            verify(salgadoRepository).flush();
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
 
@@ -714,6 +724,8 @@ class SalgadoServiceTest {
             assertThat(resposta.nome()).isEqualTo(novosDados.nome());
             verify(salgadoRepository).findById(ID);
             verify(estoqueRepository).findBySalgadoId(ID);
+            verify(salgadoRepository).existsByNomeAndIdNot(novosDados.nome(), ID);
+            verify(salgadoRepository).flush();
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
 
@@ -758,6 +770,8 @@ class SalgadoServiceTest {
 
             verify(salgadoRepository).findById(ID);
             verify(estoqueRepository).findBySalgadoId(ID);
+            verify(salgadoRepository).existsByNomeAndIdNot(dto.nome(), ID);
+            verify(salgadoRepository).flush();
             verifyNoMoreInteractions(salgadoRepository, estoqueRepository);
         }
     }
@@ -920,6 +934,96 @@ class SalgadoServiceTest {
                 entidadeSalgado.getDescricao(), entidadeSalgado.getCategoria(),
                 entidadeSalgado.getPrecoCentoCongelado(), entidadeSalgado.getPrecoCentoProcessado(),
                 entidadeSalgado.isAtivo(), estoqueDto);
+    }
+
+    @Nested
+    @DisplayName("Limites de tamanho das colunas")
+    class LimitesDeTamanho {
+        @ParameterizedTest
+        @CsvSource({"nome,100", "descricao,255"})
+        @DisplayName("Deve aceitar o limite e rejeitar um caractere excedente na propriedade correta")
+        void deveRespeitarLimite(String campo, int limite) {
+            try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+                for (int tamanho : new int[]{limite, limite + 1}) {
+                    String valor = "a".repeat(tamanho);
+                    var entrada = new SalgadoRequest(campo.equals("nome") ? valor : "Coxinha",
+                        campo.equals("descricao") ? valor : "Frango", Categoria.FRITO, BigDecimal.ONE, BigDecimal.ONE);
+                String propriedade = campo;
+                    var violacoes = factory.getValidator().validate(entrada);
+                    if (tamanho == limite) {
+                        assertThat(violacoes).isEmpty();
+                    } else {
+                        assertThat(violacoes).singleElement().satisfies(violacao -> {
+                            assertThat(violacao.getPropertyPath().toString()).isEqualTo(propriedade);
+                            assertThat(violacao.getConstraintDescriptor().getAnnotation().annotationType())
+                                    .isEqualTo(jakarta.validation.constraints.Size.class);
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("Duplicidade do nome do salgado")
+    class DuplicidadeNome {
+        @Test
+        @DisplayName("Deve rejeitar cadastro duplicado antes de salvar salgado ou estoque")
+        void deveRejeitarCadastro() {
+            when(salgadoRepository.existsByNome(dto.nome())).thenReturn(true);
+            assertThatThrownBy(() -> salgadoService.cadastrar(dto))
+                    .isInstanceOf(br.com.salgadosdalucia.api.exception.BusinessException.class)
+                    .hasMessage("Já existe um salgado com esse nome.");
+            verify(salgadoRepository).existsByNome(dto.nome());
+            verifyNoMoreInteractions(salgadoRepository);
+            verifyNoInteractions(estoqueRepository);
+        }
+
+        @Test
+        @DisplayName("Deve rejeitar edição duplicada antes de alterar qualquer campo")
+        void deveRejeitarEdicao() {
+            var anterior = criarResponse(salgado, estoque);
+            when(salgadoRepository.findById(ID)).thenReturn(Optional.of(salgado));
+            when(salgadoRepository.existsByNomeAndIdNot(dto.nome(), ID)).thenReturn(true);
+            assertThatThrownBy(() -> salgadoService.atualizar(ID, dto))
+                    .isInstanceOf(br.com.salgadosdalucia.api.exception.BusinessException.class)
+                    .hasMessage("Já existe um salgado com esse nome.");
+            assertThat(criarResponse(salgado, estoque)).isEqualTo(anterior);
+            verify(salgadoRepository).findById(ID);
+            verify(salgadoRepository).existsByNomeAndIdNot(dto.nome(), ID);
+            verifyNoMoreInteractions(salgadoRepository);
+            verifyNoInteractions(estoqueRepository);
+        }
+
+        @Test
+        @DisplayName("Deve permitir manter o próprio nome preservando sua apresentação")
+        void deveManterNome() {
+            when(salgadoRepository.findById(ID)).thenReturn(Optional.of(salgado));
+            var resposta = salgadoService.atualizar(ID, dto);
+            assertThat(resposta.nome()).isEqualTo(dto.nome());
+            verify(salgadoRepository).existsByNomeAndIdNot(dto.nome(), ID);
+            verify(salgadoRepository).flush();
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        @DisplayName("Deve apresentar mensagem clara quando o banco rejeitar os dados no cadastro ou na edição")
+        void deveInformarConflitoNosDados(boolean edicao) {
+            var erro = new org.springframework.dao.DataIntegrityViolationException("Restrição do banco");
+            if (edicao) {
+                when(salgadoRepository.findById(ID)).thenReturn(Optional.of(salgado));
+                doThrow(erro).when(salgadoRepository).flush();
+            } else {
+                when(salgadoRepository.save(any(Salgado.class))).thenThrow(erro);
+            }
+            assertThatThrownBy(() -> {
+                if (edicao) salgadoService.atualizar(ID, dto);
+                else salgadoService.cadastrar(dto);
+            }).isInstanceOf(br.com.salgadosdalucia.api.exception.BusinessException.class)
+                    .hasMessage("Não foi possível salvar o salgado por conflito nos dados. Verifique se o nome já está em uso.");
+            verifyNoInteractions(estoqueRepository);
+        }
+
     }
 
 }
