@@ -8,6 +8,8 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8%2B-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
 ![Frontend](https://img.shields.io/badge/Frontend-HTML%20%7C%20CSS%20%7C%20JavaScript-F7DF1E)
 
+**Quer testar?** Siga o [passo a passo com Docker](#executar-com-docker--recomendado), do clone ao primeiro login.
+
 ## Contexto
 
 A salgadaria recebe pedidos por canais como WhatsApp e realiza entregas na região de São Paulo e ABC Paulista. O sistema
@@ -110,13 +112,127 @@ erDiagram
     USUARIO }o--o{ PERFIL: possui
 ```
 
-## Como executar
+## Executar com Docker — recomendado
 
-Para executar frontend, backend e MySQL com Docker Compose, veja [Docker e operação do MVP](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/10-Docker-e-operacao-do-MVP).
-O fluxo local sem containers continua descrito abaixo.
+Este é o caminho mais simples para testar o sistema: Docker prepara **frontend, API e banco de dados**.
+Você não precisa instalar Java, Maven, MySQL ou Nginx separadamente.
 
-As imagens usam Temurin Java 21.0.13+9 sobre Ubuntu 26.04 LTS, Nginx 1.30.6 (linha estável) e MySQL 8.4.13 LTS.
-Todas estão fixadas por digest SHA-256; atualizações exigem revisar o digest e validar novamente o build e a integração.
+### 1. Prepare o ambiente e baixe o projeto
+
+- Instale o [Git](https://git-scm.com/downloads) e o [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+  (Windows/macOS) ou Docker Engine com o plugin Docker Compose (Linux).
+- Inicie o Docker e use containers Linux. Confira com `docker info` e `docker compose version`.
+- Tenha internet para baixar imagens e dependências no primeiro build e um navegador para acessar o sistema.
+
+Os comandos partem da raiz do projeto, onde está `compose.yaml`. Use PowerShell no Windows ou Bash no Linux/macOS.
+
+```sh
+git clone https://github.com/matheus-vsm/SistemaSalgadosDaLucia.git
+cd SistemaSalgadosDaLucia
+```
+
+### 2. Configure o arquivo .env
+
+Copie o exemplo **somente no primeiro uso**; se já existe `.env`, preserve-o.
+
+**PowerShell:**
+
+```powershell
+Copy-Item .env.example .env
+```
+
+**Bash:**
+
+```bash
+cp .env.example .env
+```
+
+Abra `.env` em um editor de texto e preencha as três linhas vazias:
+
+| Variável | O que preencher |
+| --- | --- |
+| `DB_PASSWORD` | Uma senha escolhida para o usuário da aplicação no banco |
+| `DB_ROOT_PASSWORD` | Outra senha para o administrador do MySQL |
+| `JWT_HMC256` | Um segredo longo e aleatório para assinar os tokens de login |
+
+Use valores próprios, sem espaços, `$` ou `#`, para simplificar a configuração local. Não compartilhe nem versione `.env`.
+Mantenha os demais valores do exemplo: `DB_NAME=salgados_lucia`, `DB_USER=salgados_app`,
+`JWT_ISSUER=salgados-da-lucia-kojima`, `BACKEND_URL=http://backend:8080` e `FRONTEND_PORT=5500`.
+O Compose lê `.env` automaticamente; não é necessário carregar suas variáveis no terminal.
+Se você já definiu variáveis com esses nomes no terminal, elas têm prioridade sobre o arquivo; remova-as antes de continuar.
+
+### 3. Suba o sistema
+
+```sh
+docker compose config --quiet
+docker compose up -d --build --wait
+docker compose ps
+```
+
+O primeiro comando valida a configuração e não imprime nada quando ela está correta. Se houver erro, corrija-o antes de continuar.
+O primeiro build pode demorar vários minutos. Aguarde o comando terminar com sucesso: `--wait` espera os serviços
+ficarem saudáveis. `docker compose ps` deve mostrar `db`, `backend` e `frontend` em execução e com estado `healthy`.
+
+### 4. Crie o primeiro administrador
+
+Não existe usuário ou senha padrão. Crie seu administrador **uma única vez**, depois que a subida terminar.
+Escolha nome, username e senha nos prompts; não são as credenciais do banco configuradas no `.env`.
+Execute o bloco correspondente ao seu terminal, ainda na raiz do projeto.
+
+**Windows — PowerShell:**
+
+```powershell
+$env:BOOTSTRAP_ADMIN_NAME = Read-Host 'Nome do administrador'
+$env:BOOTSTRAP_ADMIN_USERNAME = Read-Host 'Username para login'
+$adminPassword = Read-Host 'Senha para login' -AsSecureString
+$env:BOOTSTRAP_ADMIN_PASSWORD = [System.Net.NetworkCredential]::new('', $adminPassword).Password
+try {
+    docker compose run --rm --no-deps -e "SPRING_PROFILES_ACTIVE=prod,bootstrap-admin" -e BOOTSTRAP_ADMIN_NAME -e BOOTSTRAP_ADMIN_USERNAME -e BOOTSTRAP_ADMIN_PASSWORD backend
+} finally {
+    Remove-Item Env:BOOTSTRAP_ADMIN_NAME, Env:BOOTSTRAP_ADMIN_USERNAME, Env:BOOTSTRAP_ADMIN_PASSWORD
+    $adminPassword = $null
+}
+```
+
+**Linux/macOS — Bash** (se estiver usando outro shell, abra `bash` antes):
+
+```bash
+(
+    read -r -p 'Nome do administrador: ' BOOTSTRAP_ADMIN_NAME
+    read -r -p 'Username para login: ' BOOTSTRAP_ADMIN_USERNAME
+    read -r -s -p 'Senha para login: ' BOOTSTRAP_ADMIN_PASSWORD
+    printf '\n'
+    export BOOTSTRAP_ADMIN_NAME BOOTSTRAP_ADMIN_USERNAME BOOTSTRAP_ADMIN_PASSWORD
+    docker compose run --rm --no-deps -e SPRING_PROFILES_ACTIVE=prod,bootstrap-admin -e BOOTSTRAP_ADMIN_NAME -e BOOTSTRAP_ADMIN_USERNAME -e BOOTSTRAP_ADMIN_PASSWORD backend
+)
+```
+
+A senha não aparece enquanto é digitada. No PowerShell, as variáveis temporárias são removidas ao final;
+no Bash, ficam restritas ao subshell entre parênteses e desaparecem quando ele termina.
+Aguarde a mensagem **Administrador criado**. O comando cria o usuário com perfil `ADMIN` e encerra;
+não é outro servidor para deixar aberto. Uma nova execução com o mesmo username falha e não redefine a senha.
+Use nome de até 100 caracteres, username de até 50 e senha não vazia de até 72 bytes UTF-8.
+
+### 5. Abra o sistema e faça login
+
+Acesse [http://127.0.0.1:5500](http://127.0.0.1:5500) e entre com o **username e a senha que acabou de escolher**.
+O banco começa sem cadastros de negócio; você pode cadastrar clientes e salgados para experimentar as telas.
+
+Para parar e voltar a usar depois, na mesma pasta:
+
+```sh
+docker compose stop
+docker compose start --wait
+```
+
+Os dados e o administrador continuam salvos. Não use `docker compose down -v`: ele apaga o banco.
+Veja [diagnóstico e operação do Docker](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/10-Docker-e-operacao-do-MVP#solução-de-problemas)
+se algo falhar. Publicação em servidor é um procedimento separado deste teste local.
+
+## Alternativa: executar sem Docker
+
+Use esta opção se quiser desenvolver com Java, MySQL e Nginx instalados na máquina.
+Para apenas experimentar o sistema, siga o roteiro Docker acima.
 
 ### Pré-requisitos
 
@@ -251,9 +367,9 @@ de erro. A consulta de CEP continua sendo feita diretamente ao ViaCEP.
 - **PID antigo:** confirme se o processo indicado em `infra/nginx/.runtime/logs/nginx.pid` ainda existe antes de remover
   um PID deixado por uma interrupção. Use o auxiliar para gerenciar esta instância.
 
-Python e Live Server, sozinhos, não encaminham `/api/` e não substituem esse fluxo. Para a futura containerização, o
-valor de `BACKEND_URL` deverá apontar para o serviço do backend na rede dos containers (por exemplo, `http://backend:8080`), pois `127.0.0.1` seria o próprio
-container do Nginx. Docker, domínio, HTTPS e hospedagem ainda não fazem parte desta etapa.
+Python e Live Server, sozinhos, não encaminham `/api/` e não substituem esse fluxo manual.
+No Docker Compose, o proxy já usa `BACKEND_URL=http://backend:8080`; `127.0.0.1` dentro do container seria o próprio Nginx.
+Domínio, HTTPS e hospedagem não são necessários para o teste local com Docker.
 
 O Nginx para Windows é usado aqui para validação local; a [documentação oficial registra limitações dessa versão](https://nginx.org/en/docs/windows.html).
 Esta integração não é uma auditoria de prontidão para produção.
