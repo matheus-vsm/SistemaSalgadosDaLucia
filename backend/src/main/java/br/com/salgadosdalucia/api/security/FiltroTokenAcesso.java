@@ -1,9 +1,9 @@
 package br.com.salgadosdalucia.api.security;
 
 import br.com.salgadosdalucia.api.autenticacao.TokenService;
-import br.com.salgadosdalucia.api.exception.NotFoundException;
 import br.com.salgadosdalucia.api.exception.BusinessException;
 import br.com.salgadosdalucia.api.exception.InvalidCredentialsException;
+import br.com.salgadosdalucia.api.exception.NotFoundException;
 import br.com.salgadosdalucia.api.usuario.Usuario;
 import br.com.salgadosdalucia.api.usuario.UsuarioRepository;
 import jakarta.servlet.FilterChain;
@@ -30,7 +30,7 @@ public class FiltroTokenAcesso extends OncePerRequestFilter {
     private final HandlerExceptionResolver exceptionResolver;
 
     public FiltroTokenAcesso(TokenService tokenService, UsuarioRepository usuarioRepository,
-                            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver exceptionResolver) {
+                             @Qualifier("handlerExceptionResolver") HandlerExceptionResolver exceptionResolver) {
         this.tokenService = tokenService;
         this.usuarioRepository = usuarioRepository;
         this.exceptionResolver = exceptionResolver;
@@ -55,6 +55,10 @@ public class FiltroTokenAcesso extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
             exceptionResolver.resolveException(request, response, null,
                     new InvalidCredentialsException("Token de acesso inválido ou expirado."));
+            return;
+        } catch (RuntimeException ex) {
+            SecurityContextHolder.clearContext();
+            exceptionResolver.resolveException(request, response, null, ex);
             return;
         }
         filterChain.doFilter(request, response);

@@ -16,6 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import java.util.stream.Stream;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -801,6 +803,85 @@ class UsuarioServiceTest {
                 }
             }
         }
+    }
+
+    @Nested
+    @DisplayName("Perfil configurado para cadastro")
+    class PerfilConfigurado {
+        @ParameterizedTest
+        @EnumSource(PerfilUsuarioNome.class)
+        @DisplayName("Deve informar perfil ausente sem salvar um usuário sem permissões")
+        void deveRejeitarPerfilAusente(PerfilUsuarioNome nomePerfil) {
+            var entrada = new UsuarioRequest("Ana", "ana", "senha", nomePerfil);
+            assertThatThrownBy(() -> usuarioService.cadastrar(entrada))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Perfil de usuário não configurado: " + nomePerfil);
+            verify(perfilRepository).findByNome(nomePerfil);
+            verify(usuarioRepository, never()).save(any(Usuario.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("Limite de bytes da senha no BCrypt")
+    class LimiteDaSenha {
+        @ParameterizedTest
+        @MethodSource("br.com.salgadosdalucia.api.usuario.UsuarioServiceTest#senhasNoLimite")
+        @DisplayName("Deve cadastrar com até 72 bytes preservando espaços e caracteres originais")
+        void deveAceitarCadastro(String senha) {
+            var entrada = new UsuarioRequest("Ana", "ana", senha, PerfilUsuarioNome.FUNCIONARIO);
+            when(perfilRepository.findByNome(entrada.perfilUsuarioNome())).thenReturn(perfil);
+            when(passwordEncoder.encode(senha)).thenReturn("hash");
+            when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
+            var salvo = usuarioService.cadastrar(entrada);
+            assertThat(salvo.getSenha()).isEqualTo("hash");
+            verify(passwordEncoder).encode(senha);
+        }
+
+        @ParameterizedTest
+        @MethodSource("br.com.salgadosdalucia.api.usuario.UsuarioServiceTest#senhasExcedentes")
+        @DisplayName("Deve rejeitar senha acima de 72 bytes no cadastro antes de codificar ou salvar")
+        void deveRejeitarCadastro(String senha) {
+            var entrada = new UsuarioRequest("Ana", "ana", senha, PerfilUsuarioNome.FUNCIONARIO);
+            assertThatThrownBy(() -> usuarioService.cadastrar(entrada))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessage("A senha deve ter no máximo 72 bytes em UTF-8. Caracteres acentuados e emojis podem ocupar mais de um byte.");
+            verifyNoInteractions(passwordEncoder, perfilRepository);
+            verify(usuarioRepository, never()).save(any(Usuario.class));
+        }
+
+        @ParameterizedTest
+        @MethodSource("br.com.salgadosdalucia.api.usuario.UsuarioServiceTest#senhasNoLimite")
+        @DisplayName("Deve alterar para senha de até 72 bytes sem modificar a senha digitada")
+        void deveAceitarAlteracao(String senha) {
+            var entrada = new AlterarSenhaUsuarioDto("atual", senha, senha);
+            when(passwordEncoder.matches("atual", usuario.getSenha())).thenReturn(true);
+            when(passwordEncoder.encode(senha)).thenReturn("hash-novo");
+            usuarioService.alterarSenha(entrada, usuario);
+            verify(passwordEncoder).encode(senha);
+            verify(usuarioRepository).alterarSenha(ID, "hash-novo");
+        }
+
+        @ParameterizedTest
+        @MethodSource("br.com.salgadosdalucia.api.usuario.UsuarioServiceTest#senhasExcedentes")
+        @DisplayName("Deve rejeitar nova senha acima de 72 bytes sem codificar ou atualizar o hash")
+        void deveRejeitarAlteracao(String senha) {
+            var entrada = new AlterarSenhaUsuarioDto("atual", senha, senha);
+            when(passwordEncoder.matches("atual", usuario.getSenha())).thenReturn(true);
+            assertThatThrownBy(() -> usuarioService.alterarSenha(entrada, usuario))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessage("A senha deve ter no máximo 72 bytes em UTF-8. Caracteres acentuados e emojis podem ocupar mais de um byte.");
+            verify(passwordEncoder).matches("atual", usuario.getSenha());
+            verifyNoMoreInteractions(passwordEncoder);
+            verifyNoInteractions(usuarioRepository, perfilRepository);
+        }
+    }
+
+    static Stream<String> senhasNoLimite() {
+        return Stream.of("a".repeat(72), "á".repeat(36), "😀".repeat(18), " " + "á".repeat(35) + " ", "curta");
+    }
+
+    static Stream<String> senhasExcedentes() {
+        return Stream.of("a".repeat(73), "á".repeat(37), "😀".repeat(19), "a".repeat(71) + "á");
     }
 
 }

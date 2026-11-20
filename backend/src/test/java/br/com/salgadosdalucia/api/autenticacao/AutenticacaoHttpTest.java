@@ -364,6 +364,46 @@ class AutenticacaoHttpTest {
         }
     }
 
+    @Nested
+    @DisplayName("Falhas técnicas sem exposição de detalhes internos")
+    class FalhasTecnicas {
+        @Test
+        @DisplayName("Deve responder 503 no login quando a consulta do usuário falhar, preservando o contrato de erro")
+        void deveDistinguirFalhaTecnicaNoLogin() throws Exception {
+            when(usuarios.findByUsernameIgnoreCase("alice"))
+                    .thenThrow(new org.springframework.dao.DataAccessResourceFailureException("Conexão recusada em banco-interno:3306"));
+            erro(enviar(LOGIN, "{\"username\":\"alice\",\"senha\":\"senha correta\"}"), 503, LOGIN)
+                    .andExpect(jsonPath("$.message").value("Não foi possível autenticar no momento. Tente novamente mais tarde."));
+        }
+
+        @Test
+        @DisplayName("Deve responder 500 quando o banco falhar no filtro, sem tratar o token válido como credencial inválida")
+        void deveTratarFalhaTecnicaNoFiltro() throws Exception {
+            String token = tokens.gerarToken(usuario);
+            when(usuarios.findByUsernameIgnoreCase("alice"))
+                    .thenThrow(new org.springframework.dao.DataAccessResourceFailureException("SQL interno indisponível"));
+            erro(mvc.perform(get(PROTEGIDA).header("Authorization", "Bearer " + token)), 500, PROTEGIDA)
+                    .andExpect(jsonPath("$.message").value("Ocorreu um erro interno. Tente novamente mais tarde."));
+        }
+
+        @Test
+        @DisplayName("Deve ocultar detalhes de uma falha inesperada no controller")
+        void deveOcultarFalhaDoController() throws Exception {
+            when(usuarios.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(usuario));
+            String token = tokens.gerarToken(usuario);
+            erro(mvc.perform(get("/teste-autenticacao/falha").header("Authorization", "Bearer " + token)),
+                    500, "/teste-autenticacao/falha")
+                    .andExpect(jsonPath("$.message").value("Ocorreu um erro interno. Tente novamente mais tarde."));
+        }
+
+        @Test
+        @DisplayName("Deve retornar 400 para JSON inválido sem expor o conteúdo enviado ou o parser")
+        void deveOcultarDetalhesDoJson() throws Exception {
+            erro(enviar(LOGIN, "{\"senha\":\"conteudo-confidencial\",\"username\":}"), 400, LOGIN)
+                    .andExpect(jsonPath("$.message").value("Corpo da requisição inválido. Verifique os dados enviados."));
+        }
+    }
+
     static Stream<String> loginsInvalidos() {
         return Stream.of(
                 "{\"senha\":\"senha\"}", "{\"username\":null,\"senha\":\"senha\"}",
@@ -398,6 +438,11 @@ class AutenticacaoHttpTest {
         @GetMapping({"/actuator/health", "/swagger-ui/index.html", "/v3/api-docs"})
         String publica() {
             return "ok";
+        }
+
+        @GetMapping("/teste-autenticacao/falha")
+        String falha() {
+            throw new IllegalStateException("Falha interna em tabela usuarios");
         }
 
         @GetMapping(PROTEGIDA)

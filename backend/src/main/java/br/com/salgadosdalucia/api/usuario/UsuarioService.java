@@ -17,6 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+
 @Service
 @RequiredArgsConstructor
 public class UsuarioService implements UserDetailsService {
@@ -38,8 +40,15 @@ public class UsuarioService implements UserDetailsService {
         if (usuarioRepository.findByUsernameIgnoreCase(dados.username()).isPresent()) {
             throw new BusinessException("Nome de Usuário já está em uso.");
         }
+
+        validarTamanhoSenha(dados.senha());
         String senhaCriptografada = passwordEncoder.encode(dados.senha());
+
         var perfil = perfilRepository.findByNome(dados.perfilUsuarioNome());
+        if (perfil == null) {
+            throw new IllegalStateException("Perfil de usuário não configurado: " + dados.perfilUsuarioNome());
+        }
+
         Usuario usuario = UsuarioMapper.mapToEntity(dados, senhaCriptografada, perfil);
         return usuarioRepository.save(usuario);
     }
@@ -66,8 +75,15 @@ public class UsuarioService implements UserDetailsService {
         if (!dados.novaSenha().equals(dados.novaSenhaConfirmacao())) {
             throw new BusinessException("Nova senha e confirmação não coincidem!");
         }
+        validarTamanhoSenha(dados.novaSenha());
         String novaSenhaCriptografada = passwordEncoder.encode(dados.novaSenha());
         usuarioRepository.alterarSenha(usuarioLogado.getId(), novaSenhaCriptografada);
+    }
+
+    private void validarTamanhoSenha(String senha) {
+        if (senha.getBytes(StandardCharsets.UTF_8).length > 72) {
+            throw new BusinessException("A senha deve ter no máximo 72 bytes em UTF-8. Caracteres acentuados e emojis podem ocupar mais de um byte.");
+        }
     }
 
     @Transactional

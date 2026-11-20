@@ -2,6 +2,9 @@ package br.com.salgadosdalucia.api.handler;
 
 import br.com.salgadosdalucia.api.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.ProviderNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -14,12 +17,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalHandlerException {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponse> handleException(Exception ex, HttpServletRequest request) {
-        return buildResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, request);
+        log.error("Falha inesperada ao processar {}", request.getRequestURI(), ex);
+        return buildResponse("Ocorreu um erro interno. Tente novamente mais tarde.", HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -42,9 +47,8 @@ public class GlobalHandlerException {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErroResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
-                                                                       HttpServletRequest request) {
-        return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, request);
+    public ResponseEntity<ErroResponse> handleHttpMessageNotReadable(HttpServletRequest request) {
+        return buildResponse("Corpo da requisição inválido. Verifique os dados enviados.", HttpStatus.BAD_REQUEST, request);
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -64,14 +68,20 @@ public class GlobalHandlerException {
 
     // 403 proibido
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErroResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
-        return buildResponse(ex.getMessage(), HttpStatus.FORBIDDEN, request);
+    public ResponseEntity<ErroResponse> handleAccessDenied(HttpServletRequest request) {
+        return buildResponse("Acesso negado.", HttpStatus.FORBIDDEN, request);
+    }
+
+    @ExceptionHandler({AuthenticationServiceException.class, ProviderNotFoundException.class})
+    public ResponseEntity<ErroResponse> handleAuthenticationService(AuthenticationException ex, HttpServletRequest request) {
+        log.error("Falha técnica na autenticação em {}", request.getRequestURI(), ex);
+        return buildResponse("Não foi possível autenticar no momento. Tente novamente mais tarde.", HttpStatus.SERVICE_UNAVAILABLE, request);
     }
 
     // 401 não autorizado
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ErroResponse> handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
-        return buildResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED, request);
+    public ResponseEntity<ErroResponse> handleAuthentication(HttpServletRequest request) {
+        return buildResponse("Usuário ou senha inválidos.", HttpStatus.UNAUTHORIZED, request);
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
