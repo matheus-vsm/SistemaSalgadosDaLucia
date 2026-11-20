@@ -17,6 +17,18 @@ Ao propor ou criar uma branch de trabalho, nunca use `codex/`. Use os prefixos p
 2. Examine commits e o diff a partir do ancestral comum com a base, incluindo arquivos pertinentes para entender o comportamento final. Um título de commit isolado não comprova a entrega. Respeite filtros de data pedidos e diferencie alterações locais não commitadas das alterações da branch.
 3. Separe objetivos principais, ajustes incidentais e pendências. Use correções explícitas do usuário para decidir o escopo. Uma correção incidental pode constar como observação no PR sem se tornar objetivo ou critério de aceite do card.
 
+## Status inicial de novas tarefas
+
+Ao receber um pedido para criar uma tarefa/card, identifique se o trabalho ainda será iniciado, já está em andamento ou já foi implementado. Use as informações explícitas da conversa e confira o código, as alterações locais, os commits e os PRs pertinentes; a ausência de um card ou de um PR não comprova que o trabalho não começou.
+
+- Trabalho ainda não iniciado: crie a tarefa com status **Ready**.
+- Trabalho já iniciado, parcialmente implementado ou já implementado: crie a tarefa mesmo assim e configure pelo menos **In Progress**. Use uma etapa posterior do fluxo apenas quando houver evidências e os critérios dessa etapa estiverem satisfeitos; código implementado, isoladamente, não comprova conclusão do fluxo.
+- Se as evidências não permitirem distinguir os casos, esclareça o estado com o usuário antes de definir o status; não presuma **Ready** só porque a tarefa está sendo criada agora.
+
+Na criação autorizada, configurar esse status inicial faz parte da criação do card. Consulte as opções existentes do campo Status no Project de destino e use **Ready**, **In Progress** ou seus equivalentes no fluxo, sem criar opções ou alterar o esquema. Se faltar acesso ou não houver uma opção equivalente identificável, informe o status pretendido e a pendência. Depois da criação, confira o status efetivamente salvo no item do Project; mencionar o status no corpo da issue não substitui configurar o campo.
+
+Em pedidos apenas de redação ou de prompt para outro agente, indique o status inicial recomendado e a evidência que justifica a escolha, sem realizar escritas externas. Esta regra se aplica à criação de novas tarefas; preserve o status de cards existentes em pedidos apenas de reescrita, salvo solicitação explícita de mudança.
+
 ## Redação
 
 Consulte [modelos de card e PR](references/modelos.md) para a estrutura. Adapte ao conteúdo existente e ao pedido:
