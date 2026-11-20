@@ -64,7 +64,7 @@ function ambiente([pasta, arquivo, idLista, listar, criarCard, template]) {
     }
     vm.runInContext(`${template} = 'template em cache';`, contexto);
     contexto[criarCard] = item => `card-${item.id}`;
-    return {lista: elemento(idLista), elemento, consultas, observadores, notificacoes, listar: pagina => contexto[listar](pagina)};
+    return {lista: elemento(idLista), elemento, consultas, observadores, notificacoes, listar: (...args) => contexto[listar](...args)};
 }
 
 function pagina(id, numero = 1) {
@@ -72,6 +72,30 @@ function pagina(id, numero = 1) {
 }
 
 for (const modulo of modulos) {
+    if (['cliente', 'salgado'].includes(modulo[0])) {
+        for (const ativo of [true, false]) {
+            test(`${modulo[0]}: busca por nome envia status e mantém paginação devolvida pelo backend (${ativo})`, async () => {
+                const a = ambiente(modulo);
+                const requisicao = a.listar(1, ativo, 'Nome com espaço');
+                const url = new URL(a.consultas[0].url, 'http://localhost');
+                assert.equal(url.pathname, modulo[0] === 'cliente' ? '/clientes/nome' : '/salgados/nome');
+                assert.equal(url.searchParams.get('ativo'), String(ativo));
+                assert.equal(url.searchParams.get('nome'), 'Nome com espaço');
+                assert.equal(url.searchParams.get('page'), '1');
+                const resposta = pagina(10, 1);
+                resposta.data.content = [{id: 10, ativo}];
+                a.consultas[0].resolve(resposta);
+                await requisicao;
+                assert.equal(a.lista.innerHTML, 'card-10');
+                const idPagina = modulo[0] === 'cliente' ? 'pagina-atual' : 'pagina-atual-salgados';
+                const idProximo = modulo[0] === 'cliente' ? 'btn-proximo' : 'btn-proximo-salgados';
+                assert.equal(a.elemento(idPagina).textContent, 'Página 2 de 3');
+                assert.equal(a.elemento(idProximo).disabled, false);
+                assert.equal(a.consultas.length, 1);
+            });
+        }
+    }
+
     test(`${modulo[0]}: atualização após cadastro permite aumentar a altura`, async () => {
         const a = ambiente(modulo);
         const propriedade = a.lista.dataset.alturaCards ? '--altura-card' : 'height';

@@ -26,7 +26,7 @@ async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBu
 
         const endpoint = termoBuscaSalgados ? '/salgados/nome' : '/salgados';
         const parametros = termoBuscaSalgados
-            ? `nome=${encodeURIComponent(termoBuscaSalgados)}&page=${pagina}&size=4`
+            ? `nome=${encodeURIComponent(termoBuscaSalgados)}&ativo=${tipo}&page=${pagina}&size=4`
             : `page=${pagina}&size=4&ativo=${tipo}`;
         const {
             data: salgadosPage
@@ -34,9 +34,7 @@ async function listarSalgados(pagina = 0, tipo = salgadosAtivos, busca = termoBu
 
         if (!carregamento.atual()) return;
 
-        const salgados = termoBuscaSalgados
-            ? salgadosPage.content.filter(salgado => salgado.ativo === tipo)
-            : salgadosPage.content;
+        const salgados = salgadosPage.content;
 
         paginaAtualSalgados = salgadosPage.page.number;
         if (!salgados || salgados.length === 0) {

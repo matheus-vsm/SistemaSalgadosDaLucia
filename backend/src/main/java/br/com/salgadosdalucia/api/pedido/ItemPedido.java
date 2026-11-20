@@ -28,6 +28,7 @@ public class ItemPedido {
     private Integer quantidade;
     @Enumerated(EnumType.STRING)
     private TipoPreco tipoPreco;
+    @Column(precision = 12, scale = 4)
     private BigDecimal precoUnitario;
     private BigDecimal subTotal;
 

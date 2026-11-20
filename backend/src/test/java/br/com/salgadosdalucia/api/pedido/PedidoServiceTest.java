@@ -92,13 +92,18 @@ class PedidoServiceTest {
     class Registrar {
         @ParameterizedTest
         @CsvSource({
-                "CONGELADO, 60.49, 3, 0.60, 1.80",
-                "CONGELADO, 60.50, 3, 0.61, 1.83",
-                "CONGELADO, 60.51, 3, 0.61, 1.83",
-                "PROCESSADO, 55.55, 150, 0.56, 84.00",
-                "PROCESSADO, 1.00, 7, 0.01, 0.07"
+                "CONGELADO, 60.49, 3, 0.6049, 1.81",
+                "CONGELADO, 60.50, 3, 0.605, 1.82",
+                "CONGELADO, 60.51, 3, 0.6051, 1.82",
+                "PROCESSADO, 55.55, 150, 0.5555, 83.33",
+                "PROCESSADO, 1.00, 7, 0.01, 0.07",
+                "CONGELADO, 60.50, 50, 0.605, 30.25",
+                "CONGELADO, 60.50, 100, 0.605, 60.50",
+                "PROCESSADO, 3.35, 30, 0.0335, 1.01",
+                "CONGELADO, 0.01, 49, 0.0001, 0.00",
+                "CONGELADO, 0.01, 50, 0.0001, 0.01"
         })
-        @DisplayName("Deve selecionar o preço do catálogo e aplicar HALF_UP antes de multiplicar a quantidade")
+        @DisplayName("Deve preservar o preço unitário exato e aplicar HALF_UP somente ao subtotal")
         void deveCalcularPrecoPorTipo(TipoPreco tipo, String cento, int quantidade, String unitario, String subtotal) {
             salgado.setPrecoCentoCongelado(new BigDecimal(tipo == TipoPreco.CONGELADO ? cento : "135.00"));
             salgado.setPrecoCentoProcessado(new BigDecimal(tipo == TipoPreco.PROCESSADO ? cento : "246.00"));
@@ -155,8 +160,8 @@ class PedidoServiceTest {
             assertThat(resposta.id()).isEqualTo(87L);
             assertThat(resposta.itens()).containsExactly(
                     new ItemPedidoResponse(501L, 87L, "Coxinha", 50, TipoPreco.CONGELADO, new BigDecimal("0.60"), new BigDecimal("30.00")),
-                    new ItemPedidoResponse(502L, 87L, "Esfiha", 3, TipoPreco.PROCESSADO, new BigDecimal("0.91"), new BigDecimal("2.73")));
-            assertThat(resposta.valorTotal()).isEqualByComparingTo("35.08");
+                    new ItemPedidoResponse(502L, 87L, "Esfiha", 3, TipoPreco.PROCESSADO, new BigDecimal("0.9149"), new BigDecimal("2.74")));
+            assertThat(resposta.valorTotal()).isEqualByComparingTo("35.09");
             assertThat(resposta.frete()).isEqualByComparingTo("2.35");
             assertThat(resposta.status()).isEqualTo(StatusPedido.EM_ANDAMENTO);
             verify(clienteRepository).findById(CLIENTE_ID);
@@ -298,8 +303,8 @@ class PedidoServiceTest {
         }
 
         @Test
-        @DisplayName("Deve arredondar o preço unitário para duas casas antes de calcular o subtotal")
-        void deveArredondarPrecoUnitario() throws NotFoundException {
+        @DisplayName("Deve preservar a fração de centavo no unitário e somar o frete ao subtotal arredondado")
+        void deveArredondarSomenteSubtotal() throws NotFoundException {
             salgado.setPrecoCentoCongelado(new BigDecimal("60.50"));
 
             when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
@@ -308,9 +313,9 @@ class PedidoServiceTest {
 
             CriacaoPedidoResponse resposta = pedidoService.registrar(request);
 
-            assertThat(resposta.itens().getFirst().precoUnitario()).isEqualByComparingTo("0.61");
-            assertThat(resposta.itens().getFirst().subTotal()).isEqualByComparingTo("30.50");
-            assertThat(resposta.valorTotal()).isEqualByComparingTo("40.50");
+            assertThat(resposta.itens().getFirst().precoUnitario()).isEqualByComparingTo("0.605");
+            assertThat(resposta.itens().getFirst().subTotal()).isEqualByComparingTo("30.25");
+            assertThat(resposta.valorTotal()).isEqualByComparingTo("40.25");
             verify(clienteRepository).findById(CLIENTE_ID);
             verify(usuarioRepository).findById(USUARIO_ID);
             verify(salgadoRepository).findById(SALGADO_ID);
@@ -496,14 +501,40 @@ class PedidoServiceTest {
     @DisplayName("Atualizar pedido")
     class Atualizar {
         @ParameterizedTest
+        @CsvSource(value = {"12.75, 42.75", "NULL, 30.00"}, nullValues = "NULL")
+        @DisplayName("Deve substituir ou remover o frete anterior e recalcular o total")
+        void deveAplicarFreteInformado(String novoFrete, String totalEsperado) throws NotFoundException {
+            request = criarRequest(TipoEntrega.ENTREGA,
+                    novoFrete == null ? null : new BigDecimal(novoFrete),
+                    List.of(new ItemPedidoDto(SALGADO_ID, 50, TipoPreco.CONGELADO)));
+
+            when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+
+            CriacaoPedidoResponse resposta = pedidoService.atualizar(PEDIDO_ID, request);
+
+            assertThat(resposta.frete()).isEqualTo(request.frete());
+            assertThat(pedido.getFrete()).isEqualTo(request.frete());
+            assertThat(resposta.valorTotal()).isEqualByComparingTo(totalEsperado);
+            verify(pedidoRepository).save(pedido);
+        }
+
+        @ParameterizedTest
         @CsvSource({
-                "CONGELADO, 60.49, 3, 0.60, 1.80",
-                "CONGELADO, 60.50, 3, 0.61, 1.83",
-                "CONGELADO, 60.51, 3, 0.61, 1.83",
-                "PROCESSADO, 55.55, 150, 0.56, 84.00",
-                "PROCESSADO, 1.00, 7, 0.01, 0.07"
+                "CONGELADO, 60.49, 3, 0.6049, 1.81",
+                "CONGELADO, 60.50, 3, 0.605, 1.82",
+                "CONGELADO, 60.51, 3, 0.6051, 1.82",
+                "PROCESSADO, 55.55, 150, 0.5555, 83.33",
+                "PROCESSADO, 1.00, 7, 0.01, 0.07",
+                "CONGELADO, 60.50, 50, 0.605, 30.25",
+                "CONGELADO, 60.50, 100, 0.605, 60.50",
+                "PROCESSADO, 3.35, 30, 0.0335, 1.01",
+                "CONGELADO, 0.01, 49, 0.0001, 0.00",
+                "CONGELADO, 0.01, 50, 0.0001, 0.01"
         })
-        @DisplayName("Deve recalcular com o preço atual do catálogo e substituir o subtotal anterior")
+        @DisplayName("Deve recalcular pelo catálogo atual arredondando apenas o novo subtotal")
         void deveRecalcularPrecoPorTipo(TipoPreco tipo, String cento, int quantidade, String unitario, String subtotal) {
             pedido.setFrete(null);
             salgado.setPrecoCentoCongelado(new BigDecimal(tipo == TipoPreco.CONGELADO ? cento : "135.00"));
@@ -564,9 +595,9 @@ class PedidoServiceTest {
 
             assertThat(resposta.id()).isEqualTo(PEDIDO_ID);
             assertThat(resposta.itens()).containsExactly(
-                    new ItemPedidoResponse(501L, PEDIDO_ID, "Coxinha", 50, TipoPreco.CONGELADO, new BigDecimal("0.66"), new BigDecimal("33.00")),
-                    new ItemPedidoResponse(502L, PEDIDO_ID, "Esfiha", 3, TipoPreco.PROCESSADO, new BigDecimal("0.91"), new BigDecimal("2.73")));
-            assertThat(resposta.valorTotal()).isEqualByComparingTo("38.08");
+                    new ItemPedidoResponse(501L, PEDIDO_ID, "Coxinha", 50, TipoPreco.CONGELADO, new BigDecimal("0.655"), new BigDecimal("32.75")),
+                    new ItemPedidoResponse(502L, PEDIDO_ID, "Esfiha", 3, TipoPreco.PROCESSADO, new BigDecimal("0.9149"), new BigDecimal("2.74")));
+            assertThat(resposta.valorTotal()).isEqualByComparingTo("37.84");
             assertThat(resposta.frete()).isEqualByComparingTo("2.35");
             assertThat(resposta.enderecoEntrega()).usingRecursiveComparison().isEqualTo(endereco);
             assertThat(cliente.getEndereco()).usingRecursiveComparison().isEqualTo(
@@ -1387,6 +1418,98 @@ class PedidoServiceTest {
             verify(pedidoRepository).findById(PEDIDO_ID);
             verifyNoMoreInteractions(pedidoRepository);
             verifyNoInteractions(clienteRepository, usuarioRepository, salgadoRepository);
+        }
+    }
+
+    @Nested
+    @DisplayName("Arredondamento dos subtotais do pedido")
+    class ArredondamentoSubtotais {
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        @DisplayName("Deve somar os subtotais já arredondados e acrescentar o frete no cadastro e na edição")
+        void deveSomarSubtotaisArredondados(boolean edicao) {
+            salgado.setPrecoCentoCongelado(new BigDecimal("0.01"));
+            request = criarRequest(TipoEntrega.ENTREGA, new BigDecimal("2.35"), List.of(
+                    new ItemPedidoDto(SALGADO_ID, 50, TipoPreco.CONGELADO),
+                    new ItemPedidoDto(SALGADO_ID, 50, TipoPreco.CONGELADO)));
+
+            when(clienteRepository.findById(CLIENTE_ID)).thenReturn(Optional.of(cliente));
+            when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+            when(salgadoRepository.findById(SALGADO_ID)).thenReturn(Optional.of(salgado));
+            if (edicao) {
+                when(pedidoRepository.findById(PEDIDO_ID)).thenReturn(Optional.of(pedido));
+            }
+
+            CriacaoPedidoResponse resposta = edicao
+                    ? pedidoService.atualizar(PEDIDO_ID, request) : pedidoService.registrar(request);
+
+            assertThat(resposta.itens()).hasSize(2).allSatisfy(item -> {
+                assertThat(item.precoUnitario()).isEqualByComparingTo("0.0001");
+                assertThat(item.subTotal()).isEqualByComparingTo("0.01");
+            });
+            assertThat(resposta.valorTotal()).isEqualByComparingTo("2.37");
+            verify(pedidoRepository).save(any(Pedido.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("Validação dos itens recebidos no pedido")
+    class ValidacaoItens {
+        @ParameterizedTest
+        @CsvSource({"id, salgadoId, NotNull", "quantidadeNula, quantidade, NotNull",
+                "zero, quantidade, Positive", "negativa, quantidade, Positive", "tipo, tipoPreco, NotNull"})
+        @DisplayName("Deve validar os campos de cada item em cascata")
+        void deveRejeitarCampoInvalido(String caso, String propriedade, String restricao) {
+            ItemPedidoDto item = switch (caso) {
+                case "id" -> new ItemPedidoDto(null, 10, TipoPreco.CONGELADO);
+                case "quantidadeNula" -> new ItemPedidoDto(SALGADO_ID, null, TipoPreco.CONGELADO);
+                case "zero" -> new ItemPedidoDto(SALGADO_ID, 0, TipoPreco.CONGELADO);
+                case "negativa" -> new ItemPedidoDto(SALGADO_ID, -1, TipoPreco.CONGELADO);
+                default -> new ItemPedidoDto(SALGADO_ID, 10, null);
+            };
+            var entrada = new CriacaoPedidoRequest(CLIENTE_ID,
+                    List.of(new ItemPedidoDto(SALGADO_ID, 1, TipoPreco.CONGELADO), item), null,
+                    LocalDate.now(), LocalDateTime.now().plusDays(2), TipoEntrega.RETIRADA,
+                    FormaPagamento.PIX, USUARIO_ID, null);
+
+            try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+                assertThat(factory.getValidator().validate(entrada))
+                        .singleElement().satisfies(violacao -> {
+                            assertThat(violacao.getPropertyPath().toString()).isEqualTo("itens[1]." + propriedade);
+                            assertThat(violacao.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName())
+                                    .isEqualTo(restricao);
+                        });
+            }
+        }
+
+        @Test
+        @DisplayName("Deve rejeitar elemento nulo sem confundir com lista ausente")
+        void deveRejeitarElementoNulo() {
+            var entrada = new CriacaoPedidoRequest(CLIENTE_ID,
+                    java.util.Arrays.asList(new ItemPedidoDto(SALGADO_ID, 1, TipoPreco.CONGELADO), null), null,
+                    LocalDate.now(), LocalDateTime.now().plusDays(2), TipoEntrega.RETIRADA,
+                    FormaPagamento.PIX, USUARIO_ID, null);
+
+            try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+                assertThat(factory.getValidator().validate(entrada)).singleElement().satisfies(violacao -> {
+                    assertThat(violacao.getPropertyPath().toString()).isEqualTo("itens[1].<list element>");
+                    assertThat(violacao.getConstraintDescriptor().getAnnotation())
+                            .isInstanceOf(jakarta.validation.constraints.NotNull.class);
+                });
+            }
+        }
+
+        @Test
+        @DisplayName("Deve aceitar itens válidos de tipos distintos")
+        void deveAceitarItensValidos() {
+            var entrada = new CriacaoPedidoRequest(CLIENTE_ID,
+                    List.of(new ItemPedidoDto(SALGADO_ID, 1, TipoPreco.CONGELADO),
+                            new ItemPedidoDto(99L, 50, TipoPreco.PROCESSADO)), null,
+                    LocalDate.now(), LocalDateTime.now().plusDays(2), TipoEntrega.RETIRADA,
+                    FormaPagamento.PIX, USUARIO_ID, null);
+            try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+                assertThat(factory.getValidator().validate(entrada)).isEmpty();
+            }
         }
     }
 

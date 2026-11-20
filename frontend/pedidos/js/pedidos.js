@@ -185,6 +185,14 @@ function precoItemPedido(salgado, tipo) {
     return precoCento / 100;
 }
 
+function subtotalItemPedido(item) {
+    // O preço por cento tem duas casas; o unitário precisa de até quatro.
+    // Inteiros evitam que imprecisões binárias alterem o HALF_UP do subtotal.
+    const valor = BigInt(Math.round(item.precoUnitario * 10000)) * BigInt(item.quantidade);
+    const centavos = (valor + (valor < 0n ? -50n : 50n)) / 100n;
+    return Number(centavos) / 100;
+}
+
 function atualizarPreviewSalgadoPedido() {
     const preview = document.getElementById('preview-salgado-pedido');
     const id = Number(document.getElementById('salgado-pedido')?.value);
@@ -196,7 +204,7 @@ function adicionarItemPedido() {
     const tipoPreco = document.getElementById('tipo-preco-pedido').value;
     const quantidade = Number(document.getElementById('quantidade-pedido').value);
     const salgado = salgadosPedido.find(item => item.id === salgadoId);
-    if (!salgado || !tipoPreco || !quantidade) return mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'Selecione o salgado, o tipo e informe a quantidade.' });
+    if (!salgado || !tipoPreco || !Number.isInteger(quantidade) || quantidade <= 0) return mostrarNotificacao({ tipo: 'aviso', titulo: 'Confira os dados', mensagem: 'Selecione o salgado, o tipo e informe uma quantidade inteira e positiva.' });
     itensNovoPedido.push({
         salgadoId,
         nomeSalgado: salgado.nome,
@@ -225,7 +233,7 @@ function renderizarItensPedido() {
         linha.querySelector('h3').textContent = item.nomeSalgado;
         linha.querySelector('.item-pedido-descricao').textContent = item.descricao;
         linha.querySelector('.item-pedido-quantidade').textContent = `Quantidade: ${item.quantidade} | ${textoEnumPedido('tiposPrecos', item.tipoPreco)}`;
-        linha.querySelector('.item-pedido-subtotal').textContent = `Subtotal: ${moedaPedido(item.precoUnitario * item.quantidade)}`;
+        linha.querySelector('.item-pedido-subtotal').textContent = `Subtotal: ${moedaPedido(subtotalItemPedido(item))}`;
         linha.querySelector('.remover-item-pedido').dataset.removerItem = indice;
         lista.appendChild(linha);
     });
@@ -233,9 +241,9 @@ function renderizarItensPedido() {
 }
 
 function atualizarTotalPedido() {
-    const subtotal = itensNovoPedido.reduce((soma, item) => soma + item.precoUnitario * item.quantidade, 0);
+    const subtotalCentavos = itensNovoPedido.reduce((soma, item) => soma + Math.round(subtotalItemPedido(item) * 100), 0);
     const frete = document.getElementById('tipo-entrega-pedido')?.value === 'ENTREGA' ? Number(document.getElementById('frete-pedido')?.value || 0) : 0;
-    document.getElementById('valor-total-pedido').textContent = moedaPedido(subtotal + frete);
+    document.getElementById('valor-total-pedido').textContent = moedaPedido((subtotalCentavos + Math.round(frete * 100)) / 100);
 }
 
 function idUsuarioLogadoPedido() {

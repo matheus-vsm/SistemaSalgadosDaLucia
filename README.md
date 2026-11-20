@@ -310,7 +310,7 @@ O refresh pode ser reutilizado até expirar, enquanto o usuário existir e estiv
 revoga o token anterior. Tokens emitidos no mesmo segundo podem ter conteúdo idêntico. O endpoint retorna
 `400` para refresh inválido, `401` para usuário inativo e `404` para usuário removido. Credenciais inválidas
 no filtro de acesso retornam `401` no formato JSON de erro da API. A ausência de credenciais em rota protegida
-mantém a resposta `403` da configuração de segurança. Veja a [matriz da revisão de autenticação](docs/revisoes/autenticacao.md)
+mantém a resposta `403` da configuração de segurança. Veja a [matriz da revisão de autenticação na wiki](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/9-%E2%80%90-Testes-e-Rastreabilidade)
 para cenários, decisões e limites da validação.
 
 | Perfil        | Permissões na API                                                                                                      |
@@ -332,8 +332,8 @@ Prefixo de todas as rotas: `/api/salgados-da-lucia-kojima`.
 | Recurso      | Operações                                                                                                                                                              |
 |--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Autenticação | `POST /autenticacao/login`, `POST /autenticacao/atualizar-token`                                                                                                       |
-| Clientes     | `POST /clientes`, `GET /clientes`, `GET /clientes/{id}`, `GET /clientes/nome?nome=`, `PUT /clientes/{id}`, `PATCH /clientes/{id}`                                      |
-| Salgados     | `POST /salgados`, `GET /salgados`, `GET /salgados/{id}`, `GET /salgados/nome?nome=`, `PUT /salgados/{id}`, `PATCH /salgados/{id}`                                      |
+| Clientes     | `POST /clientes`, `GET /clientes`, `GET /clientes/{id}`, `GET /clientes/nome?nome=...&ativo=true`, `PUT /clientes/{id}`, `PATCH /clientes/{id}`                                      |
+| Salgados     | `POST /salgados`, `GET /salgados`, `GET /salgados/{id}`, `GET /salgados/nome?nome=...&ativo=true`, `PUT /salgados/{id}`, `PATCH /salgados/{id}`                                      |
 | Estoque      | `GET /estoque`, `GET /estoque/{salgadoId}`, `PATCH /estoque/{salgadoId}`                                                                                               |
 | Pedidos      | `POST /pedidos`, `GET /pedidos`, `GET /pedidos/{id}`, `PUT /pedidos/{id}`, `PATCH /pedidos/{id}`                                                                       |
 | Compras      | `POST /compras`, `GET /compras`, `GET /compras/{id}`, `PUT /compras/{id}`                                                                                              |
@@ -343,7 +343,7 @@ Prefixo de todas as rotas: `/api/salgados-da-lucia-kojima`.
 ### Paginação e filtros
 
 As listagens paginadas aceitam `page`, `size` e `sort`, com páginas começando em zero. As listagens gerais de clientes,
-salgados e usuários exigem `ativo=true` ou `ativo=false`.
+salgados e usuários exigem `ativo=true` ou `ativo=false`. As buscas por nome de clientes e salgados também exigem esse parâmetro e aplicam nome e status antes da paginação.
 
 - **Pedidos:** `statusPedido`, `clienteId`, `nomeCliente`, `dataPedido`, `dataInicioEntrega`, `dataFimEntrega`,
   `tipoEntrega`, `formaPagamento`, `usuarioResponsavelId` e `nomeUsuarioResponsavel`. Os limites do período de entrega

@@ -18,7 +18,7 @@ public record CriacaoPedidoRequest(
         @NotNull(message = "ID no Cliente é obrigatório!")
         Long clienteId,
         @NotEmpty(message = "É necessário adicionar pelo menos um Item ao Pedido!")
-        List<ItemPedidoDto> itens,
+        List<@NotNull(message = "O item do pedido é obrigatório!") @Valid ItemPedidoDto> itens,
         @Valid
         EnderecoDto enderecoEntrega,
         LocalDate dataPedido,

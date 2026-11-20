@@ -80,8 +80,9 @@ public class ClienteController {
     @Operation(summary = "Buscar clientes por nome")
     @ApiResponse(responseCode = "200", description = "Busca realizada com sucesso.")
     public ResponseEntity<Page<ClienteResponse>> buscarClientePorNome(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao,
-                                                                      @RequestParam String nome) {
-        var page = service.buscarPorNome(paginacao, nome);
+                                                                      @RequestParam String nome,
+                                                                      @RequestParam boolean ativo) {
+        var page = service.buscarPorNome(paginacao, nome, ativo);
         return ResponseEntity.ok(page);
     }
 
