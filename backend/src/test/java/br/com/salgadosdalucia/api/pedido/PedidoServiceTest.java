@@ -1390,6 +1390,67 @@ class PedidoServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("Validação dos itens recebidos no pedido")
+    class ValidacaoItens {
+        @ParameterizedTest
+        @CsvSource({"id, salgadoId, NotNull", "quantidadeNula, quantidade, NotNull",
+                "zero, quantidade, Positive", "negativa, quantidade, Positive", "tipo, tipoPreco, NotNull"})
+        @DisplayName("Deve validar os campos de cada item em cascata")
+        void deveRejeitarCampoInvalido(String caso, String propriedade, String restricao) {
+            ItemPedidoDto item = switch (caso) {
+                case "id" -> new ItemPedidoDto(null, 10, TipoPreco.CONGELADO);
+                case "quantidadeNula" -> new ItemPedidoDto(SALGADO_ID, null, TipoPreco.CONGELADO);
+                case "zero" -> new ItemPedidoDto(SALGADO_ID, 0, TipoPreco.CONGELADO);
+                case "negativa" -> new ItemPedidoDto(SALGADO_ID, -1, TipoPreco.CONGELADO);
+                default -> new ItemPedidoDto(SALGADO_ID, 10, null);
+            };
+            var entrada = new CriacaoPedidoRequest(CLIENTE_ID,
+                    List.of(new ItemPedidoDto(SALGADO_ID, 1, TipoPreco.CONGELADO), item), null,
+                    LocalDate.now(), LocalDateTime.now().plusDays(2), TipoEntrega.RETIRADA,
+                    FormaPagamento.PIX, USUARIO_ID, null);
+
+            try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+                assertThat(factory.getValidator().validate(entrada))
+                        .singleElement().satisfies(violacao -> {
+                            assertThat(violacao.getPropertyPath().toString()).isEqualTo("itens[1]." + propriedade);
+                            assertThat(violacao.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName())
+                                    .isEqualTo(restricao);
+                        });
+            }
+        }
+
+        @Test
+        @DisplayName("Deve rejeitar elemento nulo sem confundir com lista ausente")
+        void deveRejeitarElementoNulo() {
+            var entrada = new CriacaoPedidoRequest(CLIENTE_ID,
+                    java.util.Arrays.asList(new ItemPedidoDto(SALGADO_ID, 1, TipoPreco.CONGELADO), null), null,
+                    LocalDate.now(), LocalDateTime.now().plusDays(2), TipoEntrega.RETIRADA,
+                    FormaPagamento.PIX, USUARIO_ID, null);
+
+            try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+                assertThat(factory.getValidator().validate(entrada)).singleElement().satisfies(violacao -> {
+                    assertThat(violacao.getPropertyPath().toString()).isEqualTo("itens[1].<list element>");
+                    assertThat(violacao.getConstraintDescriptor().getAnnotation())
+                            .isInstanceOf(jakarta.validation.constraints.NotNull.class);
+                });
+            }
+        }
+
+        @Test
+        @DisplayName("Deve aceitar itens válidos de tipos distintos")
+        void deveAceitarItensValidos() {
+            var entrada = new CriacaoPedidoRequest(CLIENTE_ID,
+                    List.of(new ItemPedidoDto(SALGADO_ID, 1, TipoPreco.CONGELADO),
+                            new ItemPedidoDto(99L, 50, TipoPreco.PROCESSADO)), null,
+                    LocalDate.now(), LocalDateTime.now().plusDays(2), TipoEntrega.RETIRADA,
+                    FormaPagamento.PIX, USUARIO_ID, null);
+            try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+                assertThat(factory.getValidator().validate(entrada)).isEmpty();
+            }
+        }
+    }
+
     private CriacaoPedidoRequest criarRequest(TipoEntrega tipoEntrega, BigDecimal frete, List<ItemPedidoDto> itens) {
         return criarRequest(tipoEntrega, frete, itens,
                 new EnderecoDto("Rua B", "20", "Casa", "02002000", "Centro", "São Paulo", "SP"));

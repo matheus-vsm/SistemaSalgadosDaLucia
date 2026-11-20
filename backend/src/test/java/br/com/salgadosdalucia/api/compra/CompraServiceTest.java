@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static jakarta.validation.Validation.buildDefaultValidatorFactory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -646,6 +647,32 @@ class CompraServiceTest {
 
             verify(compraRepository).findAllWithFiltros(null, null, null, null, paginacao);
             verifyNoMoreInteractions(compraRepository);
+        }
+    }
+
+    @Nested
+    @DisplayName("Validação dos itens recebidos na compra")
+    class ValidacaoItens {
+        @Test
+        @DisplayName("Deve rejeitar elemento nulo mesmo após um item válido")
+        void deveRejeitarElementoNulo() {
+            var entrada = new CriacaoCompraRequest(java.util.Arrays.asList(
+                    new ItemCompraRequest("Farinha", 1, new BigDecimal("4.25")), null), DATA_COMPRA, null);
+            try (var factory = buildDefaultValidatorFactory()) {
+                assertThat(factory.getValidator().validate(entrada)).singleElement().satisfies(violacao -> {
+                    assertThat(violacao.getPropertyPath().toString()).isEqualTo("itens[1].<list element>");
+                    assertThat(violacao.getConstraintDescriptor().getAnnotation())
+                            .isInstanceOf(jakarta.validation.constraints.NotNull.class);
+                });
+            }
+        }
+
+        @Test
+        @DisplayName("Deve continuar aceitando uma compra com vários itens válidos")
+        void deveAceitarItensValidos() {
+            try (var factory = buildDefaultValidatorFactory()) {
+                assertThat(factory.getValidator().validate(request)).isEmpty();
+            }
         }
     }
 
