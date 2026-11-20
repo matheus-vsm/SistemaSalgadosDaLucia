@@ -737,4 +737,41 @@ class CompraServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("Capacidade monetária da compra")
+    class LimitesMonetarios {
+        @ParameterizedTest
+        @CsvSource({
+                "false,99999999.99,1,1,99999999.99,aceito",
+                "true,99999999.99,1,1,99999999.99,aceito",
+                "false,33333333.33,3,1,99999999.99,aceito",
+                "true,33333333.33,3,1,99999999.99,aceito",
+                "false,50000000.00,2,1,0,O subtotal do item da compra",
+                "true,50000000.00,2,1,0,O subtotal do item da compra",
+                "false,50000000.00,1,2,0,O total da compra",
+                "true,50000000.00,1,2,0,O total da compra"
+        })
+        @DisplayName("Deve aceitar o máximo e rejeitar subtotal ou soma excedente antes de salvar")
+        void deveRespeitarCapacidade(boolean edicao, String unitario, int quantidade, int numeroItens,
+                                    String esperado, String resultado) {
+            var item = new ItemCompraRequest("Farinha", quantidade, new BigDecimal(unitario));
+            var entrada = new CriacaoCompraRequest(java.util.Collections.nCopies(numeroItens, item), DATA_COMPRA, null);
+            if (edicao) when(compraRepository.findById(COMPRA_ID)).thenReturn(Optional.of(compra));
+            if (resultado.equals("aceito")) {
+                when(compraRepository.save(any(Compra.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
+                var resposta = edicao ? compraService.editarCompra(COMPRA_ID, entrada)
+                        : compraService.registrarCompra(entrada);
+                assertThat(resposta.valorTotal()).isEqualByComparingTo(esperado);
+                verify(compraRepository).save(any(Compra.class));
+            } else {
+                assertThatThrownBy(() -> {
+                    if (edicao) compraService.editarCompra(COMPRA_ID, entrada);
+                    else compraService.registrarCompra(entrada);
+                }).isInstanceOf(br.com.salgadosdalucia.api.exception.BusinessException.class)
+                        .hasMessage(resultado + " excede o limite de R$ 99.999.999,99.");
+                verify(compraRepository, never()).save(any(Compra.class));
+            }
+        }
+    }
+
 }

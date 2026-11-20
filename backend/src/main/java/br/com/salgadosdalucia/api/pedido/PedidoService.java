@@ -31,6 +31,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PedidoService {
 
+    private static final BigDecimal VALOR_MAXIMO = new BigDecimal("99999999.99");
+
     private final PedidoRepository pedidoRepository;
 
     private final ClienteRepository clienteRepository;
@@ -79,6 +81,12 @@ public class PedidoService {
         pedidoRepository.save(pedido);
 
         return PedidoMapper.mapToCriacaoPedidoResponse(pedido);
+    }
+
+    private void validarLimiteMonetario(BigDecimal valor, String campo) {
+        if (valor.compareTo(VALOR_MAXIMO) > 0) {
+            throw new BusinessException(campo + " excede o limite de R$ 99.999.999,99.");
+        }
     }
 
     public Page<PedidoListagemDto> listarComFiltro(PedidoFiltroDto filtro, Pageable paginacao) {
@@ -158,6 +166,7 @@ public class PedidoService {
         if (pedido.getFrete() != null) {
             pedido.setValorTotal(pedido.getValorTotal().add(pedido.getFrete()));
         }
+        validarLimiteMonetario(pedido.getValorTotal(), "O total do pedido");
     }
 
     private void defineEnderecoEntrega(Pedido pedido, EnderecoDto enderecoInformado) {
@@ -184,6 +193,7 @@ public class PedidoService {
         item.setSubTotal(item.getPrecoUnitario()
                 .multiply(BigDecimal.valueOf(item.getQuantidade()))
                 .setScale(2, RoundingMode.HALF_UP));
+        validarLimiteMonetario(item.getSubTotal(), "O subtotal do item do pedido");
     }
 
     private void atualizarItensPedido(Pedido pedido, List<ItemPedidoDto> itensDto) throws NotFoundException {
