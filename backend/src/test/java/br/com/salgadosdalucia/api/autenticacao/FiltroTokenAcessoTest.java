@@ -88,6 +88,21 @@ class FiltroTokenAcessoTest {
             verifyNoInteractions(chain, usuarios);
         }
 
+        @Test
+        @DisplayName("Deve limpar o contexto e encaminhar a falha técnica original sem continuar a requisição")
+        void deveEncaminharFalhaTecnica() throws Exception {
+            SecurityContextHolder.getContext().setAuthentication(
+                    new UsernamePasswordAuthenticationToken("anterior", null, List.of()));
+            request.addHeader("Authorization", "Bearer acesso");
+            when(tokens.verificaToken("acesso")).thenReturn("alice");
+            var falha = new org.springframework.dao.DataAccessResourceFailureException("Banco indisponível");
+            when(usuarios.findByUsernameIgnoreCase("alice")).thenThrow(falha);
+            filtro.doFilter(request, response, chain);
+            assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+            verify(resolver).resolveException(request, response, null, falha);
+            verifyNoInteractions(chain);
+        }
+
         @DisplayName("Não deve converter erro de negócio posterior ao filtro em falha de autenticação")
         @Test
         void erroDeNegocioPosteriorAoFiltroNaoEViradoErroDeAutenticacao() throws Exception {
