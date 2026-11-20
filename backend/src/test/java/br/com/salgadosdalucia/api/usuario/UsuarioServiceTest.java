@@ -803,4 +803,20 @@ class UsuarioServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("Perfil configurado para cadastro")
+    class PerfilConfigurado {
+        @ParameterizedTest
+        @EnumSource(PerfilUsuarioNome.class)
+        @DisplayName("Deve informar perfil ausente sem salvar um usuário sem permissões")
+        void deveRejeitarPerfilAusente(PerfilUsuarioNome nomePerfil) {
+            var entrada = new UsuarioRequest("Ana", "ana", "senha", nomePerfil);
+            assertThatThrownBy(() -> usuarioService.cadastrar(entrada))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Perfil de usuário não configurado: " + nomePerfil);
+            verify(perfilRepository).findByNome(nomePerfil);
+            verify(usuarioRepository, never()).save(any(Usuario.class));
+        }
+    }
+
 }

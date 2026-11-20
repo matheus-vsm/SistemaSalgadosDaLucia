@@ -40,6 +40,9 @@ public class UsuarioService implements UserDetailsService {
         }
         String senhaCriptografada = passwordEncoder.encode(dados.senha());
         var perfil = perfilRepository.findByNome(dados.perfilUsuarioNome());
+        if (perfil == null) {
+            throw new IllegalStateException("Perfil de usuário não configurado: " + dados.perfilUsuarioNome());
+        }
         Usuario usuario = UsuarioMapper.mapToEntity(dados, senhaCriptografada, perfil);
         return usuarioRepository.save(usuario);
     }
