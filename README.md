@@ -176,6 +176,7 @@ ficarem saudáveis. `docker compose ps` deve mostrar `db`, `backend` e `frontend
 ### 4. Crie o primeiro administrador
 
 Não existe usuário ou senha padrão. Crie seu administrador **uma única vez**, depois que a subida terminar.
+O bootstrap abaixo é a opção recomendada; há também uma alternativa por INSERT ao final desta etapa.
 Escolha nome, username e senha nos prompts; não são as credenciais do banco configuradas no `.env`.
 Execute o bloco correspondente ao seu terminal, ainda na raiz do projeto.
 
@@ -212,6 +213,67 @@ no Bash, ficam restritas ao subshell entre parênteses e desaparecem quando ele 
 Aguarde a mensagem **Administrador criado**. O comando cria o usuário com perfil `ADMIN` e encerra;
 não é outro servidor para deixar aberto. Uma nova execução com o mesmo username falha e não redefine a senha.
 Use nome de até 100 caracteres, username de até 50 e senha não vazia de até 72 bytes UTF-8.
+
+<details>
+<summary>Alternativa: criar o primeiro usuário com INSERT no banco</summary>
+
+#### Alternativa: criar o primeiro usuário com INSERT
+
+Se preferir executar SQL, use esta opção **no lugar do bootstrap**, após a subida dos containers.
+O usuário precisa estar ativo, ter senha em **BCrypt** e estar associado ao perfil `ADMIN`.
+Não grave a senha em texto puro nem use `MD5`, `SHA` ou `PASSWORD()` do MySQL.
+
+1. Gere o hash localmente com um container auxiliar (o comando funciona em PowerShell e Bash):
+
+```sh
+docker run --rm -it httpd:2.4-alpine htpasswd -nBC 10 admin_sql
+```
+
+Digite e confirme a senha de login (até 72 bytes UTF-8). A imagem é baixada no primeiro uso; o container termina depois de gerar o hash.
+Da saída `admin_sql:$2y$10$...`, copie **somente o hash completo depois de `admin_sql:`**, incluindo os `$`.
+
+2. Abra o MySQL do projeto, ainda na raiz do repositório:
+
+```sh
+docker compose exec db sh -c 'exec mysql -u"$MYSQL_USER" -p "$MYSQL_DATABASE"'
+```
+
+Quando pedir a senha, informe `DB_PASSWORD` do `.env`. Não é a senha de login que você acabou de escolher.
+O comando usa o cliente dentro do container; não precisa instalar MySQL nem publicar a porta 3306.
+
+3. No prompt `mysql>`, substitua `<HASH_BCRYPT_DA_SUA_SENHA>` pelo hash gerado e execute:
+
+```sql
+START TRANSACTION;
+
+INSERT INTO usuarios (nome, username, senha, ativo)
+VALUES ('Administrador', 'admin_sql', '<HASH_BCRYPT_DA_SUA_SENHA>', TRUE);
+
+SET @novo_usuario_id = LAST_INSERT_ID();
+
+INSERT INTO usuarios_perfis (usuario_id, perfil_id)
+SELECT @novo_usuario_id, id FROM perfis WHERE nome = 'ADMIN';
+
+SELECT u.id, u.username, u.ativo, p.nome AS perfil
+FROM usuarios u
+JOIN usuarios_perfis up ON up.usuario_id = u.id
+JOIN perfis p ON p.id = up.perfil_id
+WHERE u.id = @novo_usuario_id;
+```
+
+Você pode trocar `Administrador` e `admin_sql` pelo nome e username desejados, respeitando os limites de 100 e 50 caracteres.
+O perfil `ADMIN` já é criado pelas migrações. Se as duas inserções terminarem sem erro e a consulta mostrar o username escolhido,
+`ativo = 1` e `perfil = ADMIN`, confirme:
+
+```sql
+COMMIT;
+```
+
+Se houver qualquer erro ou a conferência não corresponder, execute `ROLLBACK;` em vez de `COMMIT;` e corrija os valores.
+Não repita a inserção de um username já cadastrado. Saia com `exit;` e faça login com o username escolhido e a senha original,
+**não com o hash**.
+
+</details>
 
 ### 5. Abra o sistema e faça login
 
@@ -299,7 +361,7 @@ inicialização do perfil padrão.
 ### 3. Prepare o primeiro acesso
 
 Não há usuário ou senha padrão nem criação automática de administrador na subida normal. Para criar o primeiro
-administrador com Docker, use o [comando de provisionamento](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/10-Docker-e-operacao-do-MVP#primeiro-administrador).
+administrador com Docker, veja as [opções de provisionamento](https://github.com/matheus-vsm/SistemaSalgadosDaLucia/wiki/10-Docker-e-operacao-do-MVP#primeiro-administrador).
 No fluxo manual sem containers, é necessário
 provisionar um usuário ativo na tabela `usuarios`, com senha codificada em BCrypt, e associá-lo ao perfil `ADMIN` pela
 tabela `usuarios_perfis`.
